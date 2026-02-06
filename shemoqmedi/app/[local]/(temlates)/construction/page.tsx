@@ -4,15 +4,19 @@ import { useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { useTranslations } from "next-intl";
+
 import { ContactDropdown } from "./_components/contact-dropdown";
 import { ProductDetailModal } from "./_components/product-detail-modal";
+import { LanguageSwitcher } from "./_components/language-switcher";
 import { MATERIAL_TYPES, PRODUCTS } from "./_components/image-list";
 
 gsap.registerPlugin(ScrollTrigger);
 
-
-
 export default function Home() {
+  // 1. Initialize translation hook scoped to the template
+  const t = useTranslations("TimberCraftTemplate");
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<HTMLDivElement>(null);
@@ -23,6 +27,30 @@ export default function Home() {
     (typeof PRODUCTS)[number] | null
   >(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // 2. Merge Translations with Existing Image Data
+  
+  // Products: Merge JSON text with imported Images/IDs from 'PRODUCTS'
+  const localizedProducts = t.raw("Catalog.items").map((item: any, index: number) => {
+    // Fallback if PRODUCTS array is shorter than translation array
+    const originalProduct = PRODUCTS[index] || PRODUCTS[0]; 
+    return {
+      ...originalProduct, // Keep id, price, image from original const
+      ...item, // Overwrite name, desc, tags from JSON
+    };
+  });
+
+  // Materials: Merge JSON text with imported Images/Colors from 'MATERIAL_TYPES'
+  const localizedMaterials = t.raw("Materials.items").map((item: any, index: number) => {
+    const originalMaterial = MATERIAL_TYPES[index] || MATERIAL_TYPES[0];
+    return {
+      ...originalMaterial,
+      ...item,
+    };
+  });
+
+  const benefits = t.raw("Benefits.items");
+  const testimonials = t.raw("Testimonials.items");
 
   useGSAP(
     () => {
@@ -167,34 +195,41 @@ export default function Home() {
       <nav className="navbar fixed top-0 w-full z-50 px-6 py-5 transition-all">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="font-serif text-2xl text-[#2C1A0E]">
-            TIMBER<span className="text-[#8B5E3C]">CRAFT</span>
+            TIMBER<span className="text-[#8B5E3C]">{t("Navbar.brand_suffix")}</span>
           </div>
-          <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide uppercase text-[#5C4A3A]">
+          <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide uppercase text-[#5C4A3A] items-center">
             <a
               href="#products"
               className="hover:text-[#8B5E3C] transition-colors"
             >
-              Products
+              {t("Navbar.products")}
             </a>
             <a
               href="#materials"
               className="hover:text-[#8B5E3C] transition-colors"
             >
-              Materials
+              {t("Navbar.materials")}
             </a>
             <a
               href="#about"
               className="hover:text-[#8B5E3C] transition-colors"
             >
-              About
+              {t("Navbar.about")}
             </a>
+            <LanguageSwitcher />
           </div>
-          <a
-            href="#products"
-            className="px-5 py-2.5 bg-[#2C1A0E] text-[#FAF6F1] text-xs font-bold uppercase tracking-wider hover:bg-[#8B5E3C] transition-colors"
-          >
-            Request Quote
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="#products"
+              className="px-5 py-2.5 bg-[#2C1A0E] text-[#FAF6F1] text-xs font-bold uppercase tracking-wider hover:bg-[#8B5E3C] transition-colors"
+            >
+              {t("Navbar.quote")}
+            </a>
+            {/* Mobile Language Switcher */}
+            <div className="md:hidden">
+               <LanguageSwitcher />
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -206,29 +241,27 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center w-full">
           <div className="z-20">
             <div className="hero-text-item inline-block px-4 py-1.5 border border-[#8B5E3C] text-[#8B5E3C] text-xs font-bold tracking-[0.2em] uppercase mb-8">
-              Since 1998
+              {t("Hero.since")}
             </div>
             <h1 className="hero-text-item font-serif text-6xl md:text-8xl leading-[0.95] text-[#2C1A0E] mb-8">
-              Built to <br />
-              <span className="text-[#8B5E3C]">Last.</span>
+              {t("Hero.title_1")} <br />
+              <span className="text-[#8B5E3C]">{t("Hero.title_2")}</span>
             </h1>
             <p className="hero-text-item text-lg text-[#5C4A3A] max-w-md leading-relaxed mb-8">
-              Premium plywood, MDF, and structural panels sourced from
-              responsibly managed forests. Every sheet is graded, inspected, and
-              guaranteed.
+              {t("Hero.description")}
             </p>
             <div className="hero-text-item flex gap-4">
               <a
                 href="#products"
                 className="px-8 py-4 bg-[#2C1A0E] text-[#FAF6F1] font-bold uppercase text-sm tracking-wider hover:bg-[#8B5E3C] transition-colors"
               >
-                Browse Catalog
+                {t("Hero.btn_catalog")}
               </a>
               <a
                 href="#materials"
                 className="px-8 py-4 border-2 border-[#2C1A0E] text-[#2C1A0E] font-bold uppercase text-sm tracking-wider hover:bg-[#2C1A0E] hover:text-[#FAF6F1] transition-colors"
               >
-                Our Materials
+                {t("Hero.btn_materials")}
               </a>
             </div>
           </div>
@@ -254,9 +287,7 @@ export default function Home() {
               key={i}
               className="text-[#D4C5B2] font-bold text-sm mx-8 tracking-[0.3em] uppercase"
             >
-              {
-                "/ Plywood / MDF / OSB / Hardwood / Softwood / Timber / Marine Grade / Fire Rated / Structural /"
-              }
+              {t("Marquee")}
             </span>
           ))}
         </div>
@@ -266,85 +297,46 @@ export default function Home() {
       <section className="benefits-section relative z-10 py-28 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="font-serif text-5xl text-[#2C1A0E] mb-4">
-            Why TimberCraft
+            {t("Benefits.heading")}
           </h2>
           <p className="text-[#8B7355] text-lg">
-            Three decades of trusted building material supply
+            {t("Benefits.subheading")}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[
-            {
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              ),
-              title: "Certified Quality",
-              desc: "FSC and PEFC certified materials from sustainable sources",
-            },
-            {
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              ),
-              title: "Fast Delivery",
-              desc: "Same-day dispatch on in-stock items across the region",
-            },
-            {
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                />
-              ),
-              title: "Cut to Size",
-              desc: "Custom cutting service with precision CNC machinery",
-            },
-            {
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              ),
-              title: "Trade & Bulk",
-              desc: "Wholesale pricing for contractors and trade customers",
-            },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="benefit-item text-center p-8 bg-[#FAF6F1]/60 backdrop-blur-sm border border-[#D4C5B2] hover:border-[#8B5E3C] transition-all"
-            >
-              <div className="w-14 h-14 mx-auto mb-5 border border-[#8B5E3C] flex items-center justify-center">
-                <svg
-                  className="w-7 h-7 text-[#8B5E3C]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  {item.icon}
-                </svg>
+          {benefits.map((item: any, idx: number) => {
+            // Re-mapping icons based on index since JSON doesn't store components
+            const icons = [
+                <path key="1" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
+                <path key="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />,
+                <path key="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />,
+                <path key="4" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            ];
+            
+            return (
+              <div
+                key={idx}
+                className="benefit-item text-center p-8 bg-[#FAF6F1]/60 backdrop-blur-sm border border-[#D4C5B2] hover:border-[#8B5E3C] transition-all"
+              >
+                <div className="w-14 h-14 mx-auto mb-5 border border-[#8B5E3C] flex items-center justify-center">
+                  <svg
+                    className="w-7 h-7 text-[#8B5E3C]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    {icons[idx]}
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-[#2C1A0E] mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-[#8B7355] text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-[#2C1A0E] mb-2">
-                {item.title}
-              </h3>
-              <p className="text-[#8B7355] text-sm leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -358,20 +350,19 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center mb-20">
             <div className="inline-block px-4 py-1.5 border border-[#8B5E3C] text-[#8B5E3C] text-xs font-bold tracking-[0.2em] uppercase mb-6">
-              Our Catalog
+              {t("Catalog.badge")}
             </div>
             <h2 className="font-serif text-5xl md:text-7xl text-[#2C1A0E] mb-6">
-              Products
+              {t("Catalog.title")}
             </h2>
             <p className="text-lg text-[#8B7355] max-w-2xl mx-auto">
-              Every sheet is graded, inspected, and delivered with our quality
-              guarantee
+              {t("Catalog.subtitle")}
             </p>
           </div>
 
           {/* Products Grid - Rectangle Tiles */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#D4C5B2]">
-            {PRODUCTS.map((product) => (
+            {localizedProducts.map((product: any) => (
               <div
                 key={product.id}
                 className="product-showcase-card group bg-[#FAF6F1]"
@@ -400,7 +391,7 @@ export default function Home() {
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-1.5 mb-4">
-                    {product.tags.slice(0, 3).map((tag) => (
+                    {product.tags.slice(0, 3).map((tag: string) => (
                       <span
                         key={tag}
                         className="px-2 py-0.5 bg-[#E8DDD0] text-[#5C4A3A] text-[10px] font-bold uppercase tracking-wider"
@@ -417,7 +408,7 @@ export default function Home() {
                         ${product.price}
                       </span>
                       <span className="text-sm text-[#8B7355] ml-1">
-                        / sheet
+                        {t("Catalog.price_unit")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -428,7 +419,7 @@ export default function Home() {
                         }}
                         className="px-4 py-2.5 border border-[#D4C5B2] text-[#5C4A3A] text-xs font-bold uppercase tracking-wider hover:border-[#8B5E3C] hover:text-[#8B5E3C] transition-colors"
                       >
-                        Details
+                        {t("Catalog.details")}
                       </button>
                       <ContactDropdown
                         productName={product.name}
@@ -454,7 +445,7 @@ export default function Home() {
                 27+
               </div>
               <div className="text-xs text-[#8B7355] uppercase tracking-[0.2em]">
-                Years in business
+                {t("Stats.years")}
               </div>
             </div>
             <div className="stat-item text-center">
@@ -462,7 +453,7 @@ export default function Home() {
                 12k+
               </div>
               <div className="text-xs text-[#8B7355] uppercase tracking-[0.2em]">
-                Projects supplied
+                {t("Stats.projects")}
               </div>
             </div>
             <div className="stat-item text-center">
@@ -470,7 +461,7 @@ export default function Home() {
                 200+
               </div>
               <div className="text-xs text-[#8B7355] uppercase tracking-[0.2em]">
-                Product SKUs
+                {t("Stats.skus")}
               </div>
             </div>
             <div className="stat-item text-center">
@@ -478,7 +469,7 @@ export default function Home() {
                 98%
               </div>
               <div className="text-xs text-[#8B7355] uppercase tracking-[0.2em]">
-                Satisfaction rate
+                {t("Stats.satisfaction")}
               </div>
             </div>
           </div>
@@ -495,16 +486,16 @@ export default function Home() {
           {/* Fixed Header */}
           <div className="fixed top-20 left-10 md:left-20 z-50 pointer-events-none">
             <h2 className="font-serif text-4xl md:text-6xl text-[#FAF6F1] drop-shadow-2xl">
-              Our <span className="text-[#8B5E3C]">Materials.</span>
+              {t("Materials.title_1")} <span className="text-[#8B5E3C]">{t("Materials.title_2")}</span>
             </h2>
             <p className="text-[#8B7355] mt-2 text-lg drop-shadow-lg">
-              {"Scroll to explore \u2192"}
+              {t("Materials.scroll_hint")}
             </p>
           </div>
 
           {/* Horizontal Scrolling Container */}
           <div className="flex items-center gap-8 h-full py-20">
-            {MATERIAL_TYPES.map((item) => (
+            {localizedMaterials.map((item: any) => (
               <div
                 key={item.id}
                 className={`horizontal-panel w-[85vw] md:w-[600px] h-[70vh] ${item.bgColor} flex-shrink-0 ${item.borderColor} border relative group overflow-hidden shadow-2xl ml-8 first:ml-[20vw]`}
@@ -535,7 +526,7 @@ export default function Home() {
                     {item.description}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {item.tags.map((tag) => (
+                    {item.tags.map((tag: string) => (
                       <span
                         key={tag}
                         className="px-4 py-2 bg-[#FAF6F1]/10 backdrop-blur-sm text-sm font-medium text-[#FAF6F1] border border-[#FAF6F1]/20"
@@ -560,30 +551,14 @@ export default function Home() {
       >
         <div className="text-center mb-20">
           <h2 className="font-serif text-5xl text-[#2C1A0E] mb-4">
-            Trusted by Builders
+            {t("Testimonials.title")}
           </h2>
           <p className="text-[#8B7355] text-lg">
-            What our trade customers have to say
+            {t("Testimonials.subtitle")}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              text: "TimberCraft has been our go-to supplier for 8 years. Their Baltic Birch is consistently top quality, zero voids, always flat. Wouldn't source from anyone else.",
-              name: "James K.",
-              role: "Cabinet Maker",
-            },
-            {
-              text: "The marine grade plywood we ordered held up perfectly through two hurricane seasons. The BS 1088 certification isn't just a label here, it's genuine quality.",
-              name: "Michael T.",
-              role: "Boat Builder",
-            },
-            {
-              text: "Fast delivery, competitive bulk pricing, and they actually answer the phone. The cut-to-size service saved us days of labor on our last commercial project.",
-              name: "Sarah W.",
-              role: "General Contractor",
-            },
-          ].map((testimonial, idx) => (
+          {testimonials.map((testimonial: any, idx: number) => (
             <div
               key={idx}
               className="testimonial-card bg-[#FAF6F1] p-8 border border-[#D4C5B2]"
@@ -626,24 +601,23 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center cta-content">
           <div className="bg-[#2C1A0E] p-12 md:p-20 border border-[#4A3728]">
             <h2 className="font-serif text-4xl md:text-6xl text-[#FAF6F1] mb-6">
-              Ready to Build?
+              {t("CTA.title")}
             </h2>
             <p className="text-[#D4C5B2]/80 text-lg mb-8 max-w-2xl mx-auto">
-              Get a custom quote for your project. Bulk orders, trade accounts,
-              and custom cutting services available.
+              {t("CTA.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="#products"
                 className="px-10 py-5 bg-[#8B5E3C] text-[#FAF6F1] font-bold text-sm uppercase tracking-wider hover:bg-[#A67348] transition-colors"
               >
-                Browse Products
+                {t("CTA.btn_browse")}
               </a>
               <a
                 href="#about"
                 className="px-10 py-5 border border-[#D4C5B2] text-[#D4C5B2] font-bold text-sm uppercase tracking-wider hover:bg-[#D4C5B2] hover:text-[#2C1A0E] transition-colors"
               >
-                Contact Sales
+                {t("CTA.btn_contact")}
               </a>
             </div>
           </div>
@@ -662,9 +636,7 @@ export default function Home() {
                 TIMBER<span className="text-[#8B5E3C]">CRAFT</span>
               </h2>
               <p className="text-[#8B7355] mb-6 max-w-md">
-                Premium building materials supplier since 1998. Plywood, MDF,
-                OSB, and hardwood sourced from certified sustainable forests.
-                Trade accounts welcome.
+                {t("Footer.description")}
               </p>
               <div className="flex gap-3">
                 <a
@@ -696,101 +668,57 @@ export default function Home() {
 
             <div>
               <h3 className="font-bold text-sm uppercase tracking-wider text-[#FAF6F1] mb-4">
-                Products
+                {t("Footer.headers.products")}
               </h3>
               <ul className="flex flex-col gap-2 text-[#8B7355] text-sm">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    Plywood Sheets
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    MDF Boards
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    OSB Panels
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    Hardwood Timber
-                  </a>
-                </li>
+                {t.raw("Footer.links.products").map((link: string, i: number) => (
+                  <li key={i}>
+                    <a
+                      href="#"
+                      className="hover:text-[#D4C5B2] transition-colors"
+                    >
+                      {link}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div>
               <h3 className="font-bold text-sm uppercase tracking-wider text-[#FAF6F1] mb-4">
-                Services
+                {t("Footer.headers.services")}
               </h3>
               <ul className="flex flex-col gap-2 text-[#8B7355] text-sm">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    Cut to Size
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    Bulk Orders
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    Trade Accounts
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-[#D4C5B2] transition-colors"
-                  >
-                    Delivery
-                  </a>
-                </li>
+                {t.raw("Footer.links.services").map((link: string, i: number) => (
+                  <li key={i}>
+                    <a
+                      href="#"
+                      className="hover:text-[#D4C5B2] transition-colors"
+                    >
+                      {link}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
           <div className="border-t border-[#2C1A0E] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-[#8B7355] text-sm">
-              {"© 2026 TimberCraft Ltd. All rights reserved."}
+              {t("Footer.copyright")}
             </p>
             <div className="flex gap-6 text-sm text-[#8B7355]">
               <a
                 href="#"
                 className="hover:text-[#D4C5B2] transition-colors"
               >
-                Privacy Policy
+                {t("Footer.links.privacy")}
               </a>
               <a
                 href="#"
                 className="hover:text-[#D4C5B2] transition-colors"
               >
-                Terms of Service
+                {t("Footer.links.terms")}
               </a>
             </div>
           </div>

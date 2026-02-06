@@ -7,6 +7,171 @@
   "HomePage": {
     "title": "Welcome to Voloostore",
     "subtitle": "Handmade items from Georgia"
+  },
+  
+  "TimberCraftTemplate": {
+    "Navbar": {
+      "brand_suffix": "CRAFT",
+      "products": "Products",
+      "materials": "Materials",
+      "about": "About",
+      "quote": "Request Quote"
+    },
+    "Hero": {
+      "since": "Since 1998",
+      "title_1": "Built to",
+      "title_2": "Last.",
+      "description": "Premium plywood, MDF, and structural panels sourced from responsibly managed forests. Every sheet is graded, inspected, and guaranteed.",
+      "btn_catalog": "Browse Catalog",
+      "btn_materials": "Our Materials"
+    },
+    "Marquee": "/ Plywood / MDF / OSB / Hardwood / Softwood / Timber / Marine Grade / Fire Rated / Structural /",
+    "Benefits": {
+      "heading": "Why TimberCraft",
+      "subheading": "Three decades of trusted building material supply",
+      "items": [
+        { "title": "Certified Quality", "desc": "FSC and PEFC certified materials from sustainable sources" },
+        { "title": "Fast Delivery", "desc": "Same-day dispatch on in-stock items across the region" },
+        { "title": "Cut to Size", "desc": "Custom cutting service with precision CNC machinery" },
+        { "title": "Trade & Bulk", "desc": "Wholesale pricing for contractors and trade customers" }
+      ]
+    },
+    "Catalog": {
+      "badge": "Our Catalog",
+      "title": "Products",
+      "subtitle": "Every sheet is graded, inspected, and delivered with our quality guarantee",
+      "price_unit": "/ sheet",
+      "details": "Details",
+      "items": [
+        { "name": "Baltic Birch Plywood", "description": "Premium multi-ply birch for furniture and cabinetry.", "category": "Plywood", "tags": ["Furniture", "Cabinetry", "Interior"] },
+        { "name": "Marine Grade Ply", "description": "Waterproof structural panels for exterior use.", "category": "Marine", "tags": ["Exterior", "Boat", "Structural"] },
+        { "name": "MDF Sheets", "description": "Smooth surface medium density fiberboard.", "category": "MDF", "tags": ["Paintable", "Molding", "Interior"] }
+      ]
+    },
+    "Stats": {
+      "years": "Years in business",
+      "projects": "Projects supplied",
+      "skus": "Product SKUs",
+      "satisfaction": "Satisfaction rate"
+    },
+    "Materials": {
+      "title_1": "Our",
+      "title_2": "Materials.",
+      "scroll_hint": "Scroll to explore \u2192",
+      "items": [
+        { "label": "STRUCTURAL", "title": "Plywood", "description": "Versatile, high-strength sheet material made from thin layers or 'plies' of wood veneer.", "tags": ["Birch", "Pine", "Marine"] },
+        { "label": "COMPOSITE", "title": "MDF", "description": "Engineered wood product made by breaking down hardwood or softwood residuals into wood fibers.", "tags": ["Standard", "Moisture Resistant", "Fire Rated"] },
+        { "label": "NATURAL", "title": "Hardwood", "description": "Solid timber sourced from deciduous trees, known for density and durability.", "tags": ["Oak", "Walnut", "Maple"] }
+      ]
+    },
+    "Testimonials": {
+      "title": "Trusted by Builders",
+      "subtitle": "What our trade customers have to say",
+      "items": [
+        { "text": "TimberCraft has been our go-to supplier for 8 years. Their Baltic Birch is consistently top quality, zero voids, always flat.", "name": "James K.", "role": "Cabinet Maker" },
+        { "text": "The marine grade plywood we ordered held up perfectly through two hurricane seasons. The BS 1088 certification isn't just a label here.", "name": "Michael T.", "role": "Boat Builder" },
+        { "text": "Fast delivery, competitive bulk pricing, and they actually answer the phone. The cut-to-size service saved us days of labor.", "name": "Sarah W.", "role": "General Contractor" }
+      ]
+    },
+    "CTA": {
+      "title": "Ready to Build?",
+      "description": "Get a custom quote for your project. Bulk orders, trade accounts, and custom cutting services available.",
+      "btn_browse": "Browse Products",
+      "btn_contact": "Contact Sales"
+    },
+    "Footer": {
+      "description": "Premium building materials supplier since 1998. Plywood, MDF, OSB, and hardwood sourced from certified sustainable forests.",
+      "copyright": "© 2026 TimberCraft Ltd. All rights reserved.",
+      "links": {
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "products": ["Plywood Sheets", "MDF Boards", "OSB Panels", "Hardwood Timber"],
+        "services": ["Cut to Size", "Bulk Orders", "Trade Accounts", "Delivery"]
+      },
+      "headers": {
+        "products": "Products",
+        "services": "Services"
+      }
+    }
+  },
+  "BeautyTemplate": {
+    "Navbar": {
+      "shop": "Shop",
+      "ingredients": "Ingredients",
+      "about": "About",
+      "cart": "CART"
+    },
+    "Hero": {
+      "badge": "NEW COLLECTION 2026",
+      "title_1": "GLOW",
+      "title_2": "FROM WITHIN",
+      "description": "Plant-based skincare designed for radical radiance. No fillers. Just pure botanical power.",
+      "btn_shop": "Shop Essentials",
+      "btn_learn": "Learn More"
+    },
+    "Marquee": "• Cruelty Free • Vegan • Organic • Sustainable",
+    "Benefits": {
+      "title": "Why Choose AURASKIN",
+      "subtitle": "Science meets nature in every bottle",
+      "items": [
+        { "title": "100% Natural", "desc": "Pure botanical ingredients, no synthetic chemicals" },
+        { "title": "Dermatologist Tested", "desc": "Clinically proven safe for all skin types" },
+        { "title": "Eco-Friendly", "desc": "Sustainable packaging, carbon-neutral shipping" },
+        { "title": "Premium Quality", "desc": "Small-batch production for maximum freshness" }
+      ]
+    },
+    "Catalog": {
+      "badge": "BESTSELLERS",
+      "title": "Curated for You",
+      "subtitle": "Discover our most-loved formulas, handpicked for transformative results",
+      "btn_view_all": "View All Products",
+      "items": [
+        { "name": "Rose Hip Serum", "description": "Regenerative oil for glowing skin.", "category": "Serum", "benefits": ["Hydrating", "Anti-aging"] },
+        { "name": "Cloud Cream", "description": "Lightweight daily moisturizer.", "category": "Moisturizer", "benefits": ["Soothing", "Daily Use"] },
+        { "name": "Midnight Oil", "description": "Overnight repair treatment.", "category": "Treatment", "benefits": ["Repair", "Calming"] }
+      ]
+    },
+    "Stats": {
+      "customers": "Happy Customers",
+      "natural": "Natural Ingredients",
+      "rating": "Average Rating",
+      "years": "In Business"
+    },
+    "Ingredients": {
+      "title_1": "PURE",
+      "title_2": "SOURCE.",
+      "scroll_hint": "Scroll to explore ingredients →",
+      "items": [
+        { "label": "BOTANICAL", "title": "Aloe Vera", "description": "Sourced from volcanic soil for maximum hydration.", "tags": ["Soothing", "Hydrating"] },
+        { "label": "EXTRACT", "title": "Green Tea", "description": "Powerful antioxidants to protect skin barrier.", "tags": ["Protection", "Anti-oxidant"] },
+        { "label": "OIL", "title": "Jojoba", "description": "Biomimetic oil that balances natural sebum.", "tags": ["Balancing", "Nourishing"] }
+      ]
+    },
+    "Testimonials": {
+      "title": "Loved by Thousands",
+      "subtitle": "Real results from real people",
+      "items": [
+        { "text": "My skin has never looked better! The Rose Hip Serum is a game-changer. I've noticed a visible reduction in fine lines.", "name": "Sarah M.", "role": "Verified Customer" },
+        { "text": "Finally found skincare that doesn't irritate my sensitive skin. The Cloud Cream is so lightweight yet incredibly moisturizing.", "name": "Emily R.", "role": "Verified Customer" },
+        { "text": "I love that everything is natural and eco-friendly. The Midnight Oil transformed my dry skin overnight.", "name": "Jessica L.", "role": "Verified Customer" }
+      ]
+    },
+    "CTA": {
+      "title": "Ready to Transform Your Skin?",
+      "description": "Join thousands of happy customers and start your journey to radiant, healthy skin today.",
+      "btn_shop": "Shop Now",
+      "btn_quiz": "Take the Quiz"
+    },
+    "Footer": {
+      "description": "Premium plant-based skincare designed for those who demand excellence. Sustainably sourced, scientifically proven, beautifully simple.",
+      "copyright": "© 2026 AuraSkin Inc. All rights reserved.",
+      "headers": { "shop": "Shop", "support": "Support" },
+      "links": {
+        "shop": ["All Products", "Bestsellers", "Gift Sets", "Sale"],
+        "support": ["Contact Us", "FAQs", "Shipping", "Returns"],
+        "legal": ["Privacy Policy", "Terms of Service", "Cookie Policy"]
+      }
+    }
   }
 }
 
