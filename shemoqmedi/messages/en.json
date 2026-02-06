@@ -172,6 +172,236 @@
         "legal": ["Privacy Policy", "Terms of Service", "Cookie Policy"]
       }
     }
+  },
+  "CoffeeTemplate": {
+    "Navbar": {
+      "menu": "Menu",
+      "locations": "Locations",
+      "about": "Our Story",
+      "order": "ORDER NOW"
+    },
+    "Hero": {
+      "badge": "EST. 2024",
+      "title_1": "WAKE UP",
+      "title_2": "TO BETTER.",
+      "description": "Artisanal roasted coffee, ethically sourced from the world's best farms. Brewed with passion in the heart of the city.",
+      "btn_order": "Order Pickup",
+      "btn_locations": "Find Us"
+    },
+    "Marquee": "• ETHICAL SOURCING • SMALL BATCH ROAST • SPECIALTY GRADE •",
+    "Benefits": {
+      "title": "The Daily Grind",
+      "subtitle": "Why our coffee hits different",
+      "items": [
+        { "title": "High Energy", "desc": "Carefully selected beans for maximum focus" },
+        { "title": "Top Quality", "desc": "Graded 85+ points by Q-graders" },
+        { "title": "Eco Friendly", "desc": "100% compostable cups and packaging" },
+        { "title": "Always Fresh", "desc": "Roasted locally every single week" }
+      ]
+    },
+    "Catalog": {
+      "badge": "SIGNATURE MENU",
+      "title": "Crafted Cups",
+      "subtitle": "Explore our seasonal rotation of single-origin pours and signature lattes.",
+      "btn_full_menu": "View Full Menu",
+      "items": [
+        { "name": "Draft Latte", "description": "Cold brew infused with nitrogen.", "category": "Signature", "benefits": ["Smooth", "Strong"] },
+        { "name": "Honey Lavender", "description": "Double shot espresso with floral syrup.", "category": "Seasonal", "benefits": ["Floral", "Sweet"] },
+        { "name": "Classic Flat White", "description": "Espresso with silky micro-foam.", "category": "Espresso", "benefits": ["Strong", "Silky"] },
+        { "name": "Matcha Latte", "description": "Ceremonial grade matcha from Uji.", "category": "Tea", "benefits": ["Focus", "Earthy"] },
+        { "name": "Cold Brew", "description": "Steeped for 24 hours.", "category": "Iced", "benefits": ["Bold", "Cold"] },
+        { "name": "Croissant", "description": "Butter croissant baked fresh.", "category": "Bakery", "benefits": ["Flaky", "Buttery"] }
+      ]
+    },
+    "Stats": {
+      "coffees": "Coffees Served",
+      "fairtrade": "Fair Trade",
+      "roasted": "Roasted Daily",
+      "locations": "Cafe Locations"
+    },
+    "Ingredients": {
+      "title_1": "OUR",
+      "title_2": "SOURCES.",
+      "scroll_hint": "Scroll to explore origins →",
+      "items": [
+        { "label": "BEAN", "title": "Arabica 100%", "description": "Sourced from high-altitude Ethiopian farms.", "tags": ["Ethiopia", "Washed"] },
+        { "label": "MILK", "title": "Oat Milk", "description": "Barista edition oat milk for perfect foam.", "tags": ["Plant Based", "Creamy"] },
+        { "label": "TEA", "title": "Matcha", "description": "Premium Japanese green tea powder.", "tags": ["Uji", "Ceremonial"] }
+      ]
+    },
+    "Testimonials": {
+      "title": "Local Favorites",
+      "subtitle": "What the neighborhood thinks",
+      "items": [
+        { "text": "Best flat white in the city, hands down. The atmosphere is perfect for working too.", "name": "Alex D.", "role": "Local Guide" },
+        { "text": "Their honey lavender latte is an absolute dream. I come here every morning.", "name": "Sarah J.", "role": "Regular" },
+        { "text": "Finally a place that takes matcha seriously. No clumps, just smooth green goodness.", "name": "Mike R.", "role": "Tea Lover" }
+      ]
+    },
+    "CTA": {
+      "title": "Need a Caffeine Fix?",
+      "description": "Skip the line by ordering ahead. We'll have your brew ready when you walk in.",
+      "btn_order": "Start Order",
+      "btn_visit": "Get Directions"
+    },
+    "Footer": {
+      "description": "More than just coffee. It's a daily ritual, a community hub, and a relentless pursuit of the perfect cup.",
+      "copyright": "© 2026 VolooCafe. All rights reserved.",
+      "headers": { "menu": "Menu", "locations": "Locations" },
+      "links": {
+        "menu": ["Coffee", "Tea", "Pastries", "Merch"],
+        "locations": ["Downtown", "West End", "North Shore"],
+        "social": ["Instagram", "Twitter", "TikTok"]
+      }
+    }
+  },
+  "Landing": {
+    "Intro": {
+      "brand": "SHEMOQMEDI",
+      "subtitle": "The Creator"
+    },
+    "Hero": {
+      "title_1": "Digitalizing",
+      "title_2": "Georgian Business",
+      "subtitle": "We build premium web experiences that turn local ventures into digital brands.",
+      "cta": "Explore Templates",
+      "scroll": "Scroll to Discover"
+    },
+    "Showcase": {
+      "title": "Our Creations",
+      "subtitle": "Select a template to view the demo",
+      "beauty": {
+        "title": "Beauty & Wellness",
+        "desc": "Elegant minimalism for salons and spas."
+      },
+      "construction": {
+        "title": "TimberCraft",
+        "desc": "Robust reliability for builders and architects."
+      },
+      "coffee": {
+        "title": "Voloo Cafe",
+        "desc": "Warm, aromatic aesthetic for coffee shops."
+      }
+    },
+    "Pricing": {
+      "title": "Transparent Pricing",
+      "subtitle": "Pay only when you are 100% satisfied.",
+      "starter": {
+        "title": "Single Page",
+        "price": "500 ₾",
+        "features": ["Custom Design", "Mobile Responsive", "SEO Optimized", "No Admin Panel"]
+      },
+      "pro": {
+        "title": "Full Platform",
+        "price": "1000 ₾",
+        "features": ["Admin Dashboard", "Content Management", "Analytics", "Priority Support"]
+      },
+      "maintenance": {
+        "title": "Maintenance",
+        "price": "100-200 ₾",
+        "unit": "/mo",
+        "desc": "Optional ongoing support and updates."
+      },
+      "guarantee": "Satisfaction Guarantee: No payment until launch."
+    },
+    "About": {
+      "title": "Who We Are",
+      "story": "Started by two brothers with a shared vision: to elevate the digital presence of Georgian businesses. We don't just build websites; we build trust.",
+      "trust_title": "Trusted Creators",
+      "trust_desc": "Owners of Voloo Store - creating handcrafted local treasures.",
+      "mission": "Our mission is simple: To provide professional, high-quality digital tools that help you grow."
+    },
+    "Footer": {
+      "rights": "© 2026 Shemoqmedi. All rights reserved.",
+      "cta": "Ready to Start?",
+      "contact": "Contact Us"
+    }
+  },
+  "CoffeeTemplate2": {
+    "Navbar": {
+      "brand": "BREW & GLASS"
+    },
+    "Hero": {
+      "title_1": "WAKE",
+      "title_2": "UP.",
+      "subtitle": "The finest roast in the city.<br />Experience the clarity."
+    },
+    "Story": {
+      "badge": "About Us",
+      "title": "More Than Just<br/>A Morning Routine.",
+      "p1": "Founded in 2024, Brew & Glass began with a simple mission: to bring transparency to the coffee industry. We believe every cup tells a story, from the soil in Ethiopia to the pour in your cup.",
+      "p2": "We partner directly with farmers, ensuring they are paid above fair-trade prices. Our roasting process is data-driven, but our service is human-first.",
+      "btn": "Read Our Full Story →"
+    },
+    "Menu": {
+      "badge": "The Menu",
+      "title": "Daily Rotation",
+      "items": [
+        {
+          "icon": "☕",
+          "name": "Dark Matter",
+          "desc": "Single origin espresso with notes of dark chocolate.",
+          "price": "$4.50"
+        },
+        {
+          "icon": "🧊",
+          "name": "Cold Brew",
+          "desc": "Steeped for 24 hours. Smooth, silky, and intense.",
+          "price": "$5.00"
+        },
+        {
+          "icon": "🥐",
+          "name": "Butter Crust",
+          "desc": "Imported flour, local butter. Flaky perfection.",
+          "price": "$4.00"
+        }
+      ]
+    },
+    "Process": {
+      "step_1": {
+        "badge": "01. THE SOURCE",
+        "title": "Ethical<br/>Farming",
+        "desc": "We travel to the mountains of Ethiopia and Colombia to meet the farmers. Every bean is hand-picked and fair-trade certified."
+      },
+      "step_2": {
+        "badge": "02. THE ROAST",
+        "title": "Precision<br/>Heat",
+        "desc": "Roasted in small batches in our downtown facility. We bring out the natural fruit and chocolate notes hidden inside every bean."
+      },
+      "step_3": {
+        "badge": "03. THE POUR",
+        "title": "Liquid<br/>Gold",
+        "desc": "Served at the perfect temperature. Whether you like a V60 pour-over or a rich espresso, we craft it with obsession."
+      }
+    },
+    "Community": {
+      "title": "The Community",
+      "subtitle": "Join 10,000+ daily drinkers.",
+      "review": "Absolutely the best espresso I've had in the city. The atmosphere is unmatched.",
+      "author": "Sarah Jenkins",
+      "verified": "Verified Buyer"
+    },
+    "Newsletter": {
+      "title": "Never Run Out.",
+      "subtitle": "Subscribe to our bean delivery service and save 20% on your first order.",
+      "placeholder": "Enter your email",
+      "btn": "Join the Club"
+    },
+    "Footer": {
+      "brand": "BREW & GLASS",
+      "desc": "Crafting clarity through coffee since 2024. Designed for the modern palette.",
+      "headers": {
+        "explore": "Explore",
+        "visit": "Visit Us",
+        "follow": "Follow"
+      },
+      "links": {
+        "explore": ["Our Beans", "The Menu", "Merchandise", "Gift Cards"],
+        "visit": ["123 Coffee Lane", "Glass City, GC 90210", "Mon-Fri: 7am - 7pm", "Sat-Sun: 8am - 6pm"],
+        "follow": ["Instagram", "Twitter / X", "TikTok"]
+      },
+      "copyright": "© 2024 Brew & Glass. All rights reserved. Made with Next.js."
+    }
   }
 }
 
