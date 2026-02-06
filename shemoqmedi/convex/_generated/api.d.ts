@@ -9,7 +9,10 @@
  */
 
 import type * as http from "../http.js";
+import type * as init from "../init.js";
 import type * as lib_utils from "../lib/utils.js";
+import type * as products from "../products.js";
+import type * as shop from "../shop.js";
 import type * as users from "../users.js";
 
 import type {
@@ -20,7 +23,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   http: typeof http;
+  init: typeof init;
   "lib/utils": typeof lib_utils;
+  products: typeof products;
+  shop: typeof shop;
   users: typeof users;
 }>;
 

@@ -11,7 +11,7 @@ export default function LandingPage() {
   const t = useTranslations("Landing.Footer");
 
   return (
-    <main className="min-h-screen w-full bg-black text-white selection:bg-red-900 selection:text-white">
+    <main className="min-h-screen w-full bg-zinc-50 text-zinc-900 selection:bg-pink-500 selection:text-white">
       <IntroScreen />
       
       <HeroSection />
@@ -24,9 +24,11 @@ export default function LandingPage() {
       <PricingTable />
 
       {/* FOOTER */}
-      <footer className="py-12 border-t border-zinc-900 text-center text-zinc-600 text-sm bg-black">
+      <footer className="py-12 border-t border-zinc-200 text-center text-zinc-500 text-sm bg-white">
         <div className="flex flex-col items-center gap-4">
-           <div className="font-bold tracking-widest text-zinc-500 text-lg uppercase">Shemoqmedi</div>
+           <div className="font-bold tracking-widest text-zinc-500 text-lg uppercase">Shemoqmedi 
+           </div>
+            <span className="font-light">powered by <strong className="text-pink-500">voloostudio</strong></span>
            <p>{t("rights")}</p>
         </div>
       </footer>

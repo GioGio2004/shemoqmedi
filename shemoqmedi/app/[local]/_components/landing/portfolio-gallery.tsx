@@ -1,118 +1,175 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
+import Image from "next/image";
+import { ArrowUpRight, Sparkles, Zap, Coffee, ShoppingBag, Scissors, Hammer } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { ArrowUpRight } from "lucide-react";
-
-gsap.registerPlugin(ScrollTrigger);
 
 export function PortfolioGallery() {
   const t = useTranslations("Landing.Showcase");
   const locale = useLocale();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sliderRef = useRef<HTMLDivElement>(null);
 
   const templates = [
     {
+      id: "coffee-4",
+      title: "Kohi Artisan",
+      category: "Coffee Shop",
+      desc: "Minimalist Japanese aesthetic with clean lines.",
+      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2070",
+      href: `/${locale}/coffee-4`,
+      icon: Coffee,
+      color: "text-amber-600"
+    },
+    {
+      id: "auto-1",
+      title: "Apex Auto",
+      category: "Automotive",
+      desc: "Industrial 'Carbon & Chrome' design for premium garages.",
+      image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000",
+      href: `/${locale}/auto-1`,
+      icon: Zap,
+      color: "text-red-600"
+    },
+    {
+      id: "auto-shop",
+      title: "Titan Motors",
+      category: "Automotive",
+      desc: "Precision engineering blue-print style for tech-focused shops.",
+      image: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1000",
+      href: `/${locale}/auto-shop`,
+      icon: Hammer,
+      color: "text-blue-500"
+    },
+    {
+      id: "coffee-3",
+      title: "Noir Café",
+      category: "Coffee Shop",
+      desc: "High-contrast dark mode design with parallax effects.",
+      image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2000",
+      href: `/${locale}/coffee-3`,
+      icon: Coffee,
+      color: "text-orange-600"
+    },
+    {
+      id: "shop",
+      title: "Luxe Store",
+      category: "E-Commerce",
+      desc: "Full-featured online shop with cart.",
+      image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000",
+      href: `/${locale}/shop`,
+      icon: ShoppingBag,
+      color: "text-emerald-600"
+    },
+    {
       id: "beauty",
-      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1674", // Salon interior
-      href: `/${locale}/beauty`
+      title: "Velvet Salon",
+      category: "Beauty",
+      desc: "Elegant and soft design for salons and spas.",
+      image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1674",
+      href: `/${locale}/beauty`,
+      icon: Scissors,
+      color: "text-pink-600"
     },
     {
       id: "construction",
-      image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2689", // Modern architecture
-       href: `/${locale}/construction`
+      title: "Apex Build",
+      category: "Construction",
+      desc: "Robust utilitarian design for construction firms.",
+      image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2689",
+      href: `/${locale}/construction`,
+      icon: Hammer,
+      color: "text-yellow-600"
+    },
+    {
+      id: "coffee-2",
+      title: "Brew Lab",
+      category: "Coffee Shop",
+      desc: "Modern scientific approach to coffee brewing.",
+      image: "https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=2070",
+      href: `/${locale}/coffee-2`,
+      icon: Coffee,
+      color: "text-blue-600"
     },
     {
       id: "coffee",
-      image: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2671", // Coffee shop
-       href: `/${locale}/coffee`
+      title: "Classic Roast",
+      category: "Coffee Shop",
+      desc: "Traditional warm aesthetic for cozy cafes.",
+      image: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2671",
+      href: `/${locale}/coffee`,
+      icon: Coffee,
+      color: "text-amber-600"
     }
   ];
 
-  useGSAP(
-    () => {
-      const slider = sliderRef.current;
-      if (!slider) return;
-
-      const totalWidth = slider.scrollWidth;
-      const windowWidth = window.innerWidth;
-      
-      // Horizontal Scroll Animation
-      gsap.to(slider, {
-        x: () => -(totalWidth - windowWidth),
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          pin: true,
-          scrub: 1,
-          start: "top top",
-          end: () => `+=${totalWidth}`,
-          anticipatePin: 1,
-        },
-      });
-    },
-    { scope: containerRef, dependencies: [] }
-  );
-
   return (
-    <section 
-      id="portfolio-gallery" 
-      ref={containerRef} 
-      className="relative h-screen bg-black overflow-hidden"
-    >
-      <div className="absolute top-10 left-10 z-20 mix-blend-difference text-white">
-        <h2 className="text-4xl font-bold tracking-tighter">{t("title")}</h2>
-        <p className="text-sm opacity-70 mt-2">{t("subtitle")}</p>
-      </div>
+    <section id="portfolio-gallery" className="relative py-32 px-6 bg-zinc-50 min-h-screen">
+      {/* Background Blobs */}
+      <div className="absolute top-[20%] right-[0%] w-[800px] h-[800px] bg-blue-100 rounded-full blur-[150px] opacity-60 mix-blend-multiply pointer-events-none" />
+      <div className="absolute bottom-[0%] left-[0%] w-[600px] h-[600px] bg-pink-100 rounded-full blur-[150px] opacity-60 mix-blend-multiply pointer-events-none" />
+      
+      <div className="relative z-10 max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-purple-500" />
+              <span className="text-zinc-500 font-bold text-sm uppercase tracking-[0.2em]">Our Collection</span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter mb-2">
+              Select your <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-600">Vibe.</span>
+            </h2>
+          </div>
+          <p className="text-zinc-500 font-medium max-w-sm text-right hidden md:block leading-relaxed">
+            Curated high-performance templates. Designed for speed, conversion, and aesthetic excellence.
+          </p>
+        </div>
 
-      <div 
-        ref={sliderRef} 
-        className="flex h-full w-[300vw] sm:w-[300vw] lg:w-[300vw]" // Ensure wide enough container
-      >
-        {templates.map((template, idx) => (
-          <div 
-            key={template.id} 
-            className="w-[100vw] h-full relative group shrink-0" 
-          >
-            {/* Background Image */}
-            <img 
-              src={template.image} 
-              alt={t(`${template.id}.title`)} 
-              className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
-            />
-            
-            {/* Overlay Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {templates.map((template) => (
+            <Link 
+              key={template.id} 
+              href={template.href}
+              className="group relative h-[420px] rounded-[2.5rem] overflow-hidden border border-white/60 bg-white/40 backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10"
+            >
+              {/* Image Layer - Full Color */}
+              <div className="absolute inset-0 z-0 h-[65%] overflow-hidden m-3 rounded-[2rem]">
+                <Image 
+                  src={template.image} 
+                  alt={template.title} 
+                  fill 
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              </div>
 
-            {/* Content Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-12 md:p-24 flex flex-col items-start justify-end h-full">
-              <div className="backdrop-blur-xl bg-black/30 border border-white/10 p-8 md:p-12 rounded-[2rem] max-w-2xl transform translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 hover:bg-black/50">
-                <div className="flex items-start justify-between gap-8">
-                    <div>
-                        <h3 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight">
-                        {t(`${template.id}.title`)}
-                        </h3>
-                        <p className="text-xl text-zinc-300 font-light mb-8">
-                        {t(`${template.id}.desc`)}
-                        </p>
+              {/* Content Layer */}
+              <div className="absolute inset-0 z-10 flex flex-col justify-end p-8">
+                
+                {/* Info Card */}
+                <div className="bg-white/80 backdrop-blur-md p-6 rounded-[1.5rem] shadow-sm border border-white/50 group-hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                        <div className={`px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-[10px] font-bold uppercase tracking-wider ${template.color} flex items-center gap-2`}>
+                            <template.icon className="w-3 h-3" />
+                            {template.category}
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
+                            <ArrowUpRight className="w-4 h-4" />
+                        </div>
                     </div>
-                    
-                    <Link
-                        href={template.href}
-                        className="w-16 h-16 rounded-full bg-red-800 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-red-900/50"
-                    >
-                        <ArrowUpRight className="w-8 h-8" />
-                    </Link>
+
+                    <h3 className="text-2xl font-bold text-zinc-900 mb-1">{template.title}</h3>
+                    <p className="text-zinc-500 text-xs leading-relaxed line-clamp-2 font-medium">
+                        {template.desc}
+                    </p>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+
+            </Link>
+          ))}
+        </div>
+
       </div>
     </section>
   );

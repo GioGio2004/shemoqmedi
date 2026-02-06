@@ -4,7 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useTranslations } from "next-intl";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Sparkles } from "lucide-react";
 
 export function HeroSection() {
   const t = useTranslations("Landing.Hero");
@@ -13,21 +13,23 @@ export function HeroSection() {
   useGSAP(
     () => {
       gsap.from(".hero-element", {
-        y: 50,
+        y: 40,
         opacity: 0,
-        duration: 1,
-        stagger: 0.2,
-        delay: 2.8, // Wait for intro
+        duration: 1.2,
+        stagger: 0.15,
+        delay: 2.5, // Sync with intro
         ease: "power3.out",
       });
       
-      // Subtle red glow pulsing
-      gsap.to(".hero-glow", {
-        opacity: 0.4,
-        duration: 4,
+      // Float Animation for background blobs
+      gsap.to(".blob", {
+        y: "random(-20, 20)",
+        x: "random(-20, 20)",
+        duration: "random(4, 6)",
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
+        stagger: 1
       });
     },
     { scope: containerRef }
@@ -36,43 +38,45 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen flex items-center justify-center px-6 pt-20 overflow-hidden bg-black"
+      className="relative min-h-screen flex items-center justify-center px-6 pt-20 overflow-hidden bg-zinc-50"
     >
-      {/* Abstract Background Elements - Red Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[150px] hero-glow pointer-events-none" />
+      {/* --- MESH GRADIENT BACKGROUND --- */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-60">
+        <div className="blob absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-300 rounded-full blur-[120px] mix-blend-multiply opacity-70" />
+        <div className="blob absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-orange-200 rounded-full blur-[120px] mix-blend-multiply opacity-70" />
+        <div className="blob absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] bg-pink-300 rounded-full blur-[120px] mix-blend-multiply opacity-70" />
+      </div>
 
-      <div className="max-w-4xl mx-auto text-center z-10">
-        <div className="hero-element mb-6 inline-flex items-center gap-2 px-4 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-md">
-           <span className="w-2 h-2 rounded-full bg-red-700 animate-pulse" />
-           <span className="text-xs font-medium text-zinc-400 tracking-wider uppercase">EST. 2026</span>
+      <div className="max-w-4xl mx-auto text-center z-10 relative">
+        <div className="hero-element mb-8 inline-flex items-center gap-2 px-5 py-2 rounded-full border border-purple-200 bg-white/60 backdrop-blur-xl shadow-sm text-purple-900">
+           <Sparkles className="w-4 h-4 text-purple-500" />
+           <span className="text-xs font-bold tracking-widest uppercase">Est. 2026</span>
         </div>
 
-        <h1 className="hero-element text-5xl md:text-8xl font-black text-white tracking-tight leading-[0.9] mb-8">
+        <h1 className="hero-element text-5xl md:text-8xl font-black text-zinc-900 tracking-tight leading-[1.1] mb-8">
           {t("title_1")} <br />
-          <span className="text-white relative">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-600 relative inline-block pb-2">
             {t("title_2")}
-             {/* Underline accent */}
-            <svg className="absolute w-full h-3 -bottom-1 left-0 text-red-900" viewBox="0 0 100 10" preserveAspectRatio="none">
-              <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="4" fill="none" />
-            </svg>
           </span>
         </h1>
 
-        <p className="hero-element text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-12 font-light leading-relaxed">
+        <p className="hero-element text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
           {t("subtitle")}
         </p>
 
         <div className="hero-element flex flex-col items-center gap-8">
           <button 
              onClick={() => document.getElementById('portfolio-gallery')?.scrollIntoView({ behavior: 'smooth' })}
-             className="px-10 py-4 bg-white hover:bg-zinc-200 text-black font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+             className="px-12 py-5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-full transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 shadow-lg text-sm tracking-wide"
           >
             {t("cta")}
           </button>
           
-          <div className="flex flex-col items-center gap-2 text-zinc-500 text-xs tracking-widest uppercase animate-bounce mt-12">
+          <div className="flex flex-col items-center gap-3 text-zinc-400 text-xs tracking-[0.2em] uppercase animate-bounce mt-16 font-bold">
             {t("scroll")}
-            <ArrowDown className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+                 <ArrowDown className="w-4 h-4 text-zinc-900" />
+            </div>
           </div>
         </div>
       </div>

@@ -1,0 +1,24 @@
+﻿
+C:\Users\khvic\Desktop\shemoqmedi\shemoqmedi\app\[local]\(temlates)\shop\page.tsx
+    8:10  warning  'useTranslations' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   11:30  warning  'ShieldCheck' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   12:37  warning  'ArrowUpRight' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  133:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\khvic\Desktop\shemoqmedi\shemoqmedi\app\[local]\(temlates)\shop\page.tsx:133:7
+  131 |   useEffect(() => {
+  132 |     if (product) {
+> 133 |       setQuantity(1);
+      |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  134 |       setSelectedColor(product.colors?.[0]);
+  135 |     }
+  136 |   }, [product]);  react-hooks/set-state-in-effect
+
+Γ£û 4 problems (1 error, 3 warnings)
+

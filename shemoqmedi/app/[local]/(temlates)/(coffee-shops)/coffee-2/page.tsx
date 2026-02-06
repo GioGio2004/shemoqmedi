@@ -54,8 +54,8 @@ export default function Home() {
       });
 
       // 3. General Fade-Up for Sections (Story, Menu, Reviews)
-      const fadeUpElements = gsap.utils.toArray(".fade-up");
-      fadeUpElements.forEach((el: any) => {
+      const fadeUpElements = gsap.utils.toArray(".fade-up") as Element[];
+      fadeUpElements.forEach((el) => {
         gsap.from(el, {
           scrollTrigger: {
             trigger: el,

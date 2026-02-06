@@ -17,4 +17,43 @@ export default defineSchema({
     role: v.optional(v.string()), // user, admin, seller
     payementMethod: v.optional(v.string()),
   }).index("byExternalId", ["externalId"]),
+  
+  products: defineTable({
+    name: v.string(),
+    price: v.number(),
+    category: v.string(),
+    image: v.string(),
+    rating: v.number(),
+    reviews: v.number(),
+    description: v.string(),
+    features: v.array(v.string()),
+    colors: v.optional(v.array(v.string())),
+    sizes: v.optional(v.array(v.string())),
+  }),
+  carts: defineTable({
+    sessionId: v.string(),
+    items: v.array(v.object({
+      productId: v.id("products"),
+      quantity: v.number(),
+      selectedColor: v.optional(v.string()), // For variants
+    })),
+  }).index("bySessionId", ["sessionId"]),
+  orders: defineTable({
+    customerDetails: v.object({
+      email: v.string(),
+      name: v.string(),
+      address: v.string(),
+      phone: v.string(),
+    }),
+    items: v.array(v.object({
+      productId: v.id("products"),
+      name: v.string(),
+      price: v.number(),
+      quantity: v.number(),
+      image: v.string(),
+    })),
+    total: v.number(),
+    status: v.string(), // pending, paid, shipped
+    paymentId: v.optional(v.string()),
+  }),
 });

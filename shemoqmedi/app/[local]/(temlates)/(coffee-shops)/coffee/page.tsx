@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { ContactDropdown } from "@/app/[local]/(temlates)/coffee/_components/contact-dropdown";
+import { ContactDropdown } from "@/app/[local]/(temlates)/(coffee-shops)/coffee/_components/contact-dropdown";
 import { INGREDIENTS, PRODUCTS } from "./_components/image-listing";
 
 gsap.registerPlugin(ScrollTrigger);

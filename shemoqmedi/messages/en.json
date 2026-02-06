@@ -279,8 +279,20 @@
         "desc": "Robust reliability for builders and architects."
       },
       "coffee": {
-        "title": "Voloo Cafe",
-        "desc": "Warm, aromatic aesthetic for coffee shops."
+        "title": "Bean & Brew",
+        "desc": "A warm, inviting template for coffee shops and bakeries."
+      },
+      "coffee-2": {
+        "title": "Brew & Glass",
+        "desc": "Premium dark-mode coffee experience with horizontal story-telling."
+      },
+      "coffee-3": {
+        "title": "Noir Cafe",
+        "desc": "Minimalist Black & White aesthetic with schedule and location mapping."
+      },
+      "shop": {
+        "title": "Lumina Shop",
+        "desc": "Modern e-commerce interface with glassmorphism and cart functionality."
       }
     },
     "Pricing": {
@@ -401,6 +413,80 @@
         "follow": ["Instagram", "Twitter / X", "TikTok"]
       },
       "copyright": "© 2024 Brew & Glass. All rights reserved. Made with Next.js."
+    }
+  },
+  "ShopTemplate": {
+    "Navbar": {
+      "brand": "LUMINA SHOP",
+      "categories": {
+        "all": "All",
+        "tech": "Tech",
+        "art": "Art",
+        "fashion": "Fashion"
+      },
+      "cart": "Cart"
+    },
+    "Hero": {
+      "badge": "New Arrivals",
+      "title": "Future <br /> <span class='text-blue-500'>Collection</span>",
+      "subtitle": "Discover the latest trends in digital and physical goods."
+    },
+    "Products": {
+      "add_to_cart": "Add to Cart",
+      "added": "Added"
+    },
+    "Cart": {
+      "title": "Shopping Cart",
+      "empty": "Your cart is empty.",
+      "total": "Total",
+      "checkout": "Checkout",
+      "remove": "Remove"
+    }
+  },
+  "CoffeeTemplate3": {
+    "Navbar": {
+      "brand": "NOIR CAFE",
+      "menu": "Menu",
+      "schedule": "Schedule",
+      "location": "Location"
+    },
+    "Hero": {
+      "title_1": "PURE",
+      "title_2": "BLACK.",
+      "subtitle": "Essential coffee for the modern minimalist.",
+      "btn_menu": "View Menu",
+      "btn_visit": "Visit Us"
+    },
+    "Marquee": "• SINGLE ORIGIN • DIRECT TRADE • MICRO ROAST •",
+    "Menu": {
+      "title": "Essentials",
+      "subtitle": "Curated Daily",
+      "items": [
+        { "name": "Espresso", "price": "3.5", "desc": "Double shot, house blend." },
+        { "name": "Americano", "price": "4.0", "desc": "Espresso over hot water." },
+        { "name": "Cortado", "price": "4.2", "desc": "Equal parts espresso & milk." },
+        { "name": "Flat White", "price": "4.5", "desc": "Espresso with micro-foam." },
+        { "name": "Batch Brew", "price": "3.0", "desc": "Rotating single origin." },
+        { "name": "Cold Brew", "price": "4.5", "desc": "Steeped 24 hours." }
+      ]
+    },
+    "Schedule": {
+      "title": "Opening Hours",
+      "subtitle": "Come by anytime.",
+      "days": [
+        { "day": "Mon - Fri", "hours": "07:00 - 19:00" },
+        { "day": "Saturday", "hours": "08:00 - 18:00" },
+        { "day": "Sunday", "hours": "09:00 - 16:00" }
+      ]
+    },
+    "Location": {
+      "title": "Find Us",
+      "subtitle": "In the heart of the district.",
+      "address": "123 Minimalism Ave, Design District",
+      "city": "Tbilisi, Georgia"
+    },
+    "Footer": {
+      "copyright": "© 2026 Noir Cafe. All rights reserved."
     }
   }
 }

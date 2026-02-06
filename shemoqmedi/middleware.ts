@@ -13,6 +13,9 @@ const isPublicRoute = createRouteMatcher([
   '/:locale/sign-in(.*)', 
   '/:locale/sign-up(.*)',
   '/:locale', // Home page
+  '/:locale/shop(.*)', // Public shop access
+  '/:locale/coffee-2(.*)', // Public template access
+  '/:locale/coffee-3(.*)', // Public template access
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

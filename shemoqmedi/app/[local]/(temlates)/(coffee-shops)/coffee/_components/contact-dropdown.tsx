@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { SELLER_CONFIG } from "../../../../../lib/sellers-config"
+import { SELLER_CONFIG } from "../../../../../../lib/sellers-config"
 
 interface ContactDropdownProps {
   productName: string;
