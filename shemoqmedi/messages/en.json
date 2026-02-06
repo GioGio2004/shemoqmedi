@@ -1,0 +1,13 @@
+{
+  "Navbar": {
+    "brand": "Voloostore",
+    "home": "Home",
+    "signIn": "Sign In"
+  },
+  "HomePage": {
+    "title": "Welcome to Voloostore",
+    "subtitle": "Handmade items from Georgia"
+  }
+}
+
+
