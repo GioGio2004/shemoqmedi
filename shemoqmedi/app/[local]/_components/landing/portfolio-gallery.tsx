@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight, Sparkles, Zap, Coffee, ShoppingBag, Scissors, Hammer } from "lucide-react";
+import { ArrowUpRight, Sparkles, Zap, Coffee, ShoppingBag, Scissors, Hammer, Utensils, Atom, Music } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 
 export function PortfolioGallery() {
@@ -99,6 +99,56 @@ export function PortfolioGallery() {
       href: `/${locale}/coffee`,
       icon: Coffee,
       color: "text-amber-600"
+    },
+    {
+      id: "restaurant-regular",
+      title: "AURA Bistro",
+      category: "Restaurant",
+      desc: "Warm, cozy, and authentic dining experience.",
+      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cmVzdGF1cmFudHxlbnwwfHwwfHx8MA%3D%3D",
+      href: `/${locale}/regular`,
+      icon: Utensils,
+      color: "text-amber-700"
+    },
+    {
+      id: "restaurant-modern",
+      title: "NEBULA",
+      category: "Fine Dining",
+      desc: "Futuristic molecular gastronomy experience.",
+      image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2670",
+      href: `/${locale}/modern-restaurant`,
+      icon: Atom,
+      color: "text-cyan-400"
+    },
+    {
+      id: "clothes-modern",
+      title: "Voloostore",
+      category: "Fashion",
+      desc: "Tech-wear e-commerce with cyberpunk aesthetics.",
+      image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=800",
+      href: `/${locale}/modern`,
+      icon: ShoppingBag,
+      color: "text-indigo-500"
+    },
+    {
+      id: "shoes-template",
+      title: "SoleCity",
+      category: "Footwear",
+      desc: "High-energy sneaker shop with vibrant pop-art design.",
+      image: "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070",
+      href: `/${locale}/shoes`,
+      icon: Zap,
+      color: "text-yellow-500"
+    },
+    {
+      id: "acoustic-shop",
+      title: "MelodyWoods",
+      category: "Instruments",
+      desc: "Warm acoustic instrument shop with category navigation.",
+      image: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2070",
+      href: `/${locale}/acoustic-shop`,
+      icon: Music, // Note: Music needs to be imported from lucide-react if not present
+      color: "text-amber-800"
     }
   ];
 
