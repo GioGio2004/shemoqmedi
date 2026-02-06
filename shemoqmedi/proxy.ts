@@ -1,36 +1,22 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import createMiddleware from 'next-intl/middleware';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import createMiddleware from "next-intl/middleware";
 
-// 1. Setup Next-Intl Middleware
 const intlMiddleware = createMiddleware({
-  locales: ['en', 'ka'],
-  defaultLocale: 'en', // Set your default language here
+  locales: ["en", "ka"],
+  defaultLocale: "en",
 });
 
-// 2. Define routes that do NOT need authentication (optional)
-// You can leave this empty if you want to protect everything
-const isPublicRoute = createRouteMatcher([
-  '/:locale/sign-in(.*)', 
-  '/:locale/sign-up(.*)',
-  '/:locale', // Home page
-  '/:locale/shop(.*)', // Public shop access
-  '/:locale/coffee-2(.*)', // Public template access
-  '/:locale/coffee-3(.*)', // Public template access
-]);
+const isProtectedRoute = createRouteMatcher(["/:locale/shop/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Restrict access to all routes except the ones defined in isPublicRoute
-  if (!isPublicRoute(req)) {
-     await auth.protect();
-  }
+  if (isProtectedRoute(req)) await auth.protect();
 
-  // Execute Next-Intl middleware for i18n routing
   return intlMiddleware(req);
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
+    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
