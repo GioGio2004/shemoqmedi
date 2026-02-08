@@ -56,4 +56,27 @@ export default defineSchema({
     status: v.string(), // pending, paid, shipped
     paymentId: v.optional(v.string()),
   }),
+
+  userInteraction: defineTable({
+    userId: v.id("users"),
+    interactionType: v.string(),
+    timestamp: v.number(),
+    interests: v.array(v.string()),
+    location: v.string(),
+    deviceInfo: v.object({
+      browser: v.string(),
+      os: v.string(),
+      deviceType: v.string(),
+    }),
+    accessInfo: v.object({
+      city: v.string(),
+      region: v.string(),
+      country: v.string(),
+      timezone: v.string(),
+    }),
+    firstVisit: v.boolean(),
+    sessionId: v.string(),
+    timespent: v.number(),
+    
+  })
 });

@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useTranslations } from "next-intl";
+import { VolooAIGeminiSideComponent } from "../../../../../components/chatbots/volooai-gemini-side-component";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -367,7 +368,9 @@ export default function Home() {
             {t("Footer.copyright")}
         </div>
       </footer>
-
+<VolooAIGeminiSideComponent 
+        apiEndpoint="/api/chat"
+      />
     </main>
   );
 }

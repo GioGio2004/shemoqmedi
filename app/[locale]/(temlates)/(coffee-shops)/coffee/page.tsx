@@ -88,7 +88,6 @@ export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
   const catalogRef = useRef<HTMLDivElement>(null);
   const horizontalRef = useRef<HTMLDivElement>(null);
-  const testimonialsRef = useRef<HTMLDivElement>(null);
 
   // Helper arrays for icons/colors
   const benefitIcons = [
@@ -107,11 +106,7 @@ export default function Home() {
     },
   ];
 
-  const testimonialStyles = [
-    { color: "from-amber-700 to-orange-600" },
-    { color: "from-stone-600 to-neutral-500" },
-    { color: "from-emerald-700 to-green-600" },
-  ];
+
 
   useGSAP(
     () => {
@@ -205,17 +200,7 @@ export default function Home() {
         ease: "power2.out",
       });
 
-      gsap.from(".testimonial-card", {
-        scrollTrigger: {
-          trigger: testimonialsRef.current,
-          start: "top 75%",
-        },
-        y: 50,
-        opacity: 0,
-        stagger: 0.15,
-        duration: 0.9,
-        ease: "power3.out",
-      });
+
 
       gsap.from(".stat-item", {
         scrollTrigger: {
@@ -260,16 +245,11 @@ export default function Home() {
     description: string;
     tags: string[];
   }
-  interface TestimonialItem {
-    text: string;
-    name: string;
-    role: string;
-  }
+
 
   const benefitItems = t.raw("Benefits.items") as BenefitItem[];
   const catalogItems = t.raw("Catalog.items") as CatalogItem[];
   const ingredientItems = t.raw("Ingredients.items") as IngredientItem[];
-  const testimonialItems = t.raw("Testimonials.items") as TestimonialItem[];
   const footerMenuLinks = t.raw("Footer.links.menu") as string[];
   const footerLocationsLinks = t.raw("Footer.links.locations") as string[];
   const footerSocialLinks = t.raw("Footer.links.social") as string[];
@@ -347,6 +327,7 @@ export default function Home() {
             </div>
           </div>
 
+          
           <div className="hero-image relative h-[600px] w-full z-10">
             <div className="absolute inset-0 bg-stone-100/50 backdrop-blur-md rounded-[3rem] border border-white/40 shadow-2xl overflow-hidden">
               <img
@@ -359,6 +340,8 @@ export default function Home() {
         </div>
       </section>
 
+      {/* COFFEE BEANS SCROLLYTELLING */}
+      
       {/* INFINITE MARQUEE */}
       <div className="relative z-10 bg-stone-900 py-4 overflow-hidden -rotate-1 shadow-lg border-y border-stone-800">
         <div className="marquee-inner flex whitespace-nowrap">
@@ -604,45 +587,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section
-        ref={testimonialsRef}
-        className="relative z-10 py-32 px-6 max-w-7xl mx-auto"
-      >
-        <div className="text-center mb-20">
-          <h2 className="text-5xl font-black mb-4 text-stone-900">
-            {t("Testimonials.title")}
-          </h2>
-          <p className="text-stone-500 text-lg">{t("Testimonials.subtitle")}</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonialItems.map((item, idx) => (
-            <div
-              key={idx}
-              className="testimonial-card bg-white rounded-3xl p-8 shadow-xl border border-stone-100"
-            >
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Coffee
-                    key={i}
-                    className="w-5 h-5 text-amber-500 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-stone-600 mb-6 italic">"{item.text}"</p>
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonialStyles[idx].color}`}
-                />
-                <div>
-                  <div className="font-bold text-stone-900">{item.name}</div>
-                  <div className="text-sm text-stone-500">{item.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+
 
       {/* CTA SECTION */}
       <section className="cta-section relative z-10 py-32 px-6">

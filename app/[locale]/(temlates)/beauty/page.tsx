@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useRef, useTransition, useState, useMemo } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
 
-// UI Components (Ensure these exist in your project)
+// UI Components
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,10 +19,11 @@ import {
 
 import { ContactDropdown } from "@/app/[locale]/(temlates)/beauty/_components/contact-dropdown";
 import { INGREDIENTS, PRODUCTS } from "./_components/image-listing";
+import { BeautyChat } from "@/components/chatbots/beauty/beauty";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// --- YOUR PROVIDED LANGUAGE SWITCHER COMPONENT ---
+// --- LANGUAGE SWITCHER ---
 function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
@@ -90,7 +91,22 @@ export default function Home() {
   const horizontalRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
 
-  // Helper arrays to map static icons/colors with dynamic text
+  // --- STATE FOR CATEGORY FILTER ---
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  // Derive categories dynamically from the full product list
+  const categories = useMemo(() => {
+    const cats = new Set(PRODUCTS.map((p) => p.category));
+    return ["All", ...Array.from(cats)];
+  }, []);
+
+  // Filter products based on active category
+  const filteredProducts = useMemo(() => {
+    if (activeCategory === "All") return PRODUCTS;
+    return PRODUCTS.filter((p) => p.category === activeCategory);
+  }, [activeCategory]);
+
+  // --- STATIC DATA HELPERS ---
   const benefitIcons = [
     { color: "from-rose-400 to-orange-400", path: "M5 13l4 4L19 7" },
     {
@@ -113,6 +129,15 @@ export default function Home() {
     { color: "from-green-400 to-emerald-400" },
   ];
 
+  const benefitItems = t.raw("Benefits.items") as any[];
+  const catalogItems = t.raw("Catalog.items") as any[]; // NOTE: You need to expand your translation file if you want translations for all 40 items!
+  const ingredientItems = t.raw("Ingredients.items") as any[];
+  const testimonialItems = t.raw("Testimonials.items") as any[];
+  const footerShopLinks = t.raw("Footer.links.shop") as string[];
+  const footerSupportLinks = t.raw("Footer.links.support") as string[];
+  const footerLegalLinks = t.raw("Footer.links.legal") as string[];
+
+  // --- GSAP ANIMATIONS ---
   useGSAP(
     () => {
       const tl = gsap.timeline();
@@ -152,21 +177,25 @@ export default function Home() {
         ease: "linear",
       });
 
-      const productCards = gsap.utils.toArray(".product-showcase-card");
-      if (productCards.length > 0) {
-        gsap.from(productCards, {
-          scrollTrigger: {
-            trigger: catalogRef.current,
-            start: "top 75%",
-          },
-          y: 80,
-          opacity: 0,
-          scale: 0.9,
-          stagger: 0.1,
-          duration: 0.7,
-          ease: "power2.out",
-        });
-      }
+      // Products Animation - Needs to run when category changes
+      const productCtx = gsap.context(() => {
+        const productCards = gsap.utils.toArray(".product-showcase-card");
+        if (productCards.length > 0) {
+          gsap.from(productCards, {
+            scrollTrigger: {
+              trigger: catalogRef.current,
+              start: "top 75%",
+            },
+            y: 50,
+            opacity: 0,
+            scale: 0.95,
+            stagger: 0.05,
+            duration: 0.5,
+            clearProps: "all", // Important for React re-renders
+            ease: "power2.out",
+          });
+        }
+      }, catalogRef);
 
       const sections = gsap.utils.toArray(".horizontal-panel");
       if (sections.length > 0) {
@@ -239,17 +268,11 @@ export default function Home() {
         duration: 1,
         ease: "power3.out",
       });
-    },
-    { scope: containerRef, dependencies: [] }
-  );
 
-  const benefitItems = t.raw("Benefits.items") as any[];
-  const catalogItems = t.raw("Catalog.items") as any[];
-  const ingredientItems = t.raw("Ingredients.items") as any[];
-  const testimonialItems = t.raw("Testimonials.items") as any[];
-  const footerShopLinks = t.raw("Footer.links.shop") as string[];
-  const footerSupportLinks = t.raw("Footer.links.support") as string[];
-  const footerLegalLinks = t.raw("Footer.links.legal") as string[];
+      return () => productCtx.revert();
+    },
+    { scope: containerRef, dependencies: [activeCategory] } // Re-run GSAP when category changes
+  );
 
   return (
     <main
@@ -271,7 +294,7 @@ export default function Home() {
             AURA<span className="text-slate-800">SKIN.</span>
           </div>
 
-          {/* Desktop Links (Hidden on mobile) */}
+          {/* Desktop Links */}
           <div className="hidden md:flex gap-8 text-sm font-medium">
             <a
               href="#products"
@@ -290,11 +313,9 @@ export default function Home() {
             </a>
           </div>
 
-          {/* ACTIONS GROUP (Mobile Optimized) */}
-          {/* We use flex + gap to keep Language Switcher and Cart together on all screens */}
+          {/* ACTIONS GROUP */}
           <div className="flex items-center gap-2 md:gap-4">
             <LanguageSwitcher />
-
             <button className="px-5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-rose-500 transition-colors">
               {t("Navbar.cart")} (0)
             </button>
@@ -401,7 +422,7 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className="text-center mb-20">
+          <div className="text-center mb-12">
             <div className="inline-block px-4 py-2 rounded-full bg-rose-100 text-rose-600 text-xs font-bold tracking-widest mb-6">
               {t("Catalog.badge")}
             </div>
@@ -413,16 +434,40 @@ export default function Home() {
             </p>
           </div>
 
+          {/* CATEGORY FILTER TABS */}
+          <div className="flex flex-wrap justify-center gap-3 mb-16">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                  activeCategory === cat
+                    ? "bg-slate-900 text-white shadow-lg scale-105"
+                    : "bg-white text-slate-600 border border-slate-200 hover:border-rose-300 hover:text-rose-500"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {PRODUCTS.map((product, idx) => {
-              const translatedProduct = catalogItems[idx];
-              if (!translatedProduct) return null;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[500px]">
+            {filteredProducts.map((product) => {
+              // Note: We find the original index in the main PRODUCTS array to map to translations
+              // If translations aren't updated for all 40 items, we fall back to the English text in image-listing.ts
+              const originalIndex = PRODUCTS.findIndex((p) => p.id === product.id);
+              const translatedProduct = catalogItems?.[originalIndex];
+
+              const displayName = translatedProduct?.name || product.name;
+              const displayDesc = translatedProduct?.description || product.description;
+              const displayCategory = translatedProduct?.category || product.category;
+              const displayBenefits = translatedProduct?.benefits || product.benefits;
 
               return (
                 <div
                   key={product.id}
-                  className="product-showcase-card group relative"
+                  className="product-showcase-card group relative h-full"
                 >
                   {/* Card Container */}
                   <div className="relative bg-white rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 h-full flex flex-col">
@@ -430,13 +475,13 @@ export default function Home() {
                     <div className="relative h-80 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
                       <img
                         src={product.image || "/placeholder.svg"}
-                        alt={translatedProduct.name}
+                        alt={displayName}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
 
                       {/* Floating Badge */}
                       <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-xs font-bold text-slate-800 shadow-lg">
-                        {translatedProduct.category}
+                        {displayCategory}
                       </div>
 
                       {/* Gradient Overlay */}
@@ -449,17 +494,17 @@ export default function Home() {
                     <div className="p-6 flex-grow flex flex-col">
                       {/* Product Name */}
                       <h3 className="text-2xl font-bold mb-2 text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-rose-500 group-hover:to-orange-500 transition-all duration-300">
-                        {translatedProduct.name}
+                        {displayName}
                       </h3>
 
                       {/* Description */}
                       <p className="text-sm text-slate-600 mb-4 leading-relaxed flex-grow">
-                        {translatedProduct.description}
+                        {displayDesc}
                       </p>
 
                       {/* Benefits Tags */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {translatedProduct.benefits.map(
+                        {displayBenefits.map(
                           (benefit: string, bIdx: number) => (
                             <span
                               key={bIdx}
@@ -479,10 +524,10 @@ export default function Home() {
                           </span>
                         </div>
                         <ContactDropdown
-                          productName={translatedProduct.name}
+                          productName={displayName}
                           productPrice={product.price}
                           productImage={product.image}
-                          productCategory={translatedProduct.category}
+                          productCategory={displayCategory}
                           colorClass={product.color}
                         />
                       </div>
@@ -498,9 +543,12 @@ export default function Home() {
             })}
           </div>
 
-          {/* View All CTA */}
+          {/* View All CTA - Optional if you want to keep it */}
           <div className="text-center mt-16">
-            <button className="px-10 py-4 rounded-full border-2 border-slate-900 text-slate-900 font-bold hover:bg-slate-900 hover:text-white transition-all duration-300 inline-flex items-center gap-2 group">
+            <button
+              onClick={() => setActiveCategory("All")}
+              className="px-10 py-4 rounded-full border-2 border-slate-900 text-slate-900 font-bold hover:bg-slate-900 hover:text-white transition-all duration-300 inline-flex items-center gap-2 group"
+            >
               {t("Catalog.btn_view_all")}
               <svg
                 className="w-5 h-5 group-hover:translate-x-1 transition-transform"
@@ -794,6 +842,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <BeautyChat />
     </main>
   );
 }

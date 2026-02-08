@@ -5,12 +5,13 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Zap, ArrowRight, ArrowUpRight } from "lucide-react";
+import { Zap, ArrowRight } from "lucide-react";
 
 // Use the paths relative to your project structure
 import { ContactDropdown } from "./_components/contact-dropdown";
 import { PRODUCTS } from "./_components/image-listing";
 import { MegaMenu } from "./_components/mega-menu";
+import { Coffee3 } from "@/components/chatbots/coffee/coffee-3";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -218,6 +219,8 @@ export default function Home() {
           </div>
       </footer>
 
+      {/* --- LIQUID AI CHAT COMPONENT --- */}
+          <Coffee3 />
     </main>
   );
 }
