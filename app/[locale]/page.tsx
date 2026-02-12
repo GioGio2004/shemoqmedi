@@ -5,13 +5,16 @@ import { IntroScreen } from "./_components/landing/intro-screen";
 import { HeroSection } from "./_components/landing/hero-section";
 import { PortfolioGallery } from "./_components/landing/portfolio-gallery";
 import { AboutSection } from "./_components/landing/about-section";
+import { LanguageToggler } from "./_components/landing/language-toggler";
 import { PricingTable } from "./_components/landing/pricing-table";
+
 
 export default function LandingPage() {
   const t = useTranslations("Landing.Footer");
 
   return (
     <main className="min-h-screen w-full bg-zinc-50 text-zinc-900 selection:bg-pink-500 selection:text-white">
+      <LanguageToggler />
       <IntroScreen />
       
       <HeroSection />

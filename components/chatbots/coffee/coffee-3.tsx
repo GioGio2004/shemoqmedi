@@ -5,7 +5,9 @@ import { X, Send, Sparkles, Loader2, ArrowDownToLine, Eye } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ProductCard } from "@/components/chatbots/product-card-chat";
-import { PRODUCTS } from "@/app/[locale]/(temlates)/(coffee-shops)/coffee-3/_components/image-listing";
+// 1. Import navigation hooks
+import { useTranslations, useLocale } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,19 +19,29 @@ interface Message {
   products?: number[];
 }
 
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  image: string;
+  color: string;
+}
+
 interface VolooAIChatProps {
   apiEndpoint?: string;
+  localizedProducts?: Product[];
 }
 
 // --- Helper Component: Text Formatter ---
-// Parses **bold** and newlines from Gemini response
 const FormatMessage = ({ content }: { content: string }) => {
   if (!content) return null;
   
   return (
     <div className="space-y-2">
       {content.split('\n').map((line, i) => {
-        if (!line.trim()) return <div key={i} className="h-2" />; // Handle empty lines
+        if (!line.trim()) return <div key={i} className="h-2" />;
         
         return (
           <p key={i} className="leading-relaxed">
@@ -52,8 +64,16 @@ const FormatMessage = ({ content }: { content: string }) => {
 
 export function Coffee3({ 
   apiEndpoint = "/api/chat",
+  localizedProducts = []
 }: VolooAIChatProps) {
   
+  const t = useTranslations('CoffeeTemplate3.Chatbot');
+  
+  // 2. Get current locale and navigation tools
+  const locale = useLocale(); // 'en' or 'ka'
+  const router = useRouter();
+  const pathname = usePathname();
+
   // --- State ---
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -62,6 +82,8 @@ export function Coffee3({
   const [inputValue, setInputValue] = useState("");
   const [isBackgroundDark, setIsBackgroundDark] = useState(true);
   
+  // Note: Removed local [language, setLanguage] state. We use `locale` from next-intl now.
+
   // --- Refs ---
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,6 +92,25 @@ export function Coffee3({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const scrollLocked = useRef(false);
   const savedScrollPos = useRef(0);
+
+  // --- Language Switching Logic ---
+  const handleLanguageSwitch = (newLocale: string) => {
+    if (newLocale === locale) return;
+
+    // Logic to swap the locale segment in the URL (e.g. /en/home -> /ka/home)
+    const pathSegments = pathname.split('/');
+    // Assuming standard Next.js localization where the second segment is the locale
+    // ['', 'en', 'page']
+    if (pathSegments.length > 1) {
+      pathSegments[1] = newLocale;
+    } else {
+      // Fallback if path is weird
+      pathSegments.splice(1, 0, newLocale);
+    }
+    
+    const newPath = pathSegments.join('/');
+    router.replace(newPath); // Updates the URL and triggers a re-render with new translations
+  };
 
   // --- Effects ---
 
@@ -161,7 +202,6 @@ export function Coffee3({
         duration: 0.5,
         onComplete: () => setIsOpen(true)
       }, "-=0.4")
-      // Stagger in internal elements
       .from(".voloo-ui-element", {
         y: 20,
         opacity: 0,
@@ -232,7 +272,7 @@ export function Coffee3({
     }
 
     try {
-      const productContext = PRODUCTS.map((p: any) => 
+      const productContext = localizedProducts.map((p) => 
         `${p.name} (${p.category}) - $${p.price}: ${p.description}`
       ).join('\n');
 
@@ -243,7 +283,8 @@ export function Coffee3({
           message: userMessage.content,
           productContext,
           scrollPosition: window.scrollY,
-          conversationHistory: messages
+          conversationHistory: messages,
+          language: locale // 3. Use the global locale here
         })
       });
 
@@ -280,6 +321,10 @@ export function Coffee3({
     }
   };
 
+  // Suggestions logic
+  const suggestionKeys = ['0', '1', '2']; 
+  const suggestions = suggestionKeys.map(k => t(`suggestions.${k}` as any));
+
   return (
     <>
       {/* GLOBAL STYLES to hide scrollbar but allow scrolling */}
@@ -308,7 +353,7 @@ export function Coffee3({
       <div ref={processingPillRef} className="fixed bottom-8 right-8 z-[100] hidden">
         <div className="px-8 py-4 bg-orange-600 text-white rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="font-bold text-sm uppercase tracking-wider">VolooAI Thinking...</span>
+            <span className="font-bold text-sm uppercase tracking-wider">{t('thinking')}</span>
         </div>
       </div>
 
@@ -336,15 +381,39 @@ export function Coffee3({
                 <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               <div>
-                <h2 className="font-black text-lg md:text-xl uppercase tracking-tight">VolooAI</h2>
+                <h2 className="font-black text-lg md:text-xl uppercase tracking-tight">{t('title')}</h2>
                 <p className="text-[10px] md:text-xs opacity-60 font-mono flex items-center gap-2">
                   <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-400 rounded-full animate-pulse" />
-                  Online
+                  {t('subtitle')}
                 </p>
               </div>
             </div>
             
             <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto mt-2 md:mt-0">
+                {/* 4. Update Language Toggle to switch URL */}
+                <div className="flex items-center bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-white/10 mr-2">
+                    <button 
+                        onClick={() => handleLanguageSwitch('en')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 ${
+                            locale === 'en' 
+                            ? 'bg-orange-600 text-white shadow-lg' 
+                            : 'opacity-50 hover:opacity-100 hover:bg-white/5'
+                        }`}
+                    >
+                        EN
+                    </button>
+                    <button 
+                        onClick={() => handleLanguageSwitch('ka')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all duration-300 ${
+                            locale === 'ka' 
+                            ? 'bg-orange-600 text-white shadow-lg' 
+                            : 'opacity-50 hover:opacity-100 hover:bg-white/5'
+                        }`}
+                    >
+                        KA
+                    </button>
+                </div>
+
                 {/* Chat Mode Toggle */}
                 <div className="flex items-center bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-white/10 w-full md:w-auto justify-center">
                     <button 
@@ -356,7 +425,7 @@ export function Coffee3({
                         }`}
                     >
                         <ArrowDownToLine className="w-3 h-3" />
-                        <span>Auto-Collapse</span>
+                        <span>{t('auto_collapse')}</span>
                     </button>
                     <button 
                         onClick={() => setChatMode('keep')}
@@ -367,7 +436,7 @@ export function Coffee3({
                         }`}
                     >
                         <Eye className="w-3 h-3" />
-                        <span>Keep Open</span>
+                        <span>{t('keep_open')}</span>
                     </button>
                 </div>
 
@@ -389,13 +458,13 @@ export function Coffee3({
                     <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-orange-600" />
                   </div>
                   <div>
-                    <h3 className="font-black text-2xl md:text-3xl mb-3 tracking-tight">Welcome to VolooAI</h3>
+                    <h3 className="font-black text-2xl md:text-3xl mb-3 tracking-tight">{t('welcome')}</h3>
                     <p className="text-base opacity-60 leading-relaxed">
-                      I can help you navigate our menu, find the perfect coffee, or explain our brewing methods.
+                      {t('welcome_desc')}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3 justify-center">
-                    {["Suggest a drink", "Best seller?", "Dessert menu"].map((suggestion, idx) => (
+                    {suggestions.map((suggestion, idx) => (
                       <button
                         key={idx}
                         onClick={() => setInputValue(suggestion)}
@@ -430,7 +499,6 @@ export function Coffee3({
                           backdropFilter: "blur(20px)"
                         } : {}}
                       >
-                        {/* USE THE NEW FORMATTER */}
                         <div className="text-sm md:text-lg">
                             <FormatMessage content={msg.content} />
                         </div>
@@ -439,12 +507,12 @@ export function Coffee3({
                       {msg.products && msg.products.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                           {msg.products.map(productId => {
-                            const product = PRODUCTS.find((p: { id: number; }) => p.id === productId);
+                            const product = localizedProducts.find((p) => p.id === productId);
                             if (!product) return null;
                             return (
                               <ProductCard 
                                 key={product.id} 
-                                product={product}
+                                product={product as any}
                                 isBackgroundDark={isBackgroundDark}
                               />
                             );
@@ -483,7 +551,7 @@ export function Coffee3({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask VolooAI..."
+                placeholder={t('input_placeholder')}
                 className="flex-1 px-6 py-4 rounded-xl md:rounded-2xl border outline-none focus:border-orange-500 transition-all duration-300 font-medium backdrop-blur-xl shadow-inner text-base"
                 style={{
                   backgroundColor: isBackgroundDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",

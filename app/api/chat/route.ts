@@ -1,82 +1,4 @@
-// import { NextRequest, NextResponse } from "next/server";
 
-// /**
-//  * API Route: /api/chat
-//  * Handles AI chat requests using Google Gemini 2.0 Flash
-//  */
-
-// export async function POST(request: NextRequest) {
-//   try {
-//     const body = await request.json();
-//     const { 
-//       message, 
-//       context, // This should now come from the projects_content.txt we defined above
-//       conversationHistory = []
-//     } = body;
-
-//     if (!message) {
-//       return NextResponse.json({ error: "Message is required" }, { status: 400 });
-//     }
-
-//     const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    
-//     if (!GEMINI_API_KEY) {
-//       return NextResponse.json({ error: "API configuration error" }, { status: 500 });
-//     }
-
-//     // Prepare history for the model
-//     const historyForModel = conversationHistory.map((msg: any) => ({
-//       role: msg.role === "user" ? "user" : "model",
-//       parts: [{ text: msg.content }]
-//     }));
-
-//     // System instruction is prepended to the user message or sent as system instruction if supported
-//     // For simplicity and compatibility with standard generateContent, we prepend context.
-//     const systemInstruction = `
-//       ${context}
-      
-//       USER MESSAGE: ${message}
-//     `;
-//     // Call Gemini 2.0 Flash
-//     const geminiResponse = await fetch(
-//       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-//       {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           contents: [
-//             ...historyForModel,
-//             { role: "user", parts: [{ text: systemInstruction }] }
-//           ],
-//           generationConfig: {
-//             temperature: 0.7,
-//             maxOutputTokens: 800, // concise responses
-//           }
-//         })
-//       }
-//     );
-
-//     if (!geminiResponse.ok) {
-//       const errorData = await geminiResponse.json();
-//       console.error("Gemini API Error:", errorData);
-//       throw new Error("Failed to communicate with AI");
-//     }
-
-//     const geminiData = await geminiResponse.json();
-//     const aiResponse = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "Silence...";
-
-//     return NextResponse.json({
-//       response: aiResponse
-//     });
-
-//   } catch (error) {
-//     console.error("Chat API Error:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// }
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -117,7 +39,14 @@ export async function POST(request: NextRequest) {
 
     // Build conversation context
     const conversationContext = conversationHistory
-      .map((msg: any) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+      .map((msg: any) => {
+        let text = msg.content;
+        // RECONSTRUCT TAGS so the model sees it "did" use them before
+        if (msg.role === "assistant" && Array.isArray(msg.products) && msg.products.length > 0) {
+           text += ` [PRODUCTS: ${msg.products.join(',')}]`;
+        }
+        return `${msg.role === "user" ? "User" : "Assistant"}: ${text}`;
+      })
       .join("\n");
 
     // Enhanced system prompt with product intelligence
@@ -125,7 +54,7 @@ export async function POST(request: NextRequest) {
 
 BRAND VOICE:
 - Sophisticated and knowledgeable about coffee craft
-- Minimalist and concise
+- Minimalist and concise (Keep responses under 60 words unless asked for detail)
 - Dark/edgy aesthetic (embrace noir themes)
 - Professional but approachable
 - Authoritative on coffee expertise
@@ -134,11 +63,12 @@ PRODUCT CATALOG:
 ${productContext}
 
 PRODUCT RECOMMENDATION INSTRUCTIONS:
-When users ask for recommendations, suggestions, or "show me X", you MUST:
-1. Recommend 2-4 relevant products from the catalog
+When users ask for recommendations, suggestions, or "show me X", OR when discussing a specific product mentioned in context:
+1. Recommend 2-4 relevant products from the catalog (or the single product being discussed)
 2. Include product IDs in your response using this EXACT format: [PRODUCTS: 1,2,3]
 3. The product IDs must be actual IDs from the catalog above
 4. Place [PRODUCTS: ...] at the END of your response
+5. CRITICAL: If the user asks a follow-up question about a product (e.g. "how much is it?", "tell me more"), you MUST include that product's ID again in the [PRODUCTS: ...] tag so strictly show the product card again.
 
 Examples:
 - User: "suggest something to drink" → Recommend drinks/coffee with [PRODUCTS: 5,6,7]
@@ -146,6 +76,7 @@ Examples:
 - User: "what's good for breakfast?" → Recommend coffee + bakery with [PRODUCTS: 1,9,11]
 - User: "I want something sweet" → Recommend cakes/bakery with [PRODUCTS: 10,12,9]
 - User: "cold drinks?" → Recommend cold beverages with [PRODUCTS: 4,5]
+- User: "Tell me more about Obsidian Espresso" (ID: 1) → Answer details and append [PRODUCTS: 1]
 
 CURRENT USER CONTEXT:
 - Page: ${currentPage}
@@ -154,7 +85,7 @@ CURRENT USER CONTEXT:
 
 ${conversationContext ? `CONVERSATION HISTORY:\n${conversationContext}\n` : ""}
 
-Respond with expertise, maintaining the Noir brand voice. When making recommendations, be specific about why each product fits their request. Always include [PRODUCTS: ...] when recommending items.`;
+Respond with expertise, maintaining the Noir brand voice. When making recommendations, be specific about why each product fits their request. Always include [PRODUCTS: ...] when recommending items or discussing specific products.`;
 
     // Call Gemini API
     const geminiResponse = await fetch(
@@ -178,10 +109,10 @@ Respond with expertise, maintaining the Noir brand voice. When making recommenda
             }
           ],
           generationConfig: {
-            temperature: 0.8,
+            temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 4096,
           },
           safetySettings: [
             {

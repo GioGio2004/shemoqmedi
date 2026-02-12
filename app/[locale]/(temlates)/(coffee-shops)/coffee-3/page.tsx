@@ -6,18 +6,34 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Zap, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Use the paths relative to your project structure
 import { ContactDropdown } from "./_components/contact-dropdown";
 import { PRODUCTS } from "./_components/image-listing";
 import { MegaMenu } from "./_components/mega-menu";
 import { Coffee3 } from "@/components/chatbots/coffee/coffee-3";
+import { LanguageSwitcher } from "./_components/language-switcher";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
+  const t = useTranslations('CoffeeTemplate3');
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState("All");
+
+  // Merge static metadata with translations
+  const localizedProducts = useMemo(() => {
+    return PRODUCTS.map(p => ({
+      ...p,
+      name: t(`Products.${p.id}.name`),
+      description: t(`Products.${p.id}.desc`),
+      // Use the translated category for display
+      category: t(`Products.${p.id}.category`),
+      // Keep the original category key for filtering
+      categoryKey: p.category
+    }));
+  }, [t]);
 
   useGSAP(() => {
     // 1. Reveal Elements
@@ -52,9 +68,16 @@ export default function Home() {
   }, { scope: containerRef });
 
   const filteredProducts = useMemo(() => {
-    if (activeCategory === "All") return PRODUCTS;
-    return PRODUCTS.filter(p => p.category === activeCategory);
-  }, [activeCategory]);
+    if (activeCategory === "All") return localizedProducts;
+    return localizedProducts.filter(p => p.categoryKey === activeCategory);
+  }, [activeCategory, localizedProducts]);
+  
+  // Category mapping: Key -> Translation
+  // Ideally this should come from messages, but we can infer or map manually if keys are stable.
+  // Assuming keys: "Coffee", "Drinks", "Bakery", "Cakes"
+  // We can look up one product of that category to get the translation or use t('Categories.Coffee') if we add it.
+  // A simpler way: use distinct keys for buttons.
+  const categories = ["All", "Coffee", "Drinks", "Bakery", "Cakes"];
 
   return (
     <main ref={containerRef} className="bg-[#050505] text-zinc-100 min-h-screen selection:bg-orange-500 overflow-x-hidden font-sans">
@@ -73,12 +96,15 @@ export default function Home() {
       </div>
 
       {/* --- NAVIGATION --- */}
-      <nav className="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent backdrop-blur-[2px]">
-         <div className="text-2xl font-black tracking-tighter uppercase relative z-50">
-            Noir<span className="text-orange-500">.</span>
-         </div>
-         <MegaMenu onCategorySelect={(cat) => setActiveCategory(cat)} />
-      </nav>
+       <nav className="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent backdrop-blur-[2px]">
+          <div className="text-2xl font-black tracking-tighter uppercase relative z-50">
+             {t('Navbar.brand')}<span className="text-orange-500">.</span>
+          </div>
+          <div className="flex items-center gap-4 relative z-50">
+             <LanguageSwitcher />
+             <MegaMenu onCategorySelect={(cat) => setActiveCategory(cat)} />
+          </div>
+       </nav>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20">
         
@@ -87,20 +113,20 @@ export default function Home() {
           {/* Text Content */}
           <div className="lg:col-span-7 flex flex-col justify-center">
             <div className="hero-reveal inline-flex items-center gap-2 text-orange-500 font-mono text-xs font-bold tracking-[0.2em] uppercase mb-8">
-              <Zap className="w-4 h-4" /> Est. 2024
+              <Zap className="w-4 h-4" /> {t('Hero.badge')}
             </div>
             <h1 className="hero-reveal text-6xl md:text-8xl xl:text-9xl font-black leading-[0.9] tracking-tighter mb-8">
-              WAKE UP <br/>
+              {t('Hero.title_1')} <br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 to-white">
-                TO DARKNESS
+                {t('Hero.title_2')}
               </span>
             </h1>
             <p className="hero-reveal text-xl text-zinc-400 mb-10 max-w-lg leading-relaxed border-l-2 border-orange-500/50 pl-6">
-              Curated caffeine for the nocturnal soul. Experience single-origin roasts and artisanal pastries in a space designed for silence.
+              {t('Hero.description')}
             </p>
             <div className="hero-reveal flex gap-4">
               <a href="#menu" className="group px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-orange-500 hover:text-white transition-all duration-300 flex items-center gap-2">
-                View Collection
+                {t('Hero.btn_menu')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
@@ -128,13 +154,26 @@ export default function Home() {
           {/* Header & Filter */}
           <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8 border-b border-white/10 pb-8">
             <div>
-              <h2 className="text-5xl font-black uppercase mb-4 tracking-tight">The Collection</h2>
-              <p className="text-zinc-500 font-mono">Select your poison.</p>
+              <h2 className="text-5xl font-black uppercase mb-4 tracking-tight">{t('Catalog.title')}</h2>
+              <p className="text-zinc-500 font-mono">{t('Catalog.subtitle')}</p>
             </div>
             
             {/* Filter Buttons */}
             <div className="flex flex-wrap gap-2">
-               {["All", "Coffee", "Drinks", "Bakery", "Cakes"].map(cat => (
+               {categories.map(cat => {
+                 // Try to resolve a translation by finding a product of this category
+                 // Or fallback to cat.
+                 // Ideally we add "Categories" specific translations.
+                 // For now, let's use the first product of that key to get the Display Category.
+                 let displayLabel = cat;
+                 if (cat === "All") {
+                    displayLabel = t('Navbar.menu') === "მენიუ" ? "ყველა" : "All";
+                 } else {
+                    const sample = localizedProducts.find(p => p.categoryKey === cat);
+                    if (sample) displayLabel = sample.category;
+                 }
+
+                 return (
                   <button 
                      key={cat}
                      onClick={() => setActiveCategory(cat)}
@@ -145,9 +184,10 @@ export default function Home() {
                           : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white'}
                      `}
                   >
-                     {cat}
+                     {displayLabel}
                   </button>
-               ))}
+                 );
+               })}
             </div>
           </div>
 
@@ -209,18 +249,19 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative z-10 py-12 border-t border-white/5 bg-black">
           <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-             <h2 className="text-xl font-black uppercase">Noir<span className="text-orange-500">.</span></h2>
+             <h2 className="text-xl font-black uppercase">{t('Navbar.brand')}<span className="text-orange-500">.</span></h2>
              <div className="flex gap-8 text-sm text-zinc-500 font-mono uppercase tracking-wider">
                 <a href="#" className="hover:text-white transition-colors">Instagram</a>
                 <a href="#" className="hover:text-white transition-colors">Twitter</a>
                 <a href="#" className="hover:text-white transition-colors">Email</a>
              </div>
-             <p className="text-zinc-700 text-xs">© 2026 NOIR COFFEE.</p>
+             <p className="text-zinc-700 text-xs">{t('Footer.copyright')}</p>
           </div>
       </footer>
 
       {/* --- LIQUID AI CHAT COMPONENT --- */}
-          <Coffee3 />
+          {/* Passing key props to force re-render if needed, but not strictly necessary with simple prop updates */}
+          <Coffee3 localizedProducts={localizedProducts} />
     </main>
   );
 }

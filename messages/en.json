@@ -268,53 +268,100 @@
       "scroll": "Scroll to Discover"
     },
     "Showcase": {
-      "title": "Our Creations",
-      "subtitle": "Select a template to view the demo",
-      "beauty": {
-        "title": "Beauty & Wellness",
-        "desc": "Elegant minimalism for salons and spas."
-      },
-      "construction": {
-        "title": "TimberCraft",
-        "desc": "Robust reliability for builders and architects."
-      },
-      "coffee": {
-        "title": "Bean & Brew",
-        "desc": "A warm, inviting template for coffee shops and bakeries."
-      },
-      "coffee-2": {
-        "title": "Brew & Glass",
-        "desc": "Premium dark-mode coffee experience with horizontal story-telling."
-      },
-      "coffee-3": {
-        "title": "Noir Cafe",
-        "desc": "Minimalist Black & White aesthetic with schedule and location mapping."
-      },
-      "shop": {
-        "title": "Lumina Shop",
-        "desc": "Modern e-commerce interface with glassmorphism and cart functionality."
+      "title": "Our Collection",
+      "subtitle": "Select your Vibe.",
+      "description": "Curated high-performance templates. Designed for speed, conversion, and aesthetic excellence.",
+      "items": {
+        "coffee-4": { "title": "Kohi Artisan", "category": "Coffee Shop", "desc": "Minimalist Japanese aesthetic with clean lines." },
+        "auto-1": { "title": "Apex Auto", "category": "Automotive", "desc": "Industrial 'Carbon & Chrome' design for premium garages." },
+        "auto-shop": { "title": "Titan Motors", "category": "Automotive", "desc": "Precision engineering blue-print style for tech-focused shops." },
+        "coffee-3": { "title": "Noir Café", "category": "Coffee Shop", "desc": "High-contrast dark mode design with parallax effects." },
+        "shop": { "title": "Luxe Store", "category": "E-Commerce", "desc": "Full-featured online shop with cart." },
+        "beauty": { "title": "Velvet Salon", "category": "Beauty", "desc": "Elegant and soft design for salons and spas." },
+        "construction": { "title": "Apex Build", "category": "Construction", "desc": "Robust utilitarian design for construction firms." },
+        "coffee-2": { "title": "Brew Lab", "category": "Coffee Shop", "desc": "Modern scientific approach to coffee brewing." },
+        "coffee": { "title": "Classic Roast", "category": "Coffee Shop", "desc": "Traditional warm aesthetic for cozy cafes." },
+        "restaurant-regular": { "title": "AURA Bistro", "category": "Restaurant", "desc": "Warm, cozy, and authentic dining experience." },
+        "restaurant-modern": { "title": "NEBULA", "category": "Fine Dining", "desc": "Futuristic molecular gastronomy experience." },
+        "modern": { "title": "Voloostore", "category": "Fashion", "desc": "Tech-wear e-commerce with cyberpunk aesthetics." },
+        "shoes": { "title": "SoleCity", "category": "Footwear", "desc": "High-energy sneaker shop with vibrant pop-art design." },
+        "acoustic-shop": { "title": "MelodyWoods", "category": "Instruments", "desc": "Warm acoustic instrument shop with category navigation." }
       }
     },
     "Pricing": {
-      "title": "Transparent Pricing",
-      "subtitle": "Pay only when you are 100% satisfied.",
+      "title": "Choose Your Package",
+      "subtitle": "Create a modern digital experience for your business",
+      "Popup": {
+        "choose_platform": "Choose Platform",
+        "whatsapp": "WhatsApp",
+        "instagram": "Instagram",
+        "email": "Email",
+        "custom": "Custom Order",
+        "custom_desc": "Build your own package"
+      },
+      "currency": "GEL",
+      "button": "Select",
+      "bg_badge": "Most Popular",
+      "guarantee": "Money Back Guarantee",
       "starter": {
-        "title": "Single Page",
-        "price": "500 ₾",
-        "features": ["Custom Design", "Mobile Responsive", "SEO Optimized", "No Admin Panel"]
+        "title": "One-Page Site",
+        "price": "900",
+        "features": [
+          "Navigation & Brand Identity",
+          "Product Listing",
+          "Contact Section (Gmail, Insta, WA)",
+          "Working Hours & Location",
+          "Footer & Social Media Integration",
+          "Terms & Conditions"
+        ]
       },
       "pro": {
-        "title": "Full Platform",
-        "price": "1000 ₾",
-        "features": ["Admin Dashboard", "Content Management", "Analytics", "Priority Support"]
+        "title": "Web + VolooAI",
+        "price": "1400",
+        "features": [
+          "Everything in Site",
+          "VolooAI Integration",
+          "Artificial Intelligence Support",
+          "Automated Customer Communication",
+          "Smart Replies"
+        ]
       },
-      "maintenance": {
-        "title": "Maintenance",
-        "price": "100-200 ₾",
-        "unit": "/mo",
-        "desc": "Optional ongoing support and updates."
+      "full": {
+        "title": "Full Package",
+        "price": "2600",
+        "features": [
+          "Everything in AI Package",
+          "Full CMS (Control Panel)",
+          "Admin Dashboard",
+          "Independent Product Management",
+          "Full Content Control"
+        ]
       },
-      "guarantee": "Satisfaction Guarantee: No payment until launch."
+      "custom": {
+        "title": "Custom Package",
+        "price": "Tailored",
+        "description": "For large-scale businesses with specific needs.",
+        "button": "Build Package",
+        "features": [
+          "Custom Design System",
+          "Advanced Functionality",
+          "API Integration",
+          "Scalable Architecture",
+          "Priority Support"
+        ]
+      },
+      "CustomModal": {
+        "title": "Build Your Custom Package",
+        "subtitle": "Select the features you need and tell us about your vision. We'll get back to you with a quote.",
+        "select_features": "Select Features",
+        "basic_site": "Basic Webpage (Required)",
+        "included": "Included",
+        "ai_integration": "AI Integration (Chatbot/Analysis)",
+        "cms": "Full CMS & Admin Panel",
+        "your_vision": "Tell us more",
+        "placeholder": "Describe your project requirements, specific features, or design preferences...",
+        "send_request": "Send Request via WhatsApp"
+      }
     },
     "About": {
       "title": "Who We Are",
@@ -450,40 +497,71 @@
       "schedule": "Schedule",
       "location": "Location"
     },
+    "Categories": {
+      "Menu": "Menu",
+      "Visit": "Visit",
+      "Coffee": "Coffee",
+      "Coffee_Desc": "Espresso & Pour Over",
+      "Cakes": "Cakes",
+      "Cakes_Desc": "Fresh Pastries",
+      "Drinks": "Drinks",
+      "Drinks_Desc": "Teas & Refreshers",
+      "Bakery": "Bakery",
+      "Locations": "Locations",
+      "Locations_Desc": "Find nearest cafe",
+      "Hours": "Hours",
+      "Hours_Desc": "Opening times",
+      "Contact": "Contact",
+      "Contact_Desc": "Get in touch",
+      "Seasonal": "Seasonal Special",
+      "NewLocation": "New Location",
+      "Featured_Menu_Name": "Pumpkin Spice",
+      "Featured_Visit_Name": "Downtown Hub"
+    },
     "Hero": {
       "title_1": "PURE",
       "title_2": "BLACK.",
       "subtitle": "Essential coffee for the modern minimalist.",
       "btn_menu": "View Menu",
-      "btn_visit": "Visit Us"
+      "btn_visit": "Visit Us",
+      "badge": "Est. 2024",
+      "description": "Minimalist coffee experience."
     },
     "Marquee": "• SINGLE ORIGIN • DIRECT TRADE • MICRO ROAST •",
-    "Menu": {
-      "title": "Essentials",
-      "subtitle": "Curated Daily",
-      "items": [
-        { "name": "Espresso", "price": "3.5", "desc": "Double shot, house blend." },
-        { "name": "Americano", "price": "4.0", "desc": "Espresso over hot water." },
-        { "name": "Cortado", "price": "4.2", "desc": "Equal parts espresso & milk." },
-        { "name": "Flat White", "price": "4.5", "desc": "Espresso with micro-foam." },
-        { "name": "Batch Brew", "price": "3.0", "desc": "Rotating single origin." },
-        { "name": "Cold Brew", "price": "4.5", "desc": "Steeped 24 hours." }
-      ]
+    "Products": {
+      "1": { "name": "Obsidian Espresso", "desc": "Double shot of single-origin darkness. Notes of molasses and smoke.", "category": "Coffee" },
+      "2": { "name": "Flat White Noise", "desc": "Micro-foam velvet poured over ristretto. Smooth, silence in a cup.", "category": "Coffee" },
+      "3": { "name": "V60 Slow Drip", "desc": "Hand-poured extraction emphasizing floral acoustics and clarity.", "category": "Coffee" },
+      "4": { "name": "Cold Brew Void", "desc": "Steeped for 24 hours in total darkness. High caffeine, low acidity.", "category": "Coffee" },
+      "5": { "name": "Midnight Matcha", "desc": "Ceremonial grade Uji matcha whisked into charcoal-infused oat milk.", "category": "Drinks" },
+      "6": { "name": "Charcoal Latte", "desc": "Activated charcoal and vanilla bean. A detox for the modern soul.", "category": "Drinks" },
+      "7": { "name": "Golden Tonic", "desc": "Turmeric, ginger, and sparkling water. Sharp and awakening.", "category": "Drinks" },
+      "8": { "name": "Lavender Fog", "desc": "Earl Grey tea with steamed milk and house-made lavender syrup.", "category": "Drinks" },
+      "9": { "name": "Eclipse Croissant", "desc": "Butter croissant dipped in dark chocolate ganache and sea salt.", "category": "Bakery" },
+      "10": { "name": "Basque Burnt Cake", "desc": "Caramelized crust with a creamy, molten center. Perfectly imperfect.", "category": "Cakes" },
+      "11": { "name": "Shadow Toast", "desc": "Sourdough, black truffle ricotta, poached egg, and cracked pepper.", "category": "Bakery" },
+      "12": { "name": "Noir Brownie", "desc": "85% Cocoa dark chocolate brownie with walnuts and espresso dust.", "category": "Cakes" }
     },
-    "Schedule": {
-      "title": "Opening Hours",
-      "subtitle": "Come by anytime.",
-      "days": [
-        { "day": "Mon - Fri", "hours": "07:00 - 19:00" },
-        { "day": "Saturday", "hours": "08:00 - 18:00" },
-        { "day": "Sunday", "hours": "09:00 - 16:00" }
-      ]
+    "Chatbot": {
+      "title": "VolooAI",
+      "subtitle": "Online",
+      "welcome": "Welcome to VolooAI",
+      "welcome_desc": "I can help you navigate our menu, find the perfect coffee, or explain our brewing methods.",
+      "suggestions": ["Suggest a drink", "Best seller?", "Dessert menu"],
+      "input_placeholder": "Ask VolooAI...",
+      "thinking": "VolooAI Thinking...",
+      "auto_collapse": "Auto-Collapse",
+      "keep_open": "Keep Open"
     },
     "Location": {
       "title": "Find Us",
-      "subtitle": "In the heart of the district.",
-      "address": "123 Minimalism Ave, Design District",
+      "subtitle": "Heart of the district.",
+      "address": "123 Minimalism Ave.",
       "city": "Tbilisi, Georgia"
+    },
+    "Catalog": {
+      "title": "Our Menu",
+      "subtitle": "Carefully curated selection"
     },
     "Footer": {
       "copyright": "© 2026 Noir Cafe. All rights reserved."

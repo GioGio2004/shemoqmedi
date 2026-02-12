@@ -7,8 +7,8 @@ export function AboutSection() {
   const t = useTranslations("Landing.About");
 
   return (
-    <section className="py-32 px-6 bg-black border-y border-zinc-900">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+    <section className="py-20 md:py-32 px-6 bg-black border-y border-zinc-900">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
         <div>
            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 text-xs font-bold uppercase tracking-wider mb-6 border border-zinc-800">
               {t("title")}

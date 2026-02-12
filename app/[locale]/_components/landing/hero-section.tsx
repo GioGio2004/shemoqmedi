@@ -53,26 +53,26 @@ export function HeroSection() {
            <span className="text-xs font-bold tracking-widest uppercase">Est. 2026</span>
         </div>
 
-        <h1 className="hero-element text-5xl md:text-8xl font-black text-zinc-900 tracking-tight leading-[1.1] mb-8">
+        <h1 className="hero-element text-4xl sm:text-6xl md:text-8xl font-black text-zinc-900 tracking-tight leading-[1.2] md:leading-[1.1] mb-6 md:mb-8 break-words">
           {t("title_1")} <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-600 relative inline-block pb-2">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-600 relative inline-block pb-1 md:pb-2">
             {t("title_2")}
           </span>
         </h1>
 
-        <p className="hero-element text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
+        <p className="hero-element text-base sm:text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto mb-8 md:mb-12 font-medium leading-relaxed px-4">
           {t("subtitle")}
         </p>
 
         <div className="hero-element flex flex-col items-center gap-8">
           <button 
              onClick={() => document.getElementById('portfolio-gallery')?.scrollIntoView({ behavior: 'smooth' })}
-             className="px-12 py-5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-full transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 shadow-lg text-sm tracking-wide"
+             className="px-8 py-4 md:px-12 md:py-5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-full transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 shadow-lg text-sm tracking-wide"
           >
             {t("cta")}
           </button>
           
-          <div className="flex flex-col items-center gap-3 text-zinc-400 text-xs tracking-[0.2em] uppercase animate-bounce mt-16 font-bold">
+          <div className="flex flex-col items-center gap-3 text-zinc-400 text-xs tracking-[0.2em] uppercase animate-bounce mt-12 md:mt-16 font-bold">
             {t("scroll")}
             <div className="w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center bg-white/50 backdrop-blur-sm">
                  <ArrowDown className="w-4 h-4 text-zinc-900" />
