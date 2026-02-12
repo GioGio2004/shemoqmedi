@@ -34,7 +34,7 @@ export function LanguageToggler() {
   return (
     <button
       onClick={toggleLanguage}
-      className="fixed bottom-6 right-6 z-[100] px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 text-zinc-900 dark:text-white rounded-full font-bold shadow-lg hover:bg-white/20 transition-all flex items-center gap-2"
+      className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[100] px-3 py-2 md:px-4 md:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-zinc-900 dark:text-white rounded-full font-bold shadow-lg hover:bg-white/20 transition-all flex items-center gap-2 text-xs md:text-sm"
     >
       <span className={locale === "ka" ? "text-purple-500" : "text-zinc-500"}>KA</span>
       <span className="text-zinc-400">/</span>

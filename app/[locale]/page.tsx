@@ -13,7 +13,7 @@ export default function LandingPage() {
   const t = useTranslations("Landing.Footer");
 
   return (
-    <main className="min-h-screen w-full bg-zinc-50 text-zinc-900 selection:bg-pink-500 selection:text-white">
+    <main className="min-h-screen w-full bg-zinc-50 text-zinc-900 selection:bg-pink-500 selection:text-white overflow-x-hidden">
       <LanguageToggler />
       <IntroScreen />
       

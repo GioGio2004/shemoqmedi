@@ -17,10 +17,88 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "shemoqmedi - web service | digitalise your business in couple of days ",
-  description: "Handmade items from Georgia",
-};
+const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://shemoqmedi.space';
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getMessages({ locale });
+  const messages = t as any; // Type assertion for easier access
+
+  // Fallbacks in case messages are missing
+  const title = messages?.Landing?.Hero?.title_1 
+    ? `${messages.Landing.Hero.title_1} - Shemoqmedi` 
+    : "Shemoqmedi - Digital Business Solutions";
+  
+  const description = messages?.Landing?.Hero?.subtitle 
+    ? messages.Landing.Hero.subtitle.substring(0, 160)
+    : "Create a modern digital experience for your business with Shemoqmedi.";
+
+  const keywords = locale === 'ka' 
+    ? ["შემოქმედი", "ვებგვერდი", "როგორ შევქმნათ ვებგვერდი", "ვებ დიზაინი", "საიტის დამზადება", "shemoqmedi", "website builder georgia"] 
+    : ["website builder", "web design", "digital transformation", "business website", "ecommerce", "shemoqmedi", "create website"];
+
+  return {
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: title,
+      template: `%s | Shemoqmedi`
+    },
+    description: description,
+    keywords: keywords,
+    authors: [{ name: "Shemoqmedi Team" }],
+    creator: "Shemoqmedi",
+    openGraph: {
+      type: "website",
+      locale: locale,
+      alternateLocale: locale === 'ka' ? 'en' : 'ka',
+      url: `${baseUrl}/${locale}`,
+      title: title,
+      description: description,
+      siteName: "Shemoqmedi",
+      images: [
+        {
+          url: "/logo.png", // Using the logo as default OG image
+          width: 800,
+          height: 600,
+          alt: "Shemoqmedi Logo",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: title,
+      description: description,
+      images: ["/logo.png"],
+    },
+    icons: {
+      icon: "/favicon.ico",
+      shortcut: "/favicon-16x16.png",
+      apple: "/apple-touch-icon.png",
+    },
+    alternates: {
+      canonical: `${baseUrl}/${locale}`,
+      languages: {
+        'en': `${baseUrl}/en`,
+        'ka': `${baseUrl}/ka`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

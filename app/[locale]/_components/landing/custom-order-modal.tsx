@@ -65,7 +65,7 @@ export function CustomOrderModal({ isOpen, onClose }: CustomOrderModalProps) {
       {/* Modal */}
       <div 
         ref={modalRef}
-        className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
       >
         <button 
           onClick={onClose}

@@ -111,9 +111,9 @@ export function PricingContactDropdown({
             <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center group-hover/item:bg-green-500 group-hover/item:text-white transition-all">
               <MessageCircle className="w-4 h-4" />
             </div>
-            <div className="flex-grow">
-              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors">{t("whatsapp")}</div>
-              <div className="text-[10px] text-zinc-500 group-hover/item:text-green-200/70 transition-colors">Instant Chat</div>
+            <div className="flex-grow min-w-0">
+              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors truncate">{t("whatsapp")}</div>
+              <div className="text-[10px] text-zinc-500 group-hover/item:text-green-200/70 transition-colors truncate">Instant Chat</div>
             </div>
             <Send className="w-3 h-3 text-zinc-600 group-hover/item:text-green-400 -translate-x-2 opacity-0 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" />
           </a>
@@ -129,9 +129,9 @@ export function PricingContactDropdown({
             <div className="w-8 h-8 rounded-full bg-pink-500/20 text-pink-500 flex items-center justify-center group-hover/item:bg-pink-500 group-hover/item:text-white transition-all">
               <Instagram className="w-4 h-4" />
             </div>
-            <div className="flex-grow">
-              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors">{t("instagram")}</div>
-              <div className="text-[10px] text-zinc-500 group-hover/item:text-pink-200/70 transition-colors">DM Us</div>
+            <div className="flex-grow min-w-0">
+              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors truncate">{t("instagram")}</div>
+              <div className="text-[10px] text-zinc-500 group-hover/item:text-pink-200/70 transition-colors truncate">DM Us</div>
             </div>
           </a>
 
@@ -144,9 +144,9 @@ export function PricingContactDropdown({
             <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center group-hover/item:bg-blue-500 group-hover/item:text-white transition-all">
               <Mail className="w-4 h-4" />
             </div>
-            <div className="flex-grow">
-              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors">{t("email")}</div>
-              <div className="text-[10px] text-zinc-500 group-hover/item:text-blue-200/70 transition-colors">Official Request</div>
+            <div className="flex-grow min-w-0">
+              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors truncate">{t("email")}</div>
+              <div className="text-[10px] text-zinc-500 group-hover/item:text-blue-200/70 transition-colors truncate">Official Request</div>
             </div>
           </a>
 
