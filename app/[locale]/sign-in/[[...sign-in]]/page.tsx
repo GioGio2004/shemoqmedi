@@ -9,28 +9,33 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,   
+  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/icons";
 
+import { useSearchParams } from "next/navigation";
+
 export default function SignInPage() {
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect_url") || "/";
+
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
         {/* Header / Brand */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-light tracking-[0.35em] uppercase">
-            shemoqmedi 
+            shemoqmedi
           </h1>
           <p className="text-xs text-white/60">
             Sign in to continue
           </p>
         </div>
 
-        <SignIn.Root>
+        <SignIn.Root fallbackRedirectUrl={redirectUrl} forceRedirectUrl={redirectUrl}>
           <Clerk.Loading>
             {(isGlobalLoading) => (
               <>
@@ -39,7 +44,7 @@ export default function SignInPage() {
                   <Card className="border border-white/10 bg-black rounded-2xl shadow-sm">
                     <CardHeader className="text-center pb-4">
                       <CardTitle className="text-xl font-medium">
-                        Welcome 
+                        Welcome
                       </CardTitle>
                       <CardDescription className="text-xs text-white/60">
                         Enter your email to sign in

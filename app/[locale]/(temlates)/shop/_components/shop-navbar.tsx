@@ -45,21 +45,21 @@ export function ShopNavbar() {
       {/* Actions */}
       <div className="flex items-center gap-4">
         {isAdmin && (
-           <Link 
-             href={`/${locale}/shop/admin`}
-             className="px-4 py-2 bg-red-600 text-white rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-700 transition-colors"
-           >
-             <LayoutDashboard className="w-4 h-4" /> Admin
-           </Link>
+          <Link
+            href={`/${locale}/shop/admin`}
+            className="px-4 py-2 bg-red-600 text-white rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-700 transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4" /> Admin
+          </Link>
         )}
 
         <button className="p-2 rounded-full hover:bg-white/40 text-gray-600 transition-colors">
           <Search className="w-5 h-5" />
         </button>
-        
-        <button 
-            onClick={toggleCart}
-            className="relative p-2 rounded-full bg-black text-white hover:bg-blue-600 transition-colors shadow-lg"
+
+        <button
+          onClick={toggleCart}
+          className="relative p-2 rounded-full bg-black text-white hover:bg-blue-600 transition-colors shadow-lg"
         >
           <ShoppingBag className="w-5 h-5" />
           {cartCount > 0 && (
@@ -72,9 +72,9 @@ export function ShopNavbar() {
         {isSignedIn ? (
           <UserButton />
         ) : (
-          <SignInButton mode="modal">
+          <Link href={`/${locale}/sign-in?redirect_url=/${locale}/shop`}>
             <button className="text-sm font-bold hover:underline">Sign In</button>
-          </SignInButton>
+          </Link>
         )}
       </div>
     </nav>

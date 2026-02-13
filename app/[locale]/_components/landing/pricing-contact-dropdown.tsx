@@ -24,6 +24,7 @@ export function PricingContactDropdown({
 }: PricingContactDropdownProps) {
   const t = useTranslations("Landing.Pricing.Popup");
   const [isOpen, setIsOpen] = useState(false);
+  const [copiedInstagram, setCopiedInstagram] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function PricingContactDropdown({
     `Order Inquiry: ${packageName} - ${packagePrice} ${currency}`
   );
   const emailCustomSubject = encodeURIComponent(`Custom Order Inquiry`);
-  
+
   const emailBody = encodeURIComponent(
     `Hello,\n\nI'd like to order:\n\nPackage: ${packageName}\nPrice: ${packagePrice} ${currency}`
   );
@@ -70,7 +71,7 @@ export function PricingContactDropdown({
   const baseButtonClasses = "w-full py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden";
   const solidClasses = `${colorClass} hover:opacity-90 hover:scale-[1.02] hover:shadow-lg`;
   const outlineClasses = "border border-zinc-700 text-white hover:bg-zinc-800 hover:border-zinc-600";
-  
+
   const buttonClasses = `${baseButtonClasses} ${variant === "solid" ? solidClasses : outlineClasses}`;
 
   return (
@@ -86,7 +87,7 @@ export function PricingContactDropdown({
       </button>
 
       {/* Dropdown Menu */}
-      <div 
+      <div
         className={`
           absolute bottom-full left-0 w-full mb-3 
           bg-white/10 backdrop-blur-xl border border-white/10 
@@ -123,15 +124,50 @@ export function PricingContactDropdown({
             href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-pink-500/10 hover:border-pink-500/20 border border-transparent transition-all group/item"
+            onClick={(e) => {
+              // Copy to clipboard
+              navigator.clipboard.writeText(messageText);
+              setCopiedInstagram(true);
+              // Reset after 3 seconds
+              setTimeout(() => setCopiedInstagram(false), 3000);
+              // We allow default behavior (opening link) to happen
+              // but we might want to delay closing the dropdown slightly or just let it close?
+              // The original code closes it immediately: onClick={() => setIsOpen(false)}
+              // Let's keep the close behavior but maybe delay it? 
+              // Actually, if we close it immediately, the user won't see "Copied". 
+              // Better to NOT close immediately if we want to show feedback, OR rely on the fact that they are navigating away.
+              // However, if they are on mobile app, it switches app. 
+              // If we want to show feedback, we probably shouldn't close immediately.
+              // But the user said "contents follow to link", implying they want the text available.
+              // Showing "Copied!" is good UX.
+              // Let's NOT close immediately for Instagram, or just trust the system toast if we had one.
+              // I'll add a small text change to "Copied!" and keep it open for a second if possible, but the link opens a new tab.
+              // Let's just do the copy and let it behave as before (close). 
+              // Wait, if I close it, they won't see "Copied". 
+              // I'll remove `setIsOpen(false)` for Instagram specifically, or rely on them coming back?
+              // Actually, usually users appreciate a "Copied" text change.
+              // Let's use a timeout to close it.
+              e.preventDefault(); // Pause navigation for a split second? No, bad UX.
+              // Best approach: Copy, Update Text state, Open Window. 
+              window.open(instagramUrl, '_blank');
+              // Don't close dropdown immediately so they see the change?
+              // Or just close it. The critical part is the COPY.
+              // I will leave it open for a moment? 
+              // User request: "chat is empty... contents follow to link".
+              // I will just implement the copy.
+            }}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-pink-500/10 hover:border-pink-500/20 border border-transparent transition-all group/item cursor-pointer"
           >
             <div className="w-8 h-8 rounded-full bg-pink-500/20 text-pink-500 flex items-center justify-center group-hover/item:bg-pink-500 group-hover/item:text-white transition-all">
-              <Instagram className="w-4 h-4" />
+              {copiedInstagram ? <Check className="w-4 h-4" /> : <Instagram className="w-4 h-4" />}
             </div>
             <div className="flex-grow min-w-0">
-              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors truncate">{t("instagram")}</div>
-              <div className="text-[10px] text-zinc-500 group-hover/item:text-pink-200/70 transition-colors truncate">DM Us</div>
+              <div className="text-sm font-bold text-zinc-200 group-hover/item:text-white transition-colors truncate">
+                {copiedInstagram ? "Copied to Clipboard!" : t("instagram")}
+              </div>
+              <div className="text-[10px] text-zinc-500 group-hover/item:text-pink-200/70 transition-colors truncate">
+                {copiedInstagram ? "Paste in chat" : "DM Us"}
+              </div>
             </div>
           </a>
 
@@ -153,7 +189,7 @@ export function PricingContactDropdown({
         </div>
       </div>
 
-      
+
       {/* Overlay for closing (mobile friendly) */}
       {isOpen && (
         <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden" onClick={() => setIsOpen(false)} />

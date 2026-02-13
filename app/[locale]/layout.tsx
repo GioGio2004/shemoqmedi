@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 // Note: Adjusted path to ".." since we moved this file into [locale]
-import "../globals.css"; 
+import "../globals.css";
 import { ClerkProvider } from "@/components/clerk-provider";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { Analytics } from "@vercel/analytics/next"
+import { GoogleOneTap } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,16 +31,16 @@ export async function generateMetadata({
   const messages = t as any; // Type assertion for easier access
 
   // Fallbacks in case messages are missing
-  const title = messages?.Landing?.Hero?.title_1 
-    ? `${messages.Landing.Hero.title_1} - Shemoqmedi` 
+  const title = messages?.Landing?.Hero?.title_1
+    ? `${messages.Landing.Hero.title_1} - Shemoqmedi`
     : "Shemoqmedi - Digital Business Solutions";
-  
-  const description = messages?.Landing?.Hero?.subtitle 
+
+  const description = messages?.Landing?.Hero?.subtitle
     ? messages.Landing.Hero.subtitle.substring(0, 160)
     : "Create a modern digital experience for your business with Shemoqmedi.";
 
-  const keywords = locale === 'ka' 
-    ? ["შემოქმედი", "ვებგვერდი", "როგორ შევქმნათ ვებგვერდი", "ვებ დიზაინი", "საიტის დამზადება", "shemoqmedi", "website builder georgia"] 
+  const keywords = locale === 'ka'
+    ? ["შემოქმედი", "ვებგვერდი", "როგორ შევქმნათ ვებგვერდი", "ვებ დიზაინი", "საიტის დამზადება", "shemoqmedi", "website builder georgia"]
     : ["website builder", "web design", "digital transformation", "business website", "ecommerce", "shemoqmedi", "create website"];
 
   return {
@@ -120,13 +122,16 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* 4. Wrap everything in NextIntlClientProvider first */}
-        <NextIntlClientProvider messages={messages}>
-          <ClerkProvider>
+        <ClerkProvider>
+
+          <GoogleOneTap />
+          <NextIntlClientProvider messages={messages}>
             <ConvexClientProvider>
               {children}
             </ConvexClientProvider>
-          </ClerkProvider>
-        </NextIntlClientProvider>
+          </NextIntlClientProvider>
+        </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
