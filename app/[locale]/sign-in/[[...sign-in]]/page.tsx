@@ -35,7 +35,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <SignIn.Root fallbackRedirectUrl={redirectUrl} forceRedirectUrl={redirectUrl}>
+        <SignIn.Root>
           <Clerk.Loading>
             {(isGlobalLoading) => (
               <>
