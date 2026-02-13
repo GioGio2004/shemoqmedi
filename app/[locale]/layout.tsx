@@ -63,10 +63,10 @@ export async function generateMetadata({
       siteName: "Shemoqmedi",
       images: [
         {
-          url: "/logo.png", // Using the logo as default OG image
-          width: 800,
-          height: 600,
-          alt: "Shemoqmedi Logo",
+          url: "/og-default.jpg", // Using the default OG image
+          width: 1200,
+          height: 630,
+          alt: "Shemoqmedi",
         },
       ],
     },
@@ -74,7 +74,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: title,
       description: description,
-      images: ["/logo.png"],
+      images: ["/og-default.jpg"],
     },
     icons: {
       icon: "/favicon.ico",
