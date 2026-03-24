@@ -1,14 +1,14 @@
 {
   "Navbar": {
-    "brand": "Voloostore",
+    "brand": "FUTURECLOTH",
     "home": "Home",
     "signIn": "Sign In"
   },
   "HomePage": {
-    "title": "Welcome to Voloostore",
+    "title": "Welcome to FUTURECLOTH",
     "subtitle": "Handmade items from Georgia"
   },
-  
+
   "TimberCraftTemplate": {
     "Navbar": {
       "brand_suffix": "CRAFT",
@@ -30,10 +30,22 @@
       "heading": "Why TimberCraft",
       "subheading": "Three decades of trusted building material supply",
       "items": [
-        { "title": "Certified Quality", "desc": "FSC and PEFC certified materials from sustainable sources" },
-        { "title": "Fast Delivery", "desc": "Same-day dispatch on in-stock items across the region" },
-        { "title": "Cut to Size", "desc": "Custom cutting service with precision CNC machinery" },
-        { "title": "Trade & Bulk", "desc": "Wholesale pricing for contractors and trade customers" }
+        {
+          "title": "Certified Quality",
+          "desc": "FSC and PEFC certified materials from sustainable sources"
+        },
+        {
+          "title": "Fast Delivery",
+          "desc": "Same-day dispatch on in-stock items across the region"
+        },
+        {
+          "title": "Cut to Size",
+          "desc": "Custom cutting service with precision CNC machinery"
+        },
+        {
+          "title": "Trade & Bulk",
+          "desc": "Wholesale pricing for contractors and trade customers"
+        }
       ]
     },
     "Catalog": {
@@ -43,9 +55,24 @@
       "price_unit": "/ sheet",
       "details": "Details",
       "items": [
-        { "name": "Baltic Birch Plywood", "description": "Premium multi-ply birch for furniture and cabinetry.", "category": "Plywood", "tags": ["Furniture", "Cabinetry", "Interior"] },
-        { "name": "Marine Grade Ply", "description": "Waterproof structural panels for exterior use.", "category": "Marine", "tags": ["Exterior", "Boat", "Structural"] },
-        { "name": "MDF Sheets", "description": "Smooth surface medium density fiberboard.", "category": "MDF", "tags": ["Paintable", "Molding", "Interior"] }
+        {
+          "name": "Baltic Birch Plywood",
+          "description": "Premium multi-ply birch for furniture and cabinetry.",
+          "category": "Plywood",
+          "tags": ["Furniture", "Cabinetry", "Interior"]
+        },
+        {
+          "name": "Marine Grade Ply",
+          "description": "Waterproof structural panels for exterior use.",
+          "category": "Marine",
+          "tags": ["Exterior", "Boat", "Structural"]
+        },
+        {
+          "name": "MDF Sheets",
+          "description": "Smooth surface medium density fiberboard.",
+          "category": "MDF",
+          "tags": ["Paintable", "Molding", "Interior"]
+        }
       ]
     },
     "Stats": {
@@ -59,18 +86,45 @@
       "title_2": "Materials.",
       "scroll_hint": "Scroll to explore \u2192",
       "items": [
-        { "label": "STRUCTURAL", "title": "Plywood", "description": "Versatile, high-strength sheet material made from thin layers or 'plies' of wood veneer.", "tags": ["Birch", "Pine", "Marine"] },
-        { "label": "COMPOSITE", "title": "MDF", "description": "Engineered wood product made by breaking down hardwood or softwood residuals into wood fibers.", "tags": ["Standard", "Moisture Resistant", "Fire Rated"] },
-        { "label": "NATURAL", "title": "Hardwood", "description": "Solid timber sourced from deciduous trees, known for density and durability.", "tags": ["Oak", "Walnut", "Maple"] }
+        {
+          "label": "STRUCTURAL",
+          "title": "Plywood",
+          "description": "Versatile, high-strength sheet material made from thin layers or 'plies' of wood veneer.",
+          "tags": ["Birch", "Pine", "Marine"]
+        },
+        {
+          "label": "COMPOSITE",
+          "title": "MDF",
+          "description": "Engineered wood product made by breaking down hardwood or softwood residuals into wood fibers.",
+          "tags": ["Standard", "Moisture Resistant", "Fire Rated"]
+        },
+        {
+          "label": "NATURAL",
+          "title": "Hardwood",
+          "description": "Solid timber sourced from deciduous trees, known for density and durability.",
+          "tags": ["Oak", "Walnut", "Maple"]
+        }
       ]
     },
     "Testimonials": {
       "title": "Trusted by Builders",
       "subtitle": "What our trade customers have to say",
       "items": [
-        { "text": "TimberCraft has been our go-to supplier for 8 years. Their Baltic Birch is consistently top quality, zero voids, always flat.", "name": "James K.", "role": "Cabinet Maker" },
-        { "text": "The marine grade plywood we ordered held up perfectly through two hurricane seasons. The BS 1088 certification isn't just a label here.", "name": "Michael T.", "role": "Boat Builder" },
-        { "text": "Fast delivery, competitive bulk pricing, and they actually answer the phone. The cut-to-size service saved us days of labor.", "name": "Sarah W.", "role": "General Contractor" }
+        {
+          "text": "TimberCraft has been our go-to supplier for 8 years. Their Baltic Birch is consistently top quality, zero voids, always flat.",
+          "name": "James K.",
+          "role": "Cabinet Maker"
+        },
+        {
+          "text": "The marine grade plywood we ordered held up perfectly through two hurricane seasons. The BS 1088 certification isn't just a label here.",
+          "name": "Michael T.",
+          "role": "Boat Builder"
+        },
+        {
+          "text": "Fast delivery, competitive bulk pricing, and they actually answer the phone. The cut-to-size service saved us days of labor.",
+          "name": "Sarah W.",
+          "role": "General Contractor"
+        }
       ]
     },
     "CTA": {
@@ -85,7 +139,12 @@
       "links": {
         "privacy": "Privacy Policy",
         "terms": "Terms of Service",
-        "products": ["Plywood Sheets", "MDF Boards", "OSB Panels", "Hardwood Timber"],
+        "products": [
+          "Plywood Sheets",
+          "MDF Boards",
+          "OSB Panels",
+          "Hardwood Timber"
+        ],
         "services": ["Cut to Size", "Bulk Orders", "Trade Accounts", "Delivery"]
       },
       "headers": {
@@ -114,10 +173,22 @@
       "title": "Why Choose AURASKIN",
       "subtitle": "Science meets nature in every bottle",
       "items": [
-        { "title": "100% Natural", "desc": "Pure botanical ingredients, no synthetic chemicals" },
-        { "title": "Dermatologist Tested", "desc": "Clinically proven safe for all skin types" },
-        { "title": "Eco-Friendly", "desc": "Sustainable packaging, carbon-neutral shipping" },
-        { "title": "Premium Quality", "desc": "Small-batch production for maximum freshness" }
+        {
+          "title": "100% Natural",
+          "desc": "Pure botanical ingredients, no synthetic chemicals"
+        },
+        {
+          "title": "Dermatologist Tested",
+          "desc": "Clinically proven safe for all skin types"
+        },
+        {
+          "title": "Eco-Friendly",
+          "desc": "Sustainable packaging, carbon-neutral shipping"
+        },
+        {
+          "title": "Premium Quality",
+          "desc": "Small-batch production for maximum freshness"
+        }
       ]
     },
     "Catalog": {
@@ -126,9 +197,24 @@
       "subtitle": "Discover our most-loved formulas, handpicked for transformative results",
       "btn_view_all": "View All Products",
       "items": [
-        { "name": "Rose Hip Serum", "description": "Regenerative oil for glowing skin.", "category": "Serum", "benefits": ["Hydrating", "Anti-aging"] },
-        { "name": "Cloud Cream", "description": "Lightweight daily moisturizer.", "category": "Moisturizer", "benefits": ["Soothing", "Daily Use"] },
-        { "name": "Midnight Oil", "description": "Overnight repair treatment.", "category": "Treatment", "benefits": ["Repair", "Calming"] }
+        {
+          "name": "Rose Hip Serum",
+          "description": "Regenerative oil for glowing skin.",
+          "category": "Serum",
+          "benefits": ["Hydrating", "Anti-aging"]
+        },
+        {
+          "name": "Cloud Cream",
+          "description": "Lightweight daily moisturizer.",
+          "category": "Moisturizer",
+          "benefits": ["Soothing", "Daily Use"]
+        },
+        {
+          "name": "Midnight Oil",
+          "description": "Overnight repair treatment.",
+          "category": "Treatment",
+          "benefits": ["Repair", "Calming"]
+        }
       ]
     },
     "Stats": {
@@ -142,18 +228,45 @@
       "title_2": "SOURCE.",
       "scroll_hint": "Scroll to explore ingredients →",
       "items": [
-        { "label": "BOTANICAL", "title": "Aloe Vera", "description": "Sourced from volcanic soil for maximum hydration.", "tags": ["Soothing", "Hydrating"] },
-        { "label": "EXTRACT", "title": "Green Tea", "description": "Powerful antioxidants to protect skin barrier.", "tags": ["Protection", "Anti-oxidant"] },
-        { "label": "OIL", "title": "Jojoba", "description": "Biomimetic oil that balances natural sebum.", "tags": ["Balancing", "Nourishing"] }
+        {
+          "label": "BOTANICAL",
+          "title": "Aloe Vera",
+          "description": "Sourced from volcanic soil for maximum hydration.",
+          "tags": ["Soothing", "Hydrating"]
+        },
+        {
+          "label": "EXTRACT",
+          "title": "Green Tea",
+          "description": "Powerful antioxidants to protect skin barrier.",
+          "tags": ["Protection", "Anti-oxidant"]
+        },
+        {
+          "label": "OIL",
+          "title": "Jojoba",
+          "description": "Biomimetic oil that balances natural sebum.",
+          "tags": ["Balancing", "Nourishing"]
+        }
       ]
     },
     "Testimonials": {
       "title": "Loved by Thousands",
       "subtitle": "Real results from real people",
       "items": [
-        { "text": "My skin has never looked better! The Rose Hip Serum is a game-changer. I've noticed a visible reduction in fine lines.", "name": "Sarah M.", "role": "Verified Customer" },
-        { "text": "Finally found skincare that doesn't irritate my sensitive skin. The Cloud Cream is so lightweight yet incredibly moisturizing.", "name": "Emily R.", "role": "Verified Customer" },
-        { "text": "I love that everything is natural and eco-friendly. The Midnight Oil transformed my dry skin overnight.", "name": "Jessica L.", "role": "Verified Customer" }
+        {
+          "text": "My skin has never looked better! The Rose Hip Serum is a game-changer. I've noticed a visible reduction in fine lines.",
+          "name": "Sarah M.",
+          "role": "Verified Customer"
+        },
+        {
+          "text": "Finally found skincare that doesn't irritate my sensitive skin. The Cloud Cream is so lightweight yet incredibly moisturizing.",
+          "name": "Emily R.",
+          "role": "Verified Customer"
+        },
+        {
+          "text": "I love that everything is natural and eco-friendly. The Midnight Oil transformed my dry skin overnight.",
+          "name": "Jessica L.",
+          "role": "Verified Customer"
+        }
       ]
     },
     "CTA": {
@@ -193,9 +306,15 @@
       "title": "The Daily Grind",
       "subtitle": "Why our coffee hits different",
       "items": [
-        { "title": "High Energy", "desc": "Carefully selected beans for maximum focus" },
+        {
+          "title": "High Energy",
+          "desc": "Carefully selected beans for maximum focus"
+        },
         { "title": "Top Quality", "desc": "Graded 85+ points by Q-graders" },
-        { "title": "Eco Friendly", "desc": "100% compostable cups and packaging" },
+        {
+          "title": "Eco Friendly",
+          "desc": "100% compostable cups and packaging"
+        },
         { "title": "Always Fresh", "desc": "Roasted locally every single week" }
       ]
     },
@@ -205,12 +324,42 @@
       "subtitle": "Explore our seasonal rotation of single-origin pours and signature lattes.",
       "btn_full_menu": "View Full Menu",
       "items": [
-        { "name": "Draft Latte", "description": "Cold brew infused with nitrogen.", "category": "Signature", "benefits": ["Smooth", "Strong"] },
-        { "name": "Honey Lavender", "description": "Double shot espresso with floral syrup.", "category": "Seasonal", "benefits": ["Floral", "Sweet"] },
-        { "name": "Classic Flat White", "description": "Espresso with silky micro-foam.", "category": "Espresso", "benefits": ["Strong", "Silky"] },
-        { "name": "Matcha Latte", "description": "Ceremonial grade matcha from Uji.", "category": "Tea", "benefits": ["Focus", "Earthy"] },
-        { "name": "Cold Brew", "description": "Steeped for 24 hours.", "category": "Iced", "benefits": ["Bold", "Cold"] },
-        { "name": "Croissant", "description": "Butter croissant baked fresh.", "category": "Bakery", "benefits": ["Flaky", "Buttery"] }
+        {
+          "name": "Draft Latte",
+          "description": "Cold brew infused with nitrogen.",
+          "category": "Signature",
+          "benefits": ["Smooth", "Strong"]
+        },
+        {
+          "name": "Honey Lavender",
+          "description": "Double shot espresso with floral syrup.",
+          "category": "Seasonal",
+          "benefits": ["Floral", "Sweet"]
+        },
+        {
+          "name": "Classic Flat White",
+          "description": "Espresso with silky micro-foam.",
+          "category": "Espresso",
+          "benefits": ["Strong", "Silky"]
+        },
+        {
+          "name": "Matcha Latte",
+          "description": "Ceremonial grade matcha from Uji.",
+          "category": "Tea",
+          "benefits": ["Focus", "Earthy"]
+        },
+        {
+          "name": "Cold Brew",
+          "description": "Steeped for 24 hours.",
+          "category": "Iced",
+          "benefits": ["Bold", "Cold"]
+        },
+        {
+          "name": "Croissant",
+          "description": "Butter croissant baked fresh.",
+          "category": "Bakery",
+          "benefits": ["Flaky", "Buttery"]
+        }
       ]
     },
     "Stats": {
@@ -224,18 +373,45 @@
       "title_2": "SOURCES.",
       "scroll_hint": "Scroll to explore origins →",
       "items": [
-        { "label": "BEAN", "title": "Arabica 100%", "description": "Sourced from high-altitude Ethiopian farms.", "tags": ["Ethiopia", "Washed"] },
-        { "label": "MILK", "title": "Oat Milk", "description": "Barista edition oat milk for perfect foam.", "tags": ["Plant Based", "Creamy"] },
-        { "label": "TEA", "title": "Matcha", "description": "Premium Japanese green tea powder.", "tags": ["Uji", "Ceremonial"] }
+        {
+          "label": "BEAN",
+          "title": "Arabica 100%",
+          "description": "Sourced from high-altitude Ethiopian farms.",
+          "tags": ["Ethiopia", "Washed"]
+        },
+        {
+          "label": "MILK",
+          "title": "Oat Milk",
+          "description": "Barista edition oat milk for perfect foam.",
+          "tags": ["Plant Based", "Creamy"]
+        },
+        {
+          "label": "TEA",
+          "title": "Matcha",
+          "description": "Premium Japanese green tea powder.",
+          "tags": ["Uji", "Ceremonial"]
+        }
       ]
     },
     "Testimonials": {
       "title": "Local Favorites",
       "subtitle": "What the neighborhood thinks",
       "items": [
-        { "text": "Best flat white in the city, hands down. The atmosphere is perfect for working too.", "name": "Alex D.", "role": "Local Guide" },
-        { "text": "Their honey lavender latte is an absolute dream. I come here every morning.", "name": "Sarah J.", "role": "Regular" },
-        { "text": "Finally a place that takes matcha seriously. No clumps, just smooth green goodness.", "name": "Mike R.", "role": "Tea Lover" }
+        {
+          "text": "Best flat white in the city, hands down. The atmosphere is perfect for working too.",
+          "name": "Alex D.",
+          "role": "Local Guide"
+        },
+        {
+          "text": "Their honey lavender latte is an absolute dream. I come here every morning.",
+          "name": "Sarah J.",
+          "role": "Regular"
+        },
+        {
+          "text": "Finally a place that takes matcha seriously. No clumps, just smooth green goodness.",
+          "name": "Mike R.",
+          "role": "Tea Lover"
+        }
       ]
     },
     "CTA": {
@@ -267,25 +443,116 @@
       "cta": "Explore Templates",
       "scroll": "Scroll to Discover"
     },
+    "Creations": {
+      "title": "Selected Works",
+      "subtitle": "Digital <span>Craftsmanship</span>",
+      "description": "A curated selection of bespoke digital experiences we've built for forward-thinking brands.",
+      "items": {
+        "project-1": {
+          "title": "TechFlow Systems",
+          "category": "SaaS Platform",
+          "description": "A comprehensive dashboard for a logistics company, featuring real-time tracking and analytics.",
+          "highlight1": "Real-time Data Visualization",
+          "highlight2": "Complex User Roles & Permissions"
+        },
+        "project-2": {
+          "title": "Collaborate+",
+          "category": "Productivity",
+          "description": "A team collaboration tool designed for remote-first organizations.",
+          "highlight1": "Real-time Messaging",
+          "highlight2": "File Sharing Integration"
+        },
+        "project-3": {
+          "title": "Neon Agency",
+          "category": "Creative Portfolio",
+          "description": "An award-winning portfolio site for a digital design agency.",
+          "highlight1": "WebGL Animations",
+          "highlight2": "Custom CMS"
+        },
+        "project-4": {
+          "title": "Core Team",
+          "category": "Corporate",
+          "description": "Internal team management portal for a Fortune 500 company.",
+          "highlight1": "Employee Directory",
+          "highlight2": "HR Integration"
+        }
+      }
+    },
     "Showcase": {
       "title": "Our Collection",
       "subtitle": "Select your Vibe.",
       "description": "Curated high-performance templates. Designed for speed, conversion, and aesthetic excellence.",
       "items": {
-        "coffee-4": { "title": "Kohi Artisan", "category": "Coffee Shop", "desc": "Minimalist Japanese aesthetic with clean lines." },
-        "auto-1": { "title": "Apex Auto", "category": "Automotive", "desc": "Industrial 'Carbon & Chrome' design for premium garages." },
-        "auto-shop": { "title": "Titan Motors", "category": "Automotive", "desc": "Precision engineering blue-print style for tech-focused shops." },
-        "coffee-3": { "title": "Noir Café", "category": "Coffee Shop", "desc": "High-contrast dark mode design with parallax effects." },
-        "shop": { "title": "Luxe Store", "category": "E-Commerce", "desc": "Full-featured online shop with cart." },
-        "beauty": { "title": "Velvet Salon", "category": "Beauty", "desc": "Elegant and soft design for salons and spas." },
-        "construction": { "title": "Apex Build", "category": "Construction", "desc": "Robust utilitarian design for construction firms." },
-        "coffee-2": { "title": "Brew Lab", "category": "Coffee Shop", "desc": "Modern scientific approach to coffee brewing." },
-        "coffee": { "title": "Classic Roast", "category": "Coffee Shop", "desc": "Traditional warm aesthetic for cozy cafes." },
-        "restaurant-regular": { "title": "AURA Bistro", "category": "Restaurant", "desc": "Warm, cozy, and authentic dining experience." },
-        "restaurant-modern": { "title": "NEBULA", "category": "Fine Dining", "desc": "Futuristic molecular gastronomy experience." },
-        "modern": { "title": "Voloostore", "category": "Fashion", "desc": "Tech-wear e-commerce with cyberpunk aesthetics." },
-        "shoes": { "title": "SoleCity", "category": "Footwear", "desc": "High-energy sneaker shop with vibrant pop-art design." },
-        "acoustic-shop": { "title": "MelodyWoods", "category": "Instruments", "desc": "Warm acoustic instrument shop with category navigation." }
+        "coffee-4": {
+          "title": "Kohi Artisan",
+          "category": "Coffee Shop",
+          "desc": "Minimalist Japanese aesthetic with clean lines."
+        },
+        "auto-1": {
+          "title": "Apex Auto",
+          "category": "Automotive",
+          "desc": "Industrial 'Carbon & Chrome' design for premium garages."
+        },
+        "auto-shop": {
+          "title": "Titan Motors",
+          "category": "Automotive",
+          "desc": "Precision engineering blue-print style for tech-focused shops."
+        },
+        "coffee-3": {
+          "title": "Noir Café",
+          "category": "Coffee Shop",
+          "desc": "High-contrast dark mode design with parallax effects."
+        },
+        "shop": {
+          "title": "Luxe Store",
+          "category": "E-Commerce",
+          "desc": "Full-featured online shop with cart."
+        },
+        "beauty": {
+          "title": "Velvet Salon",
+          "category": "Beauty",
+          "desc": "Elegant and soft design for salons and spas."
+        },
+        "construction": {
+          "title": "Apex Build",
+          "category": "Construction",
+          "desc": "Robust utilitarian design for construction firms."
+        },
+        "coffee-2": {
+          "title": "Brew Lab",
+          "category": "Coffee Shop",
+          "desc": "Modern scientific approach to coffee brewing."
+        },
+        "coffee": {
+          "title": "Classic Roast",
+          "category": "Coffee Shop",
+          "desc": "Traditional warm aesthetic for cozy cafes."
+        },
+        "restaurant-regular": {
+          "title": "AURA Bistro",
+          "category": "Restaurant",
+          "desc": "Warm, cozy, and authentic dining experience."
+        },
+        "restaurant-modern": {
+          "title": "NEBULA",
+          "category": "Fine Dining",
+          "desc": "Futuristic molecular gastronomy experience."
+        },
+        "modern": {
+          "title": "FUTURECLOTH",
+          "category": "Fashion",
+          "desc": "Tech-wear e-commerce with cyberpunk aesthetics."
+        },
+        "shoes": {
+          "title": "SoleCity",
+          "category": "Footwear",
+          "desc": "High-energy sneaker shop with vibrant pop-art design."
+        },
+        "acoustic-shop": {
+          "title": "MelodyWoods",
+          "category": "Instruments",
+          "desc": "Warm acoustic instrument shop with category navigation."
+        }
       }
     },
     "Pricing": {
@@ -456,7 +723,12 @@
       },
       "links": {
         "explore": ["Our Beans", "The Menu", "Merchandise", "Gift Cards"],
-        "visit": ["123 Coffee Lane", "Glass City, GC 90210", "Mon-Fri: 7am - 7pm", "Sat-Sun: 8am - 6pm"],
+        "visit": [
+          "123 Coffee Lane",
+          "Glass City, GC 90210",
+          "Mon-Fri: 7am - 7pm",
+          "Sat-Sun: 8am - 6pm"
+        ],
         "follow": ["Instagram", "Twitter / X", "TikTok"]
       },
       "copyright": "© 2024 Brew & Glass. All rights reserved. Made with Next.js."
@@ -529,18 +801,66 @@
     },
     "Marquee": "• SINGLE ORIGIN • DIRECT TRADE • MICRO ROAST •",
     "Products": {
-      "1": { "name": "Obsidian Espresso", "desc": "Double shot of single-origin darkness. Notes of molasses and smoke.", "category": "Coffee" },
-      "2": { "name": "Flat White Noise", "desc": "Micro-foam velvet poured over ristretto. Smooth, silence in a cup.", "category": "Coffee" },
-      "3": { "name": "V60 Slow Drip", "desc": "Hand-poured extraction emphasizing floral acoustics and clarity.", "category": "Coffee" },
-      "4": { "name": "Cold Brew Void", "desc": "Steeped for 24 hours in total darkness. High caffeine, low acidity.", "category": "Coffee" },
-      "5": { "name": "Midnight Matcha", "desc": "Ceremonial grade Uji matcha whisked into charcoal-infused oat milk.", "category": "Drinks" },
-      "6": { "name": "Charcoal Latte", "desc": "Activated charcoal and vanilla bean. A detox for the modern soul.", "category": "Drinks" },
-      "7": { "name": "Golden Tonic", "desc": "Turmeric, ginger, and sparkling water. Sharp and awakening.", "category": "Drinks" },
-      "8": { "name": "Lavender Fog", "desc": "Earl Grey tea with steamed milk and house-made lavender syrup.", "category": "Drinks" },
-      "9": { "name": "Eclipse Croissant", "desc": "Butter croissant dipped in dark chocolate ganache and sea salt.", "category": "Bakery" },
-      "10": { "name": "Basque Burnt Cake", "desc": "Caramelized crust with a creamy, molten center. Perfectly imperfect.", "category": "Cakes" },
-      "11": { "name": "Shadow Toast", "desc": "Sourdough, black truffle ricotta, poached egg, and cracked pepper.", "category": "Bakery" },
-      "12": { "name": "Noir Brownie", "desc": "85% Cocoa dark chocolate brownie with walnuts and espresso dust.", "category": "Cakes" }
+      "1": {
+        "name": "Obsidian Espresso",
+        "desc": "Double shot of single-origin darkness. Notes of molasses and smoke.",
+        "category": "Coffee"
+      },
+      "2": {
+        "name": "Flat White Noise",
+        "desc": "Micro-foam velvet poured over ristretto. Smooth, silence in a cup.",
+        "category": "Coffee"
+      },
+      "3": {
+        "name": "V60 Slow Drip",
+        "desc": "Hand-poured extraction emphasizing floral acoustics and clarity.",
+        "category": "Coffee"
+      },
+      "4": {
+        "name": "Cold Brew Void",
+        "desc": "Steeped for 24 hours in total darkness. High caffeine, low acidity.",
+        "category": "Coffee"
+      },
+      "5": {
+        "name": "Midnight Matcha",
+        "desc": "Ceremonial grade Uji matcha whisked into charcoal-infused oat milk.",
+        "category": "Drinks"
+      },
+      "6": {
+        "name": "Charcoal Latte",
+        "desc": "Activated charcoal and vanilla bean. A detox for the modern soul.",
+        "category": "Drinks"
+      },
+      "7": {
+        "name": "Golden Tonic",
+        "desc": "Turmeric, ginger, and sparkling water. Sharp and awakening.",
+        "category": "Drinks"
+      },
+      "8": {
+        "name": "Lavender Fog",
+        "desc": "Earl Grey tea with steamed milk and house-made lavender syrup.",
+        "category": "Drinks"
+      },
+      "9": {
+        "name": "Eclipse Croissant",
+        "desc": "Butter croissant dipped in dark chocolate ganache and sea salt.",
+        "category": "Bakery"
+      },
+      "10": {
+        "name": "Basque Burnt Cake",
+        "desc": "Caramelized crust with a creamy, molten center. Perfectly imperfect.",
+        "category": "Cakes"
+      },
+      "11": {
+        "name": "Shadow Toast",
+        "desc": "Sourdough, black truffle ricotta, poached egg, and cracked pepper.",
+        "category": "Bakery"
+      },
+      "12": {
+        "name": "Noir Brownie",
+        "desc": "85% Cocoa dark chocolate brownie with walnuts and espresso dust.",
+        "category": "Cakes"
+      }
     },
     "Chatbot": {
       "title": "VolooAI",
@@ -573,5 +893,3 @@
     "button": "Return Home"
   }
 }
-
-

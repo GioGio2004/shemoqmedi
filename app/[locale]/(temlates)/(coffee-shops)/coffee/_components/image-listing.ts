@@ -1,4 +1,3 @@
-
 export const INGREDIENTS = [
   {
     id: "arabica",
@@ -28,8 +27,7 @@ export const INGREDIENTS = [
     id: "matcha",
     label: "SOURCE 03",
     title: "Ceremonial Matcha",
-    description:
-      "First-harvest stone-ground green tea from Uji, Japan.",
+    description: "First-harvest stone-ground green tea from Uji, Japan.",
     tags: ["Antioxidant", "Grade A"],
     image:
       "https://images.unsplash.com/photo-1515814472071-4d632ff97881?q=80&w=2000",
@@ -45,8 +43,9 @@ export const PRODUCTS = [
     category: "Signature",
     price: 6,
     image:
-      "https://images.unsplash.com/photo-1517701604599-bb29b5dd7326?q=80&w=800",
-    description: "Cold brew infused with nitrogen for a creamy, cascading texture.",
+      "https://144360272.cdn6.editmysite.com/uploads/1/4/4/3/144360272/PCKG7M45M3PUKCCGV6AJVBET.jpeg?width=2400&optimize=medium",
+    description:
+      "Cold brew infused with nitrogen for a creamy, cascading texture.",
     benefits: ["Smooth", "Strong", "Creamy"],
     color: "from-amber-500 to-orange-600",
   },
@@ -57,7 +56,8 @@ export const PRODUCTS = [
     price: 7,
     image:
       "https://images.unsplash.com/photo-1541167760496-1628856ab772?q=80&w=1037",
-    description: "Double shot espresso with house-made lavender syrup and honey.",
+    description:
+      "Double shot espresso with house-made lavender syrup and honey.",
     benefits: ["Floral", "Sweet", "Aromatic"],
     color: "from-purple-500 to-pink-500",
   },

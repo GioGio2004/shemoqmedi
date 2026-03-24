@@ -5,7 +5,7 @@ export const PRODUCTS = [
     category: "Signature",
     price: 6,
     image:
-      "https://images.unsplash.com/photo-1517701604599-bb29b5dd7326?q=80&w=800",
+      "https://images.unsplash.com/photo-1593443320739-77f74939d0da?q=80&w=736&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     description:
       "Cold brew infused with nitrogen for a creamy, cascading texture.",
     benefits: ["Smooth", "Strong", "Creamy"],
@@ -40,9 +40,8 @@ export const PRODUCTS = [
     category: "Tea",
     price: 6.5,
     image:
-      "https://images.unsplash.com/photo-1536638945027-1f974555e677?q=80&w=800",
-    description:
-      "Ceremonial grade matcha whisked with your choice of milk.",
+      "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    description: "Ceremonial grade matcha whisked with your choice of milk.",
     benefits: ["Energy", "Focus", "Earthy"],
     color: "bg-emerald-700",
   },
@@ -53,8 +52,7 @@ export const PRODUCTS = [
     price: 5.5,
     image:
       "https://images.unsplash.com/photo-1517959105821-eaf2591984ca?q=80&w=800",
-    description:
-      "Steeped for 24 hours for maximum smoothness and caffeine.",
+    description: "Steeped for 24 hours for maximum smoothness and caffeine.",
     benefits: ["Bold", "Cold", "Energizing"],
     color: "bg-[hsl(220,15%,30%)]",
   },

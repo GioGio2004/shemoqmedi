@@ -2,17 +2,17 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { 
-    Accordion, 
-    AccordionContent, 
-    AccordionItem, 
-    AccordionTrigger 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Award, Zap, ArrowUpRight } from "lucide-react";
 
 export function AboutSection() {
-  
+
   useGSAP(() => {
     gsap.from(".reveal-about", {
       y: 40,
@@ -29,10 +29,10 @@ export function AboutSection() {
     <section id="about" className="py-32 px-8 max-w-7xl mx-auto">
       <div className="grid md:grid-cols-2 gap-20 items-center">
         <div className="relative aspect-square rounded-[40px] overflow-hidden border border-white/10 group">
-          <img 
-            src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070" 
-            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
-            alt="About Voloostore" 
+          <img
+            src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070"
+            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+            alt="About FUTURECLOTH"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
@@ -45,7 +45,7 @@ export function AboutSection() {
             <span className="text-[#00e5ff]">To the Future.</span>
           </h2>
           <p className="text-[#8888a0] text-lg font-light leading-relaxed">
-            Voloostore is more than a shop; it&apos;s a technical infrastructure for Georgian creators. We digitalize traditional crafts, ensuring that the work of our artisans reaches every corner of the modern world.
+            FUTURECLOTH is more than a shop; it&apos;s a technical infrastructure for Georgian creators. We digitalize traditional crafts, ensuring that the work of our artisans reaches every corner of the modern world.
           </p>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="logistics" className="border-white/5">

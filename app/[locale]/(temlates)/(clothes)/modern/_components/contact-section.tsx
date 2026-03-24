@@ -7,18 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, MapPin, Clock, Send } from "lucide-react";
 
 export function ContactSection() {
-  
-    useGSAP(() => {
-        gsap.from(".reveal-contact", {
-          y: 40,
-          opacity: 0,
-          duration: 1,
-          scrollTrigger: {
-            trigger: "#contact",
-            start: "top 70%",
-          }
-        });
-      });
+
+  useGSAP(() => {
+    gsap.from(".reveal-contact", {
+      y: 40,
+      opacity: 0,
+      duration: 1,
+      scrollTrigger: {
+        trigger: "#contact",
+        start: "top 70%",
+      }
+    });
+  });
 
   return (
     <section id="contact" className="py-32 px-8 bg-[#0a0a1a]/30 border-t border-white/5">
@@ -37,7 +37,7 @@ export function ContactSection() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-widest text-[#5a5a70] mb-1">Email</p>
-                <p className="text-sm font-bold text-white">hello@voloostore.ge</p>
+                <p className="text-sm font-bold text-white">hello@FUTURECLOTH.ge</p>
               </div>
             </div>
             <div className="flex items-center gap-6 group cursor-pointer">
@@ -60,22 +60,22 @@ export function ContactSection() {
             </div>
           </div>
         </div>
-        
+
         <div className="reveal-contact bg-gradient-to-br from-white/[0.03] to-transparent p-10 rounded-[40px] border border-white/5 space-y-6">
-          <Input 
-            type="text" 
-            placeholder="NAME" 
-            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm font-bold focus:border-[#00e5ff] outline-none transition-all text-white placeholder:text-zinc-600" 
+          <Input
+            type="text"
+            placeholder="NAME"
+            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm font-bold focus:border-[#00e5ff] outline-none transition-all text-white placeholder:text-zinc-600"
           />
-          <Input 
-            type="email" 
-            placeholder="EMAIL" 
-            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm font-bold focus:border-[#00e5ff] outline-none transition-all text-white placeholder:text-zinc-600" 
+          <Input
+            type="email"
+            placeholder="EMAIL"
+            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm font-bold focus:border-[#00e5ff] outline-none transition-all text-white placeholder:text-zinc-600"
           />
-          <textarea 
-            placeholder="MESSAGE" 
-            rows={5} 
-            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm font-bold focus:border-[#00e5ff] outline-none transition-all resize-none text-white placeholder:text-zinc-600 bg-transparent" 
+          <textarea
+            placeholder="MESSAGE"
+            rows={5}
+            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm font-bold focus:border-[#00e5ff] outline-none transition-all resize-none text-white placeholder:text-zinc-600 bg-transparent"
           />
           <button className="w-full py-4 bg-[#00e5ff] text-black font-black uppercase text-xs tracking-widest rounded-2xl hover:shadow-[0_0_30px_#00e5ff] transition-all flex items-center justify-center gap-2">
             <Send size={16} /> Send Message

@@ -41,7 +41,8 @@ export const PRODUCTS = [
     category: "MDF",
     price: 38,
     image:
-      "https://images.unsplash.com/photo-1616627577385-5c0c4dab55a0?q=80&w=800",
+      "https://www.plasticsheets.com/media/catalog/product/m/d/mdf-sheet.jpg",
+
     description:
       "High-density medium-density fiberboard with a smooth, uniform surface on both sides. Perfect for interior millwork, shelving, and decorative paneling. Easy to paint and machine with clean edges.",
     specs: [
@@ -77,7 +78,7 @@ export const PRODUCTS = [
     category: "Plywood",
     price: 78,
     image:
-      "https://images.unsplash.com/photo-1610375228550-d5cabc1afc5e?q=80&w=800",
+      "https://wigwamply.com/wp-content/uploads/2024/10/Adding-Aesthetic-Appeal-Exploring-Plywood-Texture-Options.jpg",
     description:
       "Walnut-faced decorative plywood with a stable multi-ply core. A-grade veneer face provides a rich, natural grain suitable for visible furniture surfaces, wall paneling, and architectural features.",
     specs: [
@@ -95,7 +96,7 @@ export const PRODUCTS = [
     category: "Specialty",
     price: 110,
     image:
-      "https://images.unsplash.com/photo-1581094271901-8022df4466f9?q=80&w=800",
+      "https://wigwamply.com/wp-content/uploads/2024/10/Adding-Aesthetic-Appeal-Exploring-Plywood-Texture-Options.jpg",
     description:
       "Class A fire-rated plywood treated with pressure-impregnated fire retardant chemicals. Meets building code requirements for commercial and public spaces. Structural integrity maintained under fire conditions.",
     specs: [
@@ -118,7 +119,7 @@ export const MATERIAL_TYPES = [
       "Engineered wood made from thin layers of wood veneer glued together. Exceptional strength, stability, and versatility for construction and furniture making.",
     tags: ["Structural", "Versatile"],
     image:
-      "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=2070",
+      "https://wigwamply.com/wp-content/uploads/2024/10/Adding-Aesthetic-Appeal-Exploring-Plywood-Texture-Options.jpg",
     bgColor: "bg-[#3D2B1F]",
     borderColor: "border-[#5C4A3A]",
   },
@@ -130,7 +131,7 @@ export const MATERIAL_TYPES = [
       "Medium-density fiberboard with a smooth, uniform surface. Perfect for interior applications where a flawless painted finish is required.",
     tags: ["Smooth", "Interior"],
     image:
-      "https://images.unsplash.com/photo-1616627577385-5c0c4dab55a0?q=80&w=2070",
+      "https://wigwamply.com/wp-content/uploads/2024/10/Adding-Aesthetic-Appeal-Exploring-Plywood-Texture-Options.jpg",
     bgColor: "bg-[#4A3728]",
     borderColor: "border-[#6B5442]",
   },
@@ -142,7 +143,7 @@ export const MATERIAL_TYPES = [
       "Oriented strand board engineered for maximum structural performance. Cost-effective solution for sheathing, flooring, and load-bearing applications.",
     tags: ["Structural", "Economical"],
     image:
-      "https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=2070",
+      "https://wigwamply.com/wp-content/uploads/2024/10/Adding-Aesthetic-Appeal-Exploring-Plywood-Texture-Options.jpg",
     bgColor: "bg-[#5C4A3A]",
     borderColor: "border-[#7A6452]",
   },
@@ -154,7 +155,7 @@ export const MATERIAL_TYPES = [
       "Select-grade hardwood lumber sourced from responsibly managed forests. Oak, walnut, maple and cherry available in various dimensions.",
     tags: ["Premium", "Solid Wood"],
     image:
-      "https://images.unsplash.com/photo-1610375228550-d5cabc1afc5e?q=80&w=2070",
+      "https://wigwamply.com/wp-content/uploads/2024/10/Adding-Aesthetic-Appeal-Exploring-Plywood-Texture-Options.jpg",
     bgColor: "bg-[#2C1A0E]",
     borderColor: "border-[#4A3728]",
   },

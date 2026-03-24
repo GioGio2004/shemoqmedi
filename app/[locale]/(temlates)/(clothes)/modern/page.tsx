@@ -18,7 +18,7 @@ import { SiteFooter } from "./_components/site-footer";
 import { ProductDetailPopup } from "./_components/product-detail-popup";
 
 /* ─── MAIN COMPONENT ─── */
-export default function VoloostoreEnhanced() {
+export default function FUTURECLOTHEnhanced() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartCount, setCartCount] = useState<number>(0);
@@ -58,7 +58,7 @@ export default function VoloostoreEnhanced() {
 
   return (
     <div ref={containerRef} className="bg-[#05050f] text-[#e8e8f0] min-h-screen selection:bg-[#00e5ff]/30 overflow-x-hidden">
-      
+
       {/* ─── ANNOUNCEMENT BAR ─── */}
       <div className="w-full bg-gradient-to-r from-[#00e5ff] via-[#00b8d4] to-[#00e5ff] py-2 text-center overflow-hidden relative">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-black">
@@ -67,10 +67,10 @@ export default function VoloostoreEnhanced() {
       </div>
 
       {/* ─── NAVBAR ─── */}
-      <Navbar 
-        scrollTo={scrollTo} 
-        wishlistCount={wishlist.size} 
-        cartCount={cartCount} 
+      <Navbar
+        scrollTo={scrollTo}
+        wishlistCount={wishlist.size}
+        cartCount={cartCount}
       />
 
       {/* ─── HERO ─── */}
@@ -81,11 +81,11 @@ export default function VoloostoreEnhanced() {
       <BrandPillars />
 
       {/* ─── PRODUCTS ─── */}
-      <ProductShowcase 
-        onProductClick={handleProductClick} 
-        toggleWishlist={toggleWishlist} 
-        addToCart={() => setCartCount(prev => prev + 1)} 
-        wishlist={wishlist} 
+      <ProductShowcase
+        onProductClick={handleProductClick}
+        toggleWishlist={toggleWishlist}
+        addToCart={() => setCartCount(prev => prev + 1)}
+        wishlist={wishlist}
       />
 
       {/* ─── TESTIMONIALS ─── */}
@@ -114,9 +114,9 @@ export default function VoloostoreEnhanced() {
       )}
 
       {/* ─── PRODUCT DETAIL POPUP ─── */}
-      <ProductDetailPopup 
-        product={selectedProduct} 
-        onClose={() => setSelectedProduct(null)} 
+      <ProductDetailPopup
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
       />
     </div>
   );

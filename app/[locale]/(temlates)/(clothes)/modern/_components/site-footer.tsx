@@ -56,7 +56,7 @@ export function SiteFooter() {
         <Separator className="bg-white/5 mb-8" />
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#5a5a70]">
-          <p className="font-mono tracking-wider">© 2026 VOLOOSTORE // TBILISI HQ // STATUS: OPERATIONAL</p>
+          <p className="font-mono tracking-wider">© 2026 FUTURECLOTH // TBILISI HQ // STATUS: OPERATIONAL</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-[#00e5ff] transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-[#00e5ff] transition-colors">Terms of Service</a>

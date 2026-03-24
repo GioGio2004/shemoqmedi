@@ -2,17 +2,17 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { 
-    Carousel, 
-    CarouselContent, 
-    CarouselItem, 
-    CarouselNext, 
-    CarouselPrevious 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
 } from "@/components/ui/carousel";
 import { BRAND_PILLARS } from "./data";
 
 export function BrandPillars() {
-  
+
   useGSAP(() => {
     gsap.from(".reveal-pillar", {
       y: 40,
@@ -29,7 +29,7 @@ export function BrandPillars() {
     <section id="pillars" className="py-24 px-8 border-y border-white/5 bg-[#0a0a1a]/40">
       <div className="max-w-7xl mx-auto">
         <h3 className="reveal-pillar text-3xl md:text-5xl font-black uppercase tracking-tighter italic mb-12 text-center text-white">
-          Why <span className="text-[#00e5ff]">Voloostore</span>
+          Why <span className="text-[#00e5ff]">FUTURECLOTH</span>
         </h3>
         <Carousel opts={{ align: "start", loop: true }} className="w-full">
           <CarouselContent>
