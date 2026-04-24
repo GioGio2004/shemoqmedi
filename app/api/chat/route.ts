@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     // 1. Force the model to output strict JSON matching your TypeScript interface
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
