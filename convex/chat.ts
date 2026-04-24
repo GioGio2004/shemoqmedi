@@ -119,3 +119,20 @@ export const sendMessage = mutation({
     });
   },
 });
+
+// ─── submitRating ────────────────────────────────────────────────────────────
+export const submitRating = mutation({
+  args: {
+    sessionId: v.string(),
+    cafeId: v.string(),
+    rating: v.number(),
+  },
+  handler: async (ctx, { sessionId, cafeId, rating }) => {
+    await ctx.db.insert("ratings", {
+      sessionId,
+      cafeId,
+      rating,
+      timestamp: Date.now(),
+    });
+  },
+});

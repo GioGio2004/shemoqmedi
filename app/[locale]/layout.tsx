@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 // Note: Adjusted path to ".." since we moved this file into [locale]
 import "../globals.css";
@@ -102,8 +102,23 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Viewport — locks mobile zoom/pan. interactiveWidget tells the browser
+ * NOT to resize the layout viewport when the soft keyboard appears;
+ * we handle height ourselves with 100dvh in the chat overlay.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
+
 export default async function RootLayout({
   children,
+
   params
 }: Readonly<{
   children: React.ReactNode;

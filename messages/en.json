@@ -8,7 +8,6 @@
     "title": "Welcome to FUTURECLOTH",
     "subtitle": "Handmade items from Georgia"
   },
-
   "TimberCraftTemplate": {
     "Navbar": {
       "brand_suffix": "CRAFT",
@@ -59,19 +58,31 @@
           "name": "Baltic Birch Plywood",
           "description": "Premium multi-ply birch for furniture and cabinetry.",
           "category": "Plywood",
-          "tags": ["Furniture", "Cabinetry", "Interior"]
+          "tags": [
+            "Furniture",
+            "Cabinetry",
+            "Interior"
+          ]
         },
         {
           "name": "Marine Grade Ply",
           "description": "Waterproof structural panels for exterior use.",
           "category": "Marine",
-          "tags": ["Exterior", "Boat", "Structural"]
+          "tags": [
+            "Exterior",
+            "Boat",
+            "Structural"
+          ]
         },
         {
           "name": "MDF Sheets",
           "description": "Smooth surface medium density fiberboard.",
           "category": "MDF",
-          "tags": ["Paintable", "Molding", "Interior"]
+          "tags": [
+            "Paintable",
+            "Molding",
+            "Interior"
+          ]
         }
       ]
     },
@@ -84,25 +95,37 @@
     "Materials": {
       "title_1": "Our",
       "title_2": "Materials.",
-      "scroll_hint": "Scroll to explore \u2192",
+      "scroll_hint": "Scroll to explore →",
       "items": [
         {
           "label": "STRUCTURAL",
           "title": "Plywood",
           "description": "Versatile, high-strength sheet material made from thin layers or 'plies' of wood veneer.",
-          "tags": ["Birch", "Pine", "Marine"]
+          "tags": [
+            "Birch",
+            "Pine",
+            "Marine"
+          ]
         },
         {
           "label": "COMPOSITE",
           "title": "MDF",
           "description": "Engineered wood product made by breaking down hardwood or softwood residuals into wood fibers.",
-          "tags": ["Standard", "Moisture Resistant", "Fire Rated"]
+          "tags": [
+            "Standard",
+            "Moisture Resistant",
+            "Fire Rated"
+          ]
         },
         {
           "label": "NATURAL",
           "title": "Hardwood",
           "description": "Solid timber sourced from deciduous trees, known for density and durability.",
-          "tags": ["Oak", "Walnut", "Maple"]
+          "tags": [
+            "Oak",
+            "Walnut",
+            "Maple"
+          ]
         }
       ]
     },
@@ -145,7 +168,12 @@
           "OSB Panels",
           "Hardwood Timber"
         ],
-        "services": ["Cut to Size", "Bulk Orders", "Trade Accounts", "Delivery"]
+        "services": [
+          "Cut to Size",
+          "Bulk Orders",
+          "Trade Accounts",
+          "Delivery"
+        ]
       },
       "headers": {
         "products": "Products",
@@ -201,19 +229,28 @@
           "name": "Rose Hip Serum",
           "description": "Regenerative oil for glowing skin.",
           "category": "Serum",
-          "benefits": ["Hydrating", "Anti-aging"]
+          "benefits": [
+            "Hydrating",
+            "Anti-aging"
+          ]
         },
         {
           "name": "Cloud Cream",
           "description": "Lightweight daily moisturizer.",
           "category": "Moisturizer",
-          "benefits": ["Soothing", "Daily Use"]
+          "benefits": [
+            "Soothing",
+            "Daily Use"
+          ]
         },
         {
           "name": "Midnight Oil",
           "description": "Overnight repair treatment.",
           "category": "Treatment",
-          "benefits": ["Repair", "Calming"]
+          "benefits": [
+            "Repair",
+            "Calming"
+          ]
         }
       ]
     },
@@ -232,19 +269,28 @@
           "label": "BOTANICAL",
           "title": "Aloe Vera",
           "description": "Sourced from volcanic soil for maximum hydration.",
-          "tags": ["Soothing", "Hydrating"]
+          "tags": [
+            "Soothing",
+            "Hydrating"
+          ]
         },
         {
           "label": "EXTRACT",
           "title": "Green Tea",
           "description": "Powerful antioxidants to protect skin barrier.",
-          "tags": ["Protection", "Anti-oxidant"]
+          "tags": [
+            "Protection",
+            "Anti-oxidant"
+          ]
         },
         {
           "label": "OIL",
           "title": "Jojoba",
           "description": "Biomimetic oil that balances natural sebum.",
-          "tags": ["Balancing", "Nourishing"]
+          "tags": [
+            "Balancing",
+            "Nourishing"
+          ]
         }
       ]
     },
@@ -278,11 +324,28 @@
     "Footer": {
       "description": "Premium plant-based skincare designed for those who demand excellence. Sustainably sourced, scientifically proven, beautifully simple.",
       "copyright": "© 2026 AuraSkin Inc. All rights reserved.",
-      "headers": { "shop": "Shop", "support": "Support" },
+      "headers": {
+        "shop": "Shop",
+        "support": "Support"
+      },
       "links": {
-        "shop": ["All Products", "Bestsellers", "Gift Sets", "Sale"],
-        "support": ["Contact Us", "FAQs", "Shipping", "Returns"],
-        "legal": ["Privacy Policy", "Terms of Service", "Cookie Policy"]
+        "shop": [
+          "All Products",
+          "Bestsellers",
+          "Gift Sets",
+          "Sale"
+        ],
+        "support": [
+          "Contact Us",
+          "FAQs",
+          "Shipping",
+          "Returns"
+        ],
+        "legal": [
+          "Privacy Policy",
+          "Terms of Service",
+          "Cookie Policy"
+        ]
       }
     }
   },
@@ -310,12 +373,18 @@
           "title": "High Energy",
           "desc": "Carefully selected beans for maximum focus"
         },
-        { "title": "Top Quality", "desc": "Graded 85+ points by Q-graders" },
+        {
+          "title": "Top Quality",
+          "desc": "Graded 85+ points by Q-graders"
+        },
         {
           "title": "Eco Friendly",
           "desc": "100% compostable cups and packaging"
         },
-        { "title": "Always Fresh", "desc": "Roasted locally every single week" }
+        {
+          "title": "Always Fresh",
+          "desc": "Roasted locally every single week"
+        }
       ]
     },
     "Catalog": {
@@ -328,37 +397,55 @@
           "name": "Draft Latte",
           "description": "Cold brew infused with nitrogen.",
           "category": "Signature",
-          "benefits": ["Smooth", "Strong"]
+          "benefits": [
+            "Smooth",
+            "Strong"
+          ]
         },
         {
           "name": "Honey Lavender",
           "description": "Double shot espresso with floral syrup.",
           "category": "Seasonal",
-          "benefits": ["Floral", "Sweet"]
+          "benefits": [
+            "Floral",
+            "Sweet"
+          ]
         },
         {
           "name": "Classic Flat White",
           "description": "Espresso with silky micro-foam.",
           "category": "Espresso",
-          "benefits": ["Strong", "Silky"]
+          "benefits": [
+            "Strong",
+            "Silky"
+          ]
         },
         {
           "name": "Matcha Latte",
           "description": "Ceremonial grade matcha from Uji.",
           "category": "Tea",
-          "benefits": ["Focus", "Earthy"]
+          "benefits": [
+            "Focus",
+            "Earthy"
+          ]
         },
         {
           "name": "Cold Brew",
           "description": "Steeped for 24 hours.",
           "category": "Iced",
-          "benefits": ["Bold", "Cold"]
+          "benefits": [
+            "Bold",
+            "Cold"
+          ]
         },
         {
           "name": "Croissant",
           "description": "Butter croissant baked fresh.",
           "category": "Bakery",
-          "benefits": ["Flaky", "Buttery"]
+          "benefits": [
+            "Flaky",
+            "Buttery"
+          ]
         }
       ]
     },
@@ -377,19 +464,28 @@
           "label": "BEAN",
           "title": "Arabica 100%",
           "description": "Sourced from high-altitude Ethiopian farms.",
-          "tags": ["Ethiopia", "Washed"]
+          "tags": [
+            "Ethiopia",
+            "Washed"
+          ]
         },
         {
           "label": "MILK",
           "title": "Oat Milk",
           "description": "Barista edition oat milk for perfect foam.",
-          "tags": ["Plant Based", "Creamy"]
+          "tags": [
+            "Plant Based",
+            "Creamy"
+          ]
         },
         {
           "label": "TEA",
           "title": "Matcha",
           "description": "Premium Japanese green tea powder.",
-          "tags": ["Uji", "Ceremonial"]
+          "tags": [
+            "Uji",
+            "Ceremonial"
+          ]
         }
       ]
     },
@@ -423,11 +519,27 @@
     "Footer": {
       "description": "More than just coffee. It's a daily ritual, a community hub, and a relentless pursuit of the perfect cup.",
       "copyright": "© 2026 VolooCafe. All rights reserved.",
-      "headers": { "menu": "Menu", "locations": "Locations" },
+      "headers": {
+        "menu": "Menu",
+        "locations": "Locations"
+      },
       "links": {
-        "menu": ["Coffee", "Tea", "Pastries", "Merch"],
-        "locations": ["Downtown", "West End", "North Shore"],
-        "social": ["Instagram", "Twitter", "TikTok"]
+        "menu": [
+          "Coffee",
+          "Tea",
+          "Pastries",
+          "Merch"
+        ],
+        "locations": [
+          "Downtown",
+          "West End",
+          "North Shore"
+        ],
+        "social": [
+          "Instagram",
+          "Twitter",
+          "TikTok"
+        ]
       }
     }
   },
@@ -722,14 +834,23 @@
         "follow": "Follow"
       },
       "links": {
-        "explore": ["Our Beans", "The Menu", "Merchandise", "Gift Cards"],
+        "explore": [
+          "Our Beans",
+          "The Menu",
+          "Merchandise",
+          "Gift Cards"
+        ],
         "visit": [
           "123 Coffee Lane",
           "Glass City, GC 90210",
           "Mon-Fri: 7am - 7pm",
           "Sat-Sun: 8am - 6pm"
         ],
-        "follow": ["Instagram", "Twitter / X", "TikTok"]
+        "follow": [
+          "Instagram",
+          "Twitter / X",
+          "TikTok"
+        ]
       },
       "copyright": "© 2024 Brew & Glass. All rights reserved. Made with Next.js."
     }
@@ -812,8 +933,8 @@
         "category": "Coffee"
       },
       "3": {
-        "name": "V60 Slow Drip",
-        "desc": "Hand-poured extraction emphasizing floral acoustics and clarity.",
+        "name": "Noir Mocha",
+        "desc": "A decadent, comforting blend. The richness of dark chocolate masks the harshness of the espresso.",
         "category": "Coffee"
       },
       "4": {
@@ -837,28 +958,88 @@
         "category": "Drinks"
       },
       "8": {
-        "name": "Lavender Fog",
-        "desc": "Earl Grey tea with steamed milk and house-made lavender syrup.",
+        "name": "Shadow Bramble",
+        "desc": "A sophisticated, slightly savory mocktail. The herbal notes of sage cut through the sweet berry profile.",
         "category": "Drinks"
       },
       "9": {
         "name": "Eclipse Croissant",
-        "desc": "Butter croissant dipped in dark chocolate ganache and sea salt.",
+        "desc": "Crispy on the outside, impossibly airy and buttery on the inside.",
         "category": "Bakery"
       },
       "10": {
         "name": "Basque Burnt Cake",
-        "desc": "Caramelized crust with a creamy, molten center. Perfectly imperfect.",
+        "desc": "Intentionally scorched on top to create a slightly bitter caramel note.",
         "category": "Cakes"
       },
       "11": {
         "name": "Shadow Toast",
-        "desc": "Sourdough, black truffle ricotta, poached egg, and cracked pepper.",
+        "desc": "Thick slice of sourdough toast topped with smashed avocado.",
         "category": "Bakery"
       },
       "12": {
         "name": "Noir Brownie",
-        "desc": "85% Cocoa dark chocolate brownie with walnuts and espresso dust.",
+        "desc": "Extremely dense and fudgy, not cakey. The flaky sea salt cuts through.",
+        "category": "Cakes"
+      },
+      "13": {
+        "name": "Classic Macchiato",
+        "desc": "For purists who want the punch of an espresso but need just a touch of milk to soften the bite.",
+        "category": "Coffee"
+      },
+      "14": {
+        "name": "V60 Slow Drip",
+        "desc": "A manual, pour-over method that creates a clean, tea-like body. Highlights the bright, fruity notes of the bean.",
+        "category": "Coffee"
+      },
+      "15": {
+        "name": "Spiced Chai Fog",
+        "desc": "A warming, aromatic blend of Indian spices. Sweet, spicy, and deeply comforting.",
+        "category": "Drinks"
+      },
+      "16": {
+        "name": "Crimson Cooler",
+        "desc": "Vibrant, floral, and iced. The tartness of the hibiscus is perfectly balanced by the sweetness of muddled summer berries.",
+        "category": "Drinks"
+      },
+      "17": {
+        "name": "Almond Crescent",
+        "desc": "Sweeter and denser than a traditional croissant. The almond paste inside stays soft and warm.",
+        "category": "Bakery"
+      },
+      "18": {
+        "name": "Blueberry Streusel",
+        "desc": "A soft, cake-like muffin bursting with tart berries. The crunchy cinnamon sugar top adds texture.",
+        "category": "Bakery"
+      },
+      "19": {
+        "name": "Everything Bagel",
+        "desc": "Dense, chewy, and loaded with savory garlic and onion flavors. A reliable breakfast staple.",
+        "category": "Bakery"
+      },
+      "20": {
+        "name": "Vegan Cinnamon Roll",
+        "desc": "Gooey, warm, and highly spiced. You won't believe it has absolutely no dairy.",
+        "category": "Bakery"
+      },
+      "21": {
+        "name": "Midnight Fudge Cake",
+        "desc": "The ultimate indulgence. Three tall layers of rich, moist chocolate cake glued together by thick buttercream.",
+        "category": "Cakes"
+      },
+      "22": {
+        "name": "Spiced Carrot Cake",
+        "desc": "A textured, slightly savory cake featuring warm baking spices and an incredibly rich, tangy cream cheese frosting.",
+        "category": "Cakes"
+      },
+      "23": {
+        "name": "Classic Tiramisu",
+        "desc": "An elegant, airy Italian dessert. The strong coffee flavor is softened by the lightly sweetened mascarpone cheese.",
+        "category": "Cakes"
+      },
+      "24": {
+        "name": "Zesty Lemon Loaf",
+        "desc": "Bright, sour, and palate-cleansing. The cake is dense and buttery, perfectly contrasting the sharp, sugary glaze.",
         "category": "Cakes"
       }
     },
@@ -867,7 +1048,11 @@
       "subtitle": "Online",
       "welcome": "Welcome to VolooAI",
       "welcome_desc": "I can help you navigate our menu, find the perfect coffee, or explain our brewing methods.",
-      "suggestions": ["Suggest a drink", "Best seller?", "Dessert menu"],
+      "suggestions": [
+        "Suggest a drink",
+        "Best seller?",
+        "Dessert menu"
+      ],
       "input_placeholder": "Ask VolooAI...",
       "thinking": "VolooAI Thinking...",
       "auto_collapse": "Auto-Collapse",

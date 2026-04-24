@@ -26,6 +26,17 @@ interface Product {
   image: string;
   description: string;
   color: string;
+  allergens?: string[];
+  ingredients?: string;
+  nutrition?: {
+    calories: number;
+    carbs: string;
+    sugar: string;
+    fat: string;
+    sodium: string;
+    caffeine: string;
+    isGlutenFree: boolean;
+  };
 }
 
 interface ProductCardChatProps {
@@ -122,13 +133,39 @@ export function ProductCard({
         {/* Gradient scrim */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-        {/* Category badge */}
-        <span
-          className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white"
-          style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
-        >
-          {product.category}
-        </span>
+        {/* Category and Dietary Badges */}
+        <div className="absolute top-2 left-2 flex gap-1 items-center">
+          <span
+            className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white"
+            style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
+          >
+            {product.category}
+          </span>
+          {product.nutrition?.isGlutenFree && (
+            <span
+              className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest"
+              style={{ 
+                backgroundColor: `${primaryColor}22`, 
+                color: primaryColor,
+                backdropFilter: "blur(6px)" 
+              }}
+            >
+              GF
+            </span>
+          )}
+          {product.allergens?.includes("Vegan") && (
+            <span
+              className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest"
+              style={{ 
+                backgroundColor: `${primaryColor}22`, 
+                color: primaryColor,
+                backdropFilter: "blur(6px)" 
+              }}
+            >
+              V
+            </span>
+          )}
+        </div>
 
         {/*
           Context-Select Toggle Button (top-right corner)

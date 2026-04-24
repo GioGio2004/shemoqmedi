@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, memo } from "react";
-import { X, Send, Sparkles, Loader2, ArrowDownToLine, Eye, ShoppingBag, Plus, Minus, Trash2, RefreshCw } from "lucide-react";
+import { useState, useRef, useEffect, useCallback, memo, startTransition } from "react";
+import { X, Send, Sparkles, Loader2, ArrowDownToLine, Eye, ShoppingBag, Plus, Minus, Trash2, RefreshCw, Star, SlidersHorizontal } from "lucide-react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ProductCard } from "@/components/chatbots/product-card-chat";
 import { useTranslations, useLocale } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 // ─── Convex ────────────────────────────────────────────────────────────────────
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -35,6 +35,17 @@ interface Product {
   price: number;
   image: string;
   color: string;
+  allergens?: string[];
+  ingredients?: string;
+  nutrition?: {
+    calories: number;
+    carbs: string;
+    sugar: string;
+    fat: string;
+    sodium: string;
+    caffeine: string;
+    isGlutenFree: boolean;
+  };
 }
 
 /**
@@ -213,6 +224,7 @@ interface ChatInputProps {
   contextName?: string;
   placeholder: string;
   theme: CafeTheme;
+  onTyping?: () => void;
 }
 
 const ChatInput = memo(({
@@ -223,6 +235,7 @@ const ChatInput = memo(({
   contextName,
   placeholder,
   theme,
+  onTyping,
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
 
@@ -270,10 +283,13 @@ const ChatInput = memo(({
       <input
         type="text"
         value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          onTyping?.();
+        }}
         onKeyDown={handleKeyDown}
         placeholder={hasContext && contextName ? `Ask about ${contextName}…` : placeholder}
-        className="flex-1 bg-transparent outline-none text-sm text-zinc-200 placeholder:text-zinc-600 font-medium"
+        className="flex-1 bg-transparent outline-none text-[16px] text-zinc-200 placeholder:text-zinc-600 font-medium"
         autoComplete="off"
       />
 
@@ -464,27 +480,52 @@ export function VolooAI({
 
   // ── Order Basket State ─────────────────────────────────────────────────────────────────
   //
-  // Basket is persisted in sessionStorage so a page refresh doesn't wipe the
-  // user's cart. The key includes the cafeId so multi-tenant sessions don't
-  // bleed into each other on the same device.
-  const [basket, setBasket] = useState<BasketItem[]>(() => {
-    if (typeof window === "undefined") return [];
+  // HYDRATION FIX: Always start as [] so server and client render identical
+  // HTML on first paint (no basket badge on either). sessionStorage is loaded
+  // in a useEffect that only runs after client mount — never on the server.
+  const [basket, setBasket] = useState<BasketItem[]>([]);
+
+  // One-time hydration from sessionStorage after mount.
+  useEffect(() => {
     try {
       const stored = sessionStorage.getItem(`${BASKET_KEY}_${cafeId}`);
-      return stored ? (JSON.parse(stored) as BasketItem[]) : [];
-    } catch {
-      return [];
-    }
-  });
+      if (stored) setBasket(JSON.parse(stored) as BasketItem[]);
+    } catch { /* private-browsing or malformed JSON — stay empty */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Sync basket → sessionStorage
+  // Sync basket → sessionStorage on every subsequent change.
   useEffect(() => {
     try {
       sessionStorage.setItem(`${BASKET_KEY}_${cafeId}`, JSON.stringify(basket));
     } catch { /* private-browsing — ignore */ }
   }, [basket, cafeId]);
 
+
   const [isBasketOpen, setIsBasketOpen] = useState(false);
+
+  // ── Rating State ──
+  const [hasRated, setHasRated] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem(`rated_${cafeId}_${sessionId}`) === "true";
+  });
+  const submitRating = useMutation(api.chat.submitRating);
+
+  // ── Allergies State & Modal ──
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [userAllergies, setUserAllergies] = useState<string[]>([]);
+  const toggleAllergy = useCallback((allergy: string) => {
+    setUserAllergies((prev) =>
+      prev.includes(allergy) ? prev.filter((a) => a !== allergy) : [...prev, allergy]
+    );
+  }, []);
+
+  // ── Tooltip State ──
+  const [showTooltip, setShowTooltip] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTooltip(false), 6000);
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * addToBasket — increments quantity if the product already exists,
@@ -542,15 +583,18 @@ export function VolooAI({
   const savedScrollPos = useRef(0);
 
   // ── Language Switch ──
+  //
+  // Soft client-side locale swap using startTransition so the route change
+  // doesn't cause a hard reload or unmount the widget. The pathname is
+  // reconstructed with the new locale in segment [1] (e.g. /en/... → /ka/...).
   const handleLanguageSwitch = (newLocale: string) => {
     if (newLocale === locale) return;
-    const pathSegments = pathname.split("/");
-    if (pathSegments.length > 1) {
-      pathSegments[1] = newLocale;
-    } else {
-      pathSegments.splice(1, 0, newLocale);
-    }
-    router.replace(pathSegments.join("/"));
+    const segments = pathname.split("/");
+    // segments[0] is empty (leading slash), segments[1] is the locale
+    segments[1] = newLocale;
+    startTransition(() => {
+      router.replace(segments.join("/"));
+    });
   };
 
   // ── Effects ──
@@ -695,8 +739,13 @@ export function VolooAI({
     try {
       // Step 2: Build product context string for the Gemini system prompt
       const productContext = localizedProducts
-        .map((p) => `${p.name} (${p.category}) - $${p.price}: ${p.description}`)
-        .join("\n");
+        .map((p) => {
+          const ingredientsStr = p.ingredients ? `Ingredients: ${p.ingredients}.` : "";
+          const allergenStr = p.allergens ? `Allergens: ${p.allergens.join(", ")}.` : "";
+          const nutritionStr = p.nutrition ? `Nutrition: ${JSON.stringify(p.nutrition)}.` : "";
+          return `${p.name} (${p.category}) - $${p.price}: ${p.description}. ${ingredientsStr} ${allergenStr} ${nutritionStr}`;
+        })
+        .join("\n\n");
 
       // Step 3: Call Gemini API — include the current basket so the AI is aware
       const response = await fetch(apiEndpoint, {
@@ -708,7 +757,8 @@ export function VolooAI({
           scrollPosition: window.scrollY,
           conversationHistory: messages,
           language: locale,
-          focusedProducts: selectedContext.map((p) => p.id),
+          focusedItems: selectedContext.map((p) => p.name),
+          userAllergies,
           // Basket context — lets Gemini acknowledge the cart and suggest pairings
           currentBasket: basket.map((item) => ({
             name: item.product.name,
@@ -813,7 +863,17 @@ export function VolooAI({
       <div
         ref={overlayRef}
         className="fixed inset-0 z-[90] hidden items-center justify-center"
-        style={{ backgroundColor: theme.backgroundColor, clipPath: "inset(50% 0% 50% 0%)" }}
+        style={{
+          backgroundColor: theme.backgroundColor,
+          clipPath: "inset(50% 0% 50% 0%)",
+          // dvh = dynamic viewport height: shrinks when the soft keyboard
+          // appears so the input stays above it without a white gap.
+          height: "100dvh",
+          // Prevent the entire overlay from being dragged/panned off-screen
+          // on touch devices.
+          overscrollBehavior: "none",
+          touchAction: "none",
+        }}
       >
         <div
           ref={chatContainerRef}
@@ -830,19 +890,9 @@ export function VolooAI({
               backdropFilter: "blur(20px)",
             }}
           >
-            {/* Left – brand */}
-            <div className="flex items-center gap-2.5">
-              <div
-                className="p-1.5 rounded-lg shadow-lg"
-                style={{
-                  background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
-                  boxShadow: `0 4px 12px ${theme.primaryColor}60`,
-                }}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-              </div>
+            {/* Left – brand (no Sparkles icon, just name + status dot) */}
+            <div className="flex items-center gap-2">
               <div>
-                {/* brandName from cafeConfig — overrides the translation string */}
                 <h2 className="font-black text-sm uppercase tracking-tight leading-none text-zinc-100">
                   {brandName}
                 </h2>
@@ -853,9 +903,9 @@ export function VolooAI({
               </div>
             </div>
 
-            {/* Right – controls */}
-            <div className="flex items-center gap-1.5">
-              {/* Language toggle — active state uses theme.primaryColor */}
+            {/* Right – controls (tighter gap) */}
+            <div className="flex items-center gap-1">
+              {/* Language toggle */}
               <div
                 className="flex items-center p-0.5 rounded-lg border border-white/8"
                 style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
@@ -876,34 +926,48 @@ export function VolooAI({
                 ))}
               </div>
 
-              {/* Chat Mode toggle — active state uses theme.primaryColor */}
+              {/* Chat Mode toggle — icon-only for compact mobile header */}
               <div
-                className="flex items-center p-0.5 rounded-lg border border-white/8"
+                className="relative flex items-center p-0.5 rounded-lg border border-white/8"
                 style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
               >
+                {/* ── Onboarding Tooltip ── */}
+                {showTooltip && (
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[160px] p-2 rounded-lg text-center text-xs font-semibold text-white shadow-2xl animate-fade-in pointer-events-none"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
+                      boxShadow: `0 8px 32px ${theme.primaryColor}50`
+                    }}
+                  >
+                    Chat auto-minimizes so you can view the menu.
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45" style={{ backgroundColor: theme.primaryColor }} />
+                  </div>
+                )}
                 <button
                   onClick={() => setChatMode("collapse")}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all duration-200"
+                  aria-label="Auto-collapse mode"
+                  title="Auto collapse"
+                  className="w-7 h-7 flex items-center justify-center rounded-md transition-all duration-200"
                   style={
                     chatMode === "collapse"
                       ? { backgroundColor: theme.primaryColor, color: "#fff" }
                       : {}
                   }
                 >
-                  <ArrowDownToLine className="w-2.5 h-2.5" />
-                  {t("auto_collapse")}
+                  <ArrowDownToLine className="w-3 h-3" />
                 </button>
                 <button
                   onClick={() => setChatMode("keep")}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all duration-200"
+                  aria-label="Keep open mode"
+                  title="Keep open"
+                  className="w-7 h-7 flex items-center justify-center rounded-md transition-all duration-200"
                   style={
                     chatMode === "keep"
                       ? { backgroundColor: theme.primaryColor, color: "#fff" }
                       : {}
                   }
                 >
-                  <Eye className="w-2.5 h-2.5" />
-                  {t("keep_open")}
+                  <Eye className="w-3 h-3" />
                 </button>
               </div>
 
@@ -975,6 +1039,34 @@ export function VolooAI({
                       {t("welcome_desc")}
                     </p>
                   </div>
+
+                  {/* ── Personal Preferences Button ── */}
+                  <div className="voloo-ui-element w-full px-2 mt-2 flex justify-center">
+                    <button
+                      onClick={() => setIsPreferencesOpen(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-200 group"
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.02)",
+                        borderColor: "rgba(255,255,255,0.08)",
+                        color: theme.textColor
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = `${theme.primaryColor}80`;
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${theme.primaryColor}0d`;
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.08)";
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.02)";
+                      }}
+                    >
+                      <SlidersHorizontal className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" style={{ color: theme.primaryColorLight }} />
+                      <span className="text-xs font-bold uppercase tracking-wider">Dietary Requirements</span>
+                      {userAllergies.length > 0 && (
+                        <span className="w-2 h-2 rounded-full ml-1 animate-pulse" style={{ backgroundColor: theme.primaryColor }} />
+                      )}
+                    </button>
+                  </div>
+
                   <div className="voloo-ui-element flex flex-wrap gap-2 justify-center">
                     {suggestions.map((suggestion, idx) => (
                       <button
@@ -1060,6 +1152,38 @@ export function VolooAI({
                 </div>
               ))}
 
+              {/* ── Rating UI ── */}
+              {allMessages.length >= 4 && !hasRated && (
+                <div className="mt-8 p-6 rounded-[2rem] border border-white/10 text-center animate-fade-in"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.03)",
+                    backdropFilter: "blur(20px)"
+                  }}
+                >
+                  <h4 className="text-zinc-200 font-bold text-sm mb-4">How is your AI experience?</h4>
+                  <div className="flex justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => {
+                          submitRating({ sessionId, cafeId, rating: star });
+                          setHasRated(true);
+                          sessionStorage.setItem(`rated_${cafeId}_${sessionId}`, "true");
+                        }}
+                        className="p-2 text-zinc-500 hover:text-yellow-400 hover:scale-110 transition-all duration-200"
+                      >
+                        <Star className="w-6 h-6 fill-current" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {allMessages.length >= 4 && hasRated && (
+                <div className="mt-8 p-4 text-center animate-fade-in">
+                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColorLight }}>Thank you!</p>
+                </div>
+              )}
+
               {/* ── Typing Indicator ── */}
               {isProcessing && chatMode === "keep" && (
                 <div className="flex items-center gap-1.5 pl-1">
@@ -1126,6 +1250,7 @@ export function VolooAI({
                 contextName={selectedContext[0]?.name}
                 placeholder={t("input_placeholder")}
                 theme={theme}
+                onTyping={() => setShowTooltip(false)}
               />
 
             </div>
@@ -1180,7 +1305,13 @@ export function VolooAI({
                   </span>
                 )}
               </div>
-              {/* X button removed per UX spec — use the Close button in the footer */}
+              <button
+                onClick={() => setIsBasketOpen(false)}
+                aria-label="Close basket"
+                className="p-1 rounded-lg hover:bg-white/5 transition-colors duration-150 text-zinc-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Drawer Body — scrollable item list */}
@@ -1301,6 +1432,73 @@ export function VolooAI({
 
         </div>
       </div>
+
+      {/* ════════ PREFERENCES MODAL ════════ */}
+      {isPreferencesOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in" 
+          style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+        >
+          <div 
+            className="relative w-full max-w-[320px] rounded-[2rem] p-6 border shadow-2xl" 
+            style={{ 
+              backgroundColor: `${theme.backgroundColor}f0`,
+              borderColor: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(24px) saturate(150%)" 
+            }}
+          >
+            <button 
+              onClick={() => setIsPreferencesOpen(false)} 
+              className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/5 transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2 mb-2">
+              <SlidersHorizontal className="w-4 h-4" style={{ color: theme.primaryColorLight }} />
+              <h3 className="text-sm font-black uppercase tracking-wider text-white">Dietary Needs</h3>
+            </div>
+            <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
+              Select any ingredients you'd like our AI to avoid when recommending menu items.
+            </p>
+            
+            <div className="flex flex-wrap gap-2 mb-8">
+              {["Lactose/Dairy", "Nuts", "Gluten", "Vegan"].map((allergy) => {
+                const isActive = userAllergies.includes(allergy);
+                return (
+                  <button
+                    key={allergy}
+                    onClick={() => toggleAllergy(allergy)}
+                    className="px-3.5 py-1.5 text-xs font-bold rounded-full border transition-all duration-200"
+                    style={isActive ? {
+                      backgroundColor: theme.primaryColor,
+                      borderColor: theme.primaryColor,
+                      color: "#fff",
+                      boxShadow: `0 4px 12px ${theme.primaryColor}50`
+                    } : {
+                      backgroundColor: "rgba(255,255,255,0.02)",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#a1a1aa"
+                    }}
+                  >
+                    {allergy}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button 
+              onClick={() => setIsPreferencesOpen(false)}
+              className="w-full py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 shadow-lg"
+              style={{ 
+                background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
+                boxShadow: `0 8px 24px ${theme.primaryColor}40`
+              }}
+            >
+              Save Preferences
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

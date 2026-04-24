@@ -124,4 +124,11 @@ export default defineSchema({
     products: v.optional(v.array(v.number())), // product IDs from AI
     timestamp: v.number(),
   }).index("bySession", ["sessionId", "cafeId"]),
+
+  ratings: defineTable({
+    cafeId: v.string(),
+    sessionId: v.string(),
+    rating: v.number(),
+    timestamp: v.number(),
+  }).index("byCafeId", ["cafeId"]),
 });

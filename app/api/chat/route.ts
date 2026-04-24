@@ -4,7 +4,7 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, productContext, conversationHistory = [], currentBasket = [] } = body;
+    const { message, productContext, conversationHistory = [], currentBasket = [], userAllergies = [], focusedItems = [] } = body;
 
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       return NextResponse.json(
@@ -49,25 +49,34 @@ export async function POST(request: NextRequest) {
     }));
 
     // 3. The Shemoqmedi-First System Prompt
-    //
-    // The basket section is injected dynamically — when the user has items in
-    // their cart, Gemini is made aware so it can acknowledge the order and
-    // suggest pairings without needing a hard-coded menu of combinations.
-    const basketContext =
-      currentBasket.length > 0
-        ? `\nCURRENT ORDER BASKET:\nThe user currently has these items in their basket: ${JSON.stringify(currentBasket)}.\nAcknowledge their basket if they ask about it, suggest pairings or add-ons based on what they already selected, and gently encourage them to finalise the order.`
+    const basketContext = currentBasket.length > 0
+        ? `\nCURRENT ORDER BASKET: The user currently has these items: ${JSON.stringify(currentBasket)}.`
+        : "";
+
+    // CRITICAL SAFETY FILTER
+    const allergyContext = userAllergies.length > 0
+        ? `\nCRITICAL DIETARY RESTRICTIONS: The user has marked that they are allergic to or avoiding: ${userAllergies.join(", ")}. \n    RULE 1: When making general recommendations, try to suggest safe items that do NOT contain these allergens.\n    RULE 2: If the user explicitly asks about an item that contains their allergen, DO NOT REFUSE TO DESCRIBE IT. Assume they might be ordering for a friend at the table. Describe the item beautifully, but append a polite, clear WARNING that it contains their allergen.`
+        : "";
+
+    const focusContext = focusedItems.length > 0
+        ? `\nCURRENTLY FOCUSED ITEMS: The user has explicitly pinned these items to their screen: ${focusedItems.join(", ")}. If the user uses pronouns like "this", "it", or asks a vague question about a product, THEY ARE REFERRING TO THESE SPECIFIC ITEMS. Prioritize discussing these.`
         : "";
 
     const systemInstruction = `
       You are the AI assistant for Shemoqmedi cafe. 
       BRAND VOICE: Minimalist, professional, and knowledgeable about our menu.
+      You have access to exact nutritional macros, allergens, and tasting notes. Use this data to accurately answer questions about calories, caffeine, or diet, but prioritize the user's conversational flow.
       
-      PRODUCT CATALOG:
+      PRODUCT CATALOG (Includes Allergens):
       ${productContext}
+      
       ${basketContext}
+      ${allergyContext}
+      ${focusContext}
+      
       INSTRUCTIONS:
-      When users ask for recommendations or ask about specific items, find the most relevant items from the catalog. 
-      Provide a brief, helpful text response, and include the exact integer IDs of the recommended products in the productIds array.
+      When users ask for recommendations, find the most relevant, SAFE items from the catalog. 
+      Provide a brief, helpful text response in the language they are speaking, and include the exact integer IDs of the recommended products in the productIds array.
     `;
 
     const chat = model.startChat({
