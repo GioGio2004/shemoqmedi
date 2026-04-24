@@ -15,6 +15,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen w-full bg-zinc-50 text-zinc-900 selection:bg-pink-500 selection:text-white overflow-x-hidden">
+      {/* so first of all we need to amke the check for admin panel and we can use clerks role based authentication for it  */}
       <LanguageToggler />
       <IntroScreen />
 

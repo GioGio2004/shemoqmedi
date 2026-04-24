@@ -19,7 +19,6 @@ import {
 
 import { ContactDropdown } from "@/app/[locale]/(temlates)/beauty/_components/contact-dropdown";
 import { INGREDIENTS, PRODUCTS } from "./_components/image-listing";
-import { BeautyChat } from "@/components/chatbots/beauty/beauty";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -62,17 +61,15 @@ function LanguageSwitcher() {
       >
         <DropdownMenuItem
           onClick={() => handleSelect("en")}
-          className={`cursor-pointer ${
-            locale === "en" ? "font-bold text-rose-500" : "text-slate-600"
-          }`}
+          className={`cursor-pointer ${locale === "en" ? "font-bold text-rose-500" : "text-slate-600"
+            }`}
         >
           🇬🇧 English
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleSelect("ka")}
-          className={`cursor-pointer ${
-            locale === "ka" ? "font-bold text-rose-500" : "text-slate-600"
-          }`}
+          className={`cursor-pointer ${locale === "ka" ? "font-bold text-rose-500" : "text-slate-600"
+            }`}
         >
           🇬🇪 ქართული
         </DropdownMenuItem>
@@ -440,11 +437,10 @@ export default function Home() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
-                  activeCategory === cat
+                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${activeCategory === cat
                     ? "bg-slate-900 text-white shadow-lg scale-105"
                     : "bg-white text-slate-600 border border-slate-200 hover:border-rose-300 hover:text-rose-500"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -842,7 +838,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      <BeautyChat />
     </main>
   );
 }

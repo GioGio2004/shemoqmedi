@@ -1,10 +1,22 @@
+/**
+ * product-card-chat.tsx
+ *
+ * A compact product card rendered inside the VolooAI chat widget.
+ *
+ * Phase 2 changes:
+ *  - Removed ContactDropdown entirely (replaced by the in-app basket flow)
+ *  - Added `onAddToBasket` prop — fires when the user taps the ADD button
+ *  - Added `primaryColor` / `primaryColorLight` theme props so the ADD button
+ *    and selection border use the cafe's brand colour instead of hardcoded orange
+ */
 "use client";
 
 import { useRef } from "react";
 import Image from "next/image";
 import { Check, Plus } from "lucide-react";
 import gsap from "gsap";
-import { ContactDropdown } from "../../app/[locale]/(temlates)/(coffee-shops)/coffee-3/_components/contact-dropdown";
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface Product {
   id: number;
@@ -22,26 +34,51 @@ interface ProductCardChatProps {
   // ── Context-selection props ──
   isSelected: boolean;
   onToggle: (product: Product) => void;
+  // ── Basket props ──
+  /** Called when the user taps the ADD button in the card footer */
+  onAddToBasket: (product: Product) => void;
+  /** The cafe's primary brand colour — used for the ADD button gradient */
+  primaryColor: string;
+  /** The cafe's lighter accent colour — used for price badge and ADD button */
+  primaryColorLight: string;
 }
+
+// ─── ProductCard ───────────────────────────────────────────────────────────────
 
 export function ProductCard({
   product,
   isBackgroundDark,
   isSelected,
   onToggle,
+  onAddToBasket,
+  primaryColor,
+  primaryColorLight,
 }: ProductCardChatProps) {
   const toggleBtnRef = useRef<HTMLButtonElement>(null);
+  const addBtnRef = useRef<HTMLButtonElement>(null);
 
-  // GSAP pop on every toggle — only animates the button, never the card layout
+  // GSAP pop on every context-toggle (the ✓ / + button in the image corner)
   const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Don't interfere with horizontal scroll
+    e.stopPropagation();
     onToggle(product);
-
     if (toggleBtnRef.current) {
       gsap.fromTo(
         toggleBtnRef.current,
         { scale: 0.6 },
         { scale: 1, duration: 0.4, ease: "back.out(2.5)" }
+      );
+    }
+  };
+
+  // Micro-bounce on ADD tap to signal success
+  const handleAddToBasket = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToBasket(product);
+    if (addBtnRef.current) {
+      gsap.fromTo(
+        addBtnRef.current,
+        { scale: 0.75 },
+        { scale: 1, duration: 0.35, ease: "back.out(3)" }
       );
     }
   };
@@ -61,15 +98,14 @@ export function ProductCard({
           ? "rgba(30, 30, 35, 0.85)"
           : "rgba(255, 255, 255, 0.85)",
         borderColor: isSelected
-          ? "rgba(249,115,22,0.55)"   // orange glow border when selected
+          ? `${primaryColor}8c`        // brand-tinted glow border when selected
           : isBackgroundDark
             ? "rgba(255,255,255,0.08)"
             : "rgba(0,0,0,0.08)",
         backdropFilter: "blur(24px) saturate(160%)",
         WebkitBackdropFilter: "blur(24px) saturate(160%)",
-        // Subtle orange inner glow when selected
         boxShadow: isSelected
-          ? "0 0 0 1px rgba(249,115,22,0.4), 0 20px 40px rgba(0,0,0,0.6), 0 0 20px rgba(249,115,22,0.12) inset"
+          ? `0 0 0 1px ${primaryColor}66, 0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${primaryColor}1f inset`
           : "0 20px 40px rgba(0,0,0,0.6)",
       }}
     >
@@ -94,10 +130,10 @@ export function ProductCard({
           {product.category}
         </span>
 
-        {/* ── Context-Select Toggle Button ──
-            Replaces the colour dot. Lives in the top-right corner of the image.
-            Unselected: faint outline circle with a Plus icon.
-            Selected:   orange filled circle with a Check icon + glow.
+        {/*
+          Context-Select Toggle Button (top-right corner)
+          Unselected: faint circle + Plus icon
+          Selected:   brand-coloured circle + Check icon + glow
         */}
         <button
           ref={toggleBtnRef}
@@ -107,8 +143,8 @@ export function ProductCard({
           style={
             isSelected
               ? {
-                  backgroundColor: "#ea580c",
-                  boxShadow: "0 0 10px rgba(234,88,12,0.55), 0 0 4px rgba(234,88,12,0.4)",
+                  backgroundColor: primaryColor,
+                  boxShadow: `0 0 10px ${primaryColor}8c, 0 0 4px ${primaryColor}66`,
                   border: "1.5px solid rgba(255,255,255,0.30)",
                 }
               : {
@@ -134,7 +170,7 @@ export function ProductCard({
         <div className="min-w-0">
           <h3
             className="text-xs font-black leading-tight truncate transition-colors duration-300"
-            style={{ color: isSelected ? "#f97316" : undefined }}
+            style={{ color: isSelected ? primaryColorLight : undefined }}
           >
             {product.name}
           </h3>
@@ -143,32 +179,37 @@ export function ProductCard({
           </p>
         </div>
 
-        {/* Price + Order row */}
+        {/* Price + ADD row */}
         <div className="flex items-center justify-between gap-2 mt-1.5">
+          {/* Price badge — uses brand accent colour */}
           <span
             className="text-xs font-black font-mono px-1.5 py-0.5 rounded-lg shrink-0"
             style={{
-              backgroundColor: "rgba(234,88,12,0.15)",
-              color: "#f97316",
+              backgroundColor: `${primaryColor}26`,
+              color: primaryColorLight,
             }}
           >
             ${product.price.toFixed(2)}
           </span>
 
-          <ContactDropdown
-            productName={product.name}
-            productCategory={product.category}
-            productPrice={product.price}
-            productImage={product.image}
-            colorClass="
-              bg-gradient-to-r from-orange-600 to-orange-500
-              hover:from-orange-500 hover:to-orange-400
-              text-white text-[9px] px-2.5 py-1
-              shadow-md shadow-orange-900/30
-              font-black uppercase tracking-wider rounded-lg
-              transition-all duration-200
-            "
-          />
+          {/*
+            ADD button — replaces ContactDropdown.
+            A sleek pill with a gradient background using the cafe's theme colour.
+            GSAP bounce fires on every tap (handleAddToBasket).
+          */}
+          <button
+            ref={addBtnRef}
+            onClick={handleAddToBasket}
+            aria-label={`Add ${product.name} to basket`}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-white text-[9px] font-black uppercase tracking-wider transition-opacity duration-150 hover:opacity-90 active:opacity-75"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor}, ${primaryColorLight})`,
+              boxShadow: `0 4px 12px ${primaryColor}4d`,
+            }}
+          >
+            <Plus className="w-2.5 h-2.5" strokeWidth={3} />
+            ADD
+          </button>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, productContext, conversationHistory = [] } = body;
+    const { message, productContext, conversationHistory = [], currentBasket = [] } = body;
 
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       return NextResponse.json(
@@ -49,13 +49,22 @@ export async function POST(request: NextRequest) {
     }));
 
     // 3. The Shemoqmedi-First System Prompt
+    //
+    // The basket section is injected dynamically — when the user has items in
+    // their cart, Gemini is made aware so it can acknowledge the order and
+    // suggest pairings without needing a hard-coded menu of combinations.
+    const basketContext =
+      currentBasket.length > 0
+        ? `\nCURRENT ORDER BASKET:\nThe user currently has these items in their basket: ${JSON.stringify(currentBasket)}.\nAcknowledge their basket if they ask about it, suggest pairings or add-ons based on what they already selected, and gently encourage them to finalise the order.`
+        : "";
+
     const systemInstruction = `
       You are the AI assistant for Shemoqmedi cafe. 
       BRAND VOICE: Minimalist, professional, and knowledgeable about our menu.
       
       PRODUCT CATALOG:
       ${productContext}
-      
+      ${basketContext}
       INSTRUCTIONS:
       When users ask for recommendations or ask about specific items, find the most relevant items from the catalog. 
       Provide a brief, helpful text response, and include the exact integer IDs of the recommended products in the productIds array.
