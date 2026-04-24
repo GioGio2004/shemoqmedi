@@ -625,6 +625,7 @@ export function VolooAI({
       document.body.style.position = "fixed";
       document.body.style.top = `-${savedScrollPos.current}px`;
       document.body.style.width = "100%";
+      document.documentElement.style.backgroundColor = theme.backgroundColor;
       ScrollTrigger.getAll().forEach((st) => st.disable());
       scrollLocked.current = true;
     }
@@ -636,6 +637,7 @@ export function VolooAI({
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
+      document.documentElement.style.backgroundColor = "";
       window.scrollTo(0, scrollY);
       ScrollTrigger.getAll().forEach((st) => st.enable());
       scrollLocked.current = false;
@@ -873,6 +875,7 @@ export function VolooAI({
           // on touch devices.
           overscrollBehavior: "none",
           touchAction: "none",
+          overflow: "hidden",
         }}
       >
         <div
@@ -1217,7 +1220,7 @@ export function VolooAI({
               2. The pill input itself
           */}
           <div className="voloo-ui-element absolute bottom-0 left-0 right-0 pointer-events-none">
-            <div className="max-w-3xl mx-auto px-4 pb-5 flex flex-col gap-2 pointer-events-auto">
+            <div className="max-w-3xl mx-auto px-4 flex flex-col gap-2 pointer-events-auto" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}>
 
               {/* ── Context Chip Bar ──
                   Rendered above the pill when products are selected.
