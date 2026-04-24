@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, Send,  Loader2, ArrowDownToLine, Eye, SquircleIcon } from "lucide-react";
+import { X, Send, Loader2, ArrowDownToLine, Eye, SquircleIcon } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ProductCard } from "@/components/chatbots/product-card-chat";
@@ -25,12 +25,12 @@ interface VolooAIChatProps {
 // Parses **bold** and newlines from Gemini response
 const FormatMessage = ({ content }: { content: string }) => {
   if (!content) return null;
-  
+
   return (
     <div className="space-y-2">
       {content.split('\n').map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-2" />; // Handle empty lines
-        
+
         return (
           <p key={i} className="leading-relaxed">
             {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
@@ -50,10 +50,10 @@ const FormatMessage = ({ content }: { content: string }) => {
   );
 };
 
-export function BeautyChat({ 
+export function BeautyChat({
   apiEndpoint = "/api/chat",
 }: VolooAIChatProps) {
-  
+
   // --- State ---
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -61,7 +61,7 @@ export function BeautyChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isBackgroundDark, setIsBackgroundDark] = useState(true);
-  
+
   // --- Refs ---
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -83,13 +83,13 @@ export function BeautyChat({
   // Animate new messages with GSAP
   useEffect(() => {
     if (messages.length > 0 && isOpen) {
-        const lastMessageIndex = messages.length - 1;
-        const selector = `.message-item-${lastMessageIndex}`;
-        
-        gsap.fromTo(selector, 
-            { opacity: 0, y: 20, scale: 0.95 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.5)" }
-        );
+      const lastMessageIndex = messages.length - 1;
+      const selector = `.message-item-${lastMessageIndex}`;
+
+      gsap.fromTo(selector,
+        { opacity: 0, y: 20, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.5)" }
+      );
     }
   }, [messages, isOpen]);
 
@@ -99,7 +99,7 @@ export function BeautyChat({
       x: window.innerWidth / 2,
       y: (window.innerHeight / 2) + window.scrollY
     };
-    
+
     if (typeof document !== 'undefined') {
       const element = document.elementFromPoint(center.x, center.y - window.scrollY);
       if (element) {
@@ -152,7 +152,7 @@ export function BeautyChat({
 
     tl.set(overlayRef.current, { display: "flex", opacity: 0 })
       .to(overlayRef.current, { opacity: 1, duration: 0.2 })
-      .fromTo(overlayRef.current, 
+      .fromTo(overlayRef.current,
         { clipPath: "inset(50% 0% 50% 0%)" },
         { clipPath: "inset(0% 0% 0% 0%)", duration: 0.8, ease: "expo.inOut" }
       )
@@ -183,10 +183,10 @@ export function BeautyChat({
     });
 
     tl.to(chatContainerRef.current, { opacity: 0, duration: 0.3 })
-      .to(overlayRef.current, { 
-        clipPath: "inset(50% 0% 50% 0%)", 
-        duration: 0.8, 
-        ease: "expo.inOut" 
+      .to(overlayRef.current, {
+        clipPath: "inset(50% 0% 50% 0%)",
+        duration: 0.8,
+        ease: "expo.inOut"
       }, "-=0.3")
       .to(overlayRef.current, { opacity: 0, duration: 0.2 }, "-=0.2");
 
@@ -195,24 +195,26 @@ export function BeautyChat({
 
   const shrinkToProcessing = async () => {
     const tl = gsap.timeline();
-    
+
     tl.to(chatContainerRef.current, { opacity: 0, duration: 0.3 })
-      .to(overlayRef.current, { 
-        clipPath: "inset(50% 0% 50% 0%)", 
-        duration: 0.6, 
-        ease: "expo.inOut" 
+      .to(overlayRef.current, {
+        clipPath: "inset(50% 0% 50% 0%)",
+        duration: 0.6,
+        ease: "expo.inOut"
       }, "-=0.3")
       .set(processingPillRef.current, { display: "flex", opacity: 0, scale: 0.8 })
       .to(processingPillRef.current, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.7)" })
       .to(overlayRef.current, { opacity: 0, duration: 0.2 }, "-=0.2")
       .add(() => {
-         unlockScroll(); 
-         if (overlayRef.current) overlayRef.current.style.display = "none";
+        unlockScroll();
+        if (overlayRef.current) overlayRef.current.style.display = "none";
       })
-      .to(processingPillRef.current, { opacity: 0, scale: 0.8, duration: 0.3, delay: 0.8, onComplete: () => {
-         if (processingPillRef.current) processingPillRef.current.style.display = "none";
-         setIsOpen(false);
-      }});
+      .to(processingPillRef.current, {
+        opacity: 0, scale: 0.8, duration: 0.3, delay: 0.8, onComplete: () => {
+          if (processingPillRef.current) processingPillRef.current.style.display = "none";
+          setIsOpen(false);
+        }
+      });
 
     return tl;
   };
@@ -228,11 +230,11 @@ export function BeautyChat({
     setIsProcessing(true);
 
     if (chatMode === "collapse") {
-        await shrinkToProcessing();
+      await shrinkToProcessing();
     }
 
     try {
-      const productContext = PRODUCTS.map((p: any) => 
+      const productContext = PRODUCTS.map((p: any) =>
         `${p.name} (${p.category}) - $${p.price}: ${p.description}`
       ).join('\n');
 
@@ -258,18 +260,18 @@ export function BeautyChat({
       setMessages(prev => [...prev, assistantMessage]);
 
       if (chatMode === "collapse") {
-         setTimeout(() => {
-             openChatAnimation();
-         }, 300);
+        setTimeout(() => {
+          openChatAnimation();
+        }, 300);
       }
-      
+
     } catch (error) {
       console.error("VolooAI Error", error);
       if (chatMode === "collapse") {
-          setTimeout(() => openChatAnimation(), 500);
+        setTimeout(() => openChatAnimation(), 500);
       }
     } finally {
-        setIsProcessing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -307,8 +309,8 @@ export function BeautyChat({
       {/* Processing Pill */}
       <div ref={processingPillRef} className="fixed bottom-8 right-8 z-[100] hidden">
         <div className="px-8 py-4 bg-orange-600 text-white rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="font-bold text-sm uppercase tracking-wider">VolooAI Thinking...</span>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="font-bold text-sm uppercase tracking-wider">VolooAI Thinking...</span>
         </div>
       </div>
 
@@ -324,13 +326,13 @@ export function BeautyChat({
             backgroundColor: isBackgroundDark ? "rgba(10,10,10,0.98)" : "rgba(250,250,250,0.98)",
           }}
         >
-          
+
           {/* Header */}
           <div className="voloo-ui-element flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 border-b backdrop-blur-xl gap-4 md:gap-0 sticky top-0 z-10"
-               style={{ 
-                 borderColor: isBackgroundDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-               }}>
-            
+            style={{
+              borderColor: isBackgroundDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+            }}>
+
             <div className="flex items-center gap-3 md:gap-4">
               <div className="p-2 md:p-3 bg-gradient-to-br from-red-600 to-red-200 rounded-xl shadow-lg shadow-blue-900/30">
                 <SquircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
@@ -343,40 +345,38 @@ export function BeautyChat({
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto mt-2 md:mt-0">
-                {/* Chat Mode Toggle */}
-                <div className="flex items-center bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-white/10 w-full md:w-auto justify-center">
-                    <button 
-                        onClick={() => setChatMode('collapse')}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase transition-all duration-300 ${
-                            chatMode === 'collapse' 
-                            ? 'bg-orange-600 text-white shadow-lg' 
-                            : 'opacity-50 hover:opacity-100 hover:bg-white/5'
-                        }`}
-                    >
-                        <ArrowDownToLine className="w-3 h-3" />
-                        <span>Auto-Collapse</span>
-                    </button>
-                    <button 
-                        onClick={() => setChatMode('keep')}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase transition-all duration-300 ${
-                            chatMode === 'keep' 
-                            ? 'bg-orange-600 text-white shadow-lg' 
-                            : 'opacity-50 hover:opacity-100 hover:bg-white/5'
-                        }`}
-                    >
-                        <Eye className="w-3 h-3" />
-                        <span>Keep Open</span>
-                    </button>
-                </div>
 
-                <button 
-                    onClick={closeChatAnimation} 
-                    className="p-3 rounded-xl hover:bg-white/5 transition-all duration-300 backdrop-blur-sm ml-2 group"
+            <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto mt-2 md:mt-0">
+              {/* Chat Mode Toggle */}
+              <div className="flex items-center bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-white/10 w-full md:w-auto justify-center">
+                <button
+                  onClick={() => setChatMode('collapse')}
+                  className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase transition-all duration-300 ${chatMode === 'collapse'
+                      ? 'bg-orange-600 text-white shadow-lg'
+                      : 'opacity-50 hover:opacity-100 hover:bg-white/5'
+                    }`}
                 >
-                    <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                  <ArrowDownToLine className="w-3 h-3" />
+                  <span>Auto-Collapse</span>
                 </button>
+                <button
+                  onClick={() => setChatMode('keep')}
+                  className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase transition-all duration-300 ${chatMode === 'keep'
+                      ? 'bg-orange-600 text-white shadow-lg'
+                      : 'opacity-50 hover:opacity-100 hover:bg-white/5'
+                    }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Keep Open</span>
+                </button>
+              </div>
+
+              <button
+                onClick={closeChatAnimation}
+                className="p-3 rounded-xl hover:bg-white/5 transition-all duration-300 backdrop-blur-sm ml-2 group"
+              >
+                <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+              </button>
             </div>
           </div>
 
@@ -421,11 +421,10 @@ export function BeautyChat({
                   >
                     <div className={`max-w-[90%] md:max-w-[80%] space-y-3`}>
                       <div
-                        className={`rounded-2xl md:rounded-3xl px-6 py-4 shadow-lg ${
-                          msg.role === "user"
+                        className={`rounded-2xl md:rounded-3xl px-6 py-4 shadow-lg ${msg.role === "user"
                             ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white"
                             : ""
-                        }`}
+                          }`}
                         style={msg.role === "assistant" ? {
                           backgroundColor: isBackgroundDark ? "rgba(30,30,30,0.8)" : "rgba(255,255,255,0.8)",
                           border: `1px solid ${isBackgroundDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
@@ -434,22 +433,22 @@ export function BeautyChat({
                       >
                         {/* USE THE NEW FORMATTER */}
                         <div className="text-sm md:text-lg">
-                            <FormatMessage content={msg.content} />
+                          <FormatMessage content={msg.content} />
                         </div>
                       </div>
-                      
+
                       {msg.products && msg.products.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                           {msg.products.map(productId => {
                             const product = PRODUCTS.find((p: { id: number; }) => p.id === productId);
                             if (!product) return null;
                             return (
-                              <ProductCard 
-                                key={product.id} 
+                              <ProductCard
+                                key={product.id}
                                 product={product}
                                 isBackgroundDark={isBackgroundDark}
                                 isSelected={false}
-                                onToggle={() => {}}
+                                onToggle={() => { }}
                               />
                             );
                           })}
@@ -460,13 +459,13 @@ export function BeautyChat({
                 ))}
 
                 {isProcessing && chatMode === 'keep' && (
-                   <div className="flex justify-start animate-pulse">
-                      <div className="rounded-3xl px-6 py-4 bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-2">
-                        <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce"></div>
-                      </div>
-                   </div>
+                  <div className="flex justify-start animate-pulse">
+                    <div className="rounded-3xl px-6 py-4 bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce"></div>
+                    </div>
+                  </div>
                 )}
                 <div ref={messagesEndRef} />
               </>
@@ -474,9 +473,9 @@ export function BeautyChat({
           </div>
 
           {/* Input Area */}
-          <div 
+          <div
             className="voloo-ui-element p-4 md:p-8 border-t backdrop-blur-2xl"
-            style={{ 
+            style={{
               borderColor: isBackgroundDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
               backgroundColor: isBackgroundDark ? "rgba(20,20,20,0.6)" : "rgba(255,255,255,0.6)"
             }}
