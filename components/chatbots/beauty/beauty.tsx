@@ -448,6 +448,8 @@ export function BeautyChat({
                                 key={product.id} 
                                 product={product}
                                 isBackgroundDark={isBackgroundDark}
+                                isSelected={false}
+                                onToggle={() => {}}
                               />
                             );
                           })}
