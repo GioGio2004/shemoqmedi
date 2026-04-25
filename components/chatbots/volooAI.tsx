@@ -745,7 +745,7 @@ export function VolooAI({
           const ingredientsStr = p.ingredients ? `Ingredients: ${p.ingredients}.` : "";
           const allergenStr = p.allergens ? `Allergens: ${p.allergens.join(", ")}.` : "";
           const nutritionStr = p.nutrition ? `Nutrition: ${JSON.stringify(p.nutrition)}.` : "";
-          return `${p.name} (${p.category}) - $${p.price}: ${p.description}. ${ingredientsStr} ${allergenStr} ${nutritionStr}`;
+          return `ID: ${p.id} | ${p.name} (${p.category}) - $${p.price}: ${p.description}. ${ingredientsStr} ${allergenStr} ${nutritionStr}`;
         })
         .join("\n\n");
 
