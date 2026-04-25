@@ -99,6 +99,16 @@ export async function generateMetadata({
         'max-snippet': -1,
       },
     },
+    manifest: '/site.webmanifest',
+    applicationName: 'Shemoqmedi',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: 'Shemoqmedi',
+    },
+    formatDetection: {
+      telephone: false,
+    },
   };
 }
 
@@ -114,6 +124,10 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  ],
 };
 
 export default async function RootLayout({
@@ -132,9 +146,9 @@ export default async function RootLayout({
 
   return (
     // 3. Set the HTML lang dynamically
-    <html lang={locale}>
+    <html lang={locale} className="bg-[#0a0a0a]">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-zinc-100`}
       >
         {/* 4. Wrap everything in NextIntlClientProvider first */}
         <ClerkProvider>
