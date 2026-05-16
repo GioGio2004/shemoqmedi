@@ -1,12 +1,14 @@
-import { EmailTemplate } from "@/app/[locale]/(temlates)/(menus)/light-menu/components/email-template";
-import { Resend } from "resend";
+// import { EmailTemplate } from "@/app/[locale]/(temlates)/(menus)/light-menu/components/email-template";
+// import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
     const { cart, totalPrice } = await req.json();
 
+    // FREEZE RESEND: Disabled for now to prevent build errors due to missing API key
+    /*
     const { data, error } = await resend.emails.send({
       from: "Karabak Orders <onboarding@resend.dev>",
       to: ["khvichia42@gmail.com"],
@@ -17,8 +19,9 @@ export async function POST(req: Request) {
     if (error) {
       return Response.json({ error }, { status: 500 });
     }
+    */
 
-    return Response.json(data);
+    return Response.json({ message: "Email sending disabled for now" });
   } catch (error) {
     return Response.json({ error }, { status: 500 });
   }
