@@ -7,7 +7,6 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Analytics } from "@vercel/analytics/next"
-import { GoogleOneTap } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -153,7 +152,6 @@ export default async function RootLayout({
         {/* 4. Wrap everything in NextIntlClientProvider first */}
         <ClerkProvider>
 
-          <GoogleOneTap />
           <NextIntlClientProvider messages={messages}>
             <ConvexClientProvider>
               {children}

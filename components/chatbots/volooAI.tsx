@@ -10,7 +10,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 // ─── Convex ────────────────────────────────────────────────────────────────────
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@/convex-helpers-api";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -98,7 +98,7 @@ interface BasketItem {
 
 // ─── Storage keys ──────────────────────────────────────────────────────────────
 const CONTEXT_KEY = "voloo_chat_selected_context";
-const BASKET_KEY  = "voloo_order_basket";
+const BASKET_KEY = "voloo_order_basket";
 
 // ─── FormatMessage ─────────────────────────────────────────────────────────────
 // Accepts `accentColor` from the parent's theme so bold text uses the
@@ -433,7 +433,7 @@ export function VolooAI({
   // Map Convex docs to the local Message shape used by the renderer.
   // Convex docs have a `_id` and `_creationTime` on top of our fields;
   // we strip those to keep the renderer type-safe.
-  const messages: Message[] = (convexMessages ?? []).map((m) => ({
+  const messages: Message[] = (convexMessages ?? []).map((m: { role: any; content: any; timestamp: any; products: any; }) => ({
     role: m.role,
     content: m.content,
     timestamp: m.timestamp,
@@ -449,6 +449,40 @@ export function VolooAI({
 
   // ── Convex: save message mutation ──────────────────────────────────────────────────
   const saveMessage = useMutation(api.chat.sendMessage);
+
+  // ── Convex: order mutation ─────────────────────────────────────────────────────────
+  const placeOrder = useMutation(api.orders.placeOrder);
+  const [seatNumber, setSeatNumber] = useState("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    if (!seatNumber || isNaN(Number(seatNumber))) return;
+    setIsPlacingOrder(true);
+    try {
+      await placeOrder({
+        cafeId,
+        seatNumber: Number(seatNumber),
+        items: basket.map(item => ({
+          productId: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+        })),
+        totalPrice: basketTotal,
+      });
+      setOrderSuccess(true);
+      setBasket([]);
+      setTimeout(() => {
+        setOrderSuccess(false);
+        setIsBasketOpen(false);
+      }, 3000);
+    } catch (e) {
+      console.error("Failed to place order", e);
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
 
   // ── Context-selection state (persisted to sessionStorage) ──
   const [selectedContext, setSelectedContext] = useState<Product[]>(() => {
@@ -491,18 +525,30 @@ export function VolooAI({
       const stored = sessionStorage.getItem(`${BASKET_KEY}_${cafeId}`);
       if (stored) setBasket(JSON.parse(stored) as BasketItem[]);
     } catch { /* private-browsing or malformed JSON — stay empty */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync basket → sessionStorage on every subsequent change.
   useEffect(() => {
     try {
       sessionStorage.setItem(`${BASKET_KEY}_${cafeId}`, JSON.stringify(basket));
+      const count = basket.reduce((sum, item) => sum + item.quantity, 0);
+      window.dispatchEvent(new CustomEvent("basket-updated", { detail: { count } }));
     } catch { /* private-browsing — ignore */ }
   }, [basket, cafeId]);
 
 
   const [isBasketOpen, setIsBasketOpen] = useState(false);
+
+  // Listen for navbar cart button clicks
+  useEffect(() => {
+    const handleOpenBasket = () => {
+      setIsOpen(true);
+      setIsBasketOpen(true);
+    };
+    window.addEventListener("open-voloo-basket", handleOpenBasket);
+    return () => window.removeEventListener("open-voloo-basket", handleOpenBasket);
+  }, []);
 
   // ── Rating State ──
   const [hasRated, setHasRated] = useState(() => {
@@ -1408,7 +1454,7 @@ export function VolooAI({
                 style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
               >
                 {/* Total row */}
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-bold uppercase tracking-widest opacity-40" style={{ color: theme.textColor }}>
                     Total
                   </span>
@@ -1417,17 +1463,37 @@ export function VolooAI({
                   </span>
                 </div>
 
-                {/* Close button — dismisses the basket drawer */}
-                <button
-                  onClick={() => setIsBasketOpen(false)}
-                  className="w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider text-white transition-opacity duration-150 hover:opacity-90 active:opacity-75"
-                  style={{
-                    background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
-                    boxShadow: `0 8px 32px ${theme.primaryColor}50`,
-                  }}
-                >
-                  Close
-                </button>
+                {orderSuccess ? (
+                  <div className="w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider text-white text-center bg-green-500/20 border border-green-500/50 text-green-400">
+                    Order Placed!
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        placeholder="Seat No."
+                        value={seatNumber}
+                        onChange={(e) => setSeatNumber(e.target.value)}
+                        className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-center outline-none focus:border-white/30"
+                        style={{ color: theme.textColor }}
+                        min="1"
+                        max="100"
+                      />
+                      <button
+                        onClick={handlePlaceOrder}
+                        disabled={!seatNumber || isPlacingOrder}
+                        className="flex-1 py-3 rounded-xl font-black text-sm uppercase tracking-wider text-white transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-95"
+                        style={{
+                          background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
+                          boxShadow: `0 8px 32px ${theme.primaryColor}50`,
+                        }}
+                      >
+                        {isPlacingOrder ? <Loader2 className="w-4 h-4 mx-auto animate-spin" /> : "Place Order"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1438,20 +1504,20 @@ export function VolooAI({
 
       {/* ════════ PREFERENCES MODAL ════════ */}
       {isPreferencesOpen && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in" 
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
           style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
         >
-          <div 
-            className="relative w-full max-w-[320px] rounded-[2rem] p-6 border shadow-2xl" 
-            style={{ 
+          <div
+            className="relative w-full max-w-[320px] rounded-[2rem] p-6 border shadow-2xl"
+            style={{
               backgroundColor: `${theme.backgroundColor}f0`,
               borderColor: "rgba(255,255,255,0.08)",
-              backdropFilter: "blur(24px) saturate(150%)" 
+              backdropFilter: "blur(24px) saturate(150%)"
             }}
           >
-            <button 
-              onClick={() => setIsPreferencesOpen(false)} 
+            <button
+              onClick={() => setIsPreferencesOpen(false)}
               className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/5 transition-all"
             >
               <X className="w-4 h-4" />
@@ -1463,7 +1529,7 @@ export function VolooAI({
             <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
               Select any ingredients you'd like our AI to avoid when recommending menu items.
             </p>
-            
+
             <div className="flex flex-wrap gap-2 mb-8">
               {["Lactose/Dairy", "Nuts", "Gluten", "Vegan"].map((allergy) => {
                 const isActive = userAllergies.includes(allergy);
@@ -1489,10 +1555,10 @@ export function VolooAI({
               })}
             </div>
 
-            <button 
+            <button
               onClick={() => setIsPreferencesOpen(false)}
               className="w-full py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 shadow-lg"
-              style={{ 
+              style={{
                 background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
                 boxShadow: `0 8px 24px ${theme.primaryColor}40`
               }}

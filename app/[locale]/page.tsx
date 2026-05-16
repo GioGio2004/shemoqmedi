@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { IntroScreen } from "./_components/landing/intro-screen";
 import { HeroSection } from "./_components/landing/hero-section";
 import { Creations } from "./_components/landing/creations";
+import { OrganizationsList } from "./_components/landing/organizations-list";
 import { PortfolioGallery } from "./_components/landing/portfolio-gallery";
 import { AboutSection } from "./_components/landing/about-section";
 import { LanguageToggler } from "./_components/landing/language-toggler";
@@ -23,6 +24,9 @@ export default function LandingPage() {
 
       {/* Creations Section */}
       <Creations />
+
+      {/* Dynamic Organizations */}
+      <OrganizationsList />
 
       {/* Scroll Gallery replaces the Grid */}
       <PortfolioGallery />
