@@ -220,6 +220,12 @@ export type PublicApiType = {
       { orderedIds: Array<Id<"menuItems">>; orgId: string },
       any
     >;
+    setAllAvailability: FunctionReference<
+      "mutation",
+      "public",
+      { isAvailable: boolean; orgId: string },
+      any
+    >;
   };
   backfill: {
     syncMembership: FunctionReference<
@@ -471,6 +477,68 @@ export type PublicApiType = {
       "query",
       "public",
       Record<string, never>,
+      any
+    >;
+  };
+  volooAi: {
+    logChat: FunctionReference<
+      "mutation",
+      "public",
+      {
+        actionExecuted?: string;
+        message: string;
+        orgId: string;
+        role: "manager" | "volooAI" | "system";
+      },
+      any
+    >;
+    logAction: FunctionReference<
+      "mutation",
+      "public",
+      { actionType: string; details: string; orgId: string; targetId?: string },
+      any
+    >;
+    toggleMenuItem: FunctionReference<
+      "mutation",
+      "public",
+      { action: "hide" | "show"; orgId: string; targetName: string },
+      any
+    >;
+    getMenuStatus: FunctionReference<
+      "query",
+      "public",
+      { isAvailable?: boolean; orgId: string; searchTerm?: string },
+      any
+    >;
+    updateItemDescription: FunctionReference<
+      "mutation",
+      "public",
+      { newDescription: string; orgId: string; targetId: string },
+      any
+    >;
+    updateStorefrontTheme: FunctionReference<
+      "mutation",
+      "public",
+      {
+        backgroundColor?: string;
+        buttonRadius?: string;
+        fontFamily?: string;
+        orgId: string;
+        primaryColor?: string;
+        textColor?: string;
+      },
+      any
+    >;
+    getAdminChatHistory: FunctionReference<
+      "query",
+      "public",
+      { limit?: number; orgId: string },
+      any
+    >;
+    broadcastStorefrontAlert: FunctionReference<
+      "mutation",
+      "public",
+      { alertMessage: string; orgId: string },
       any
     >;
   };

@@ -1,29 +1,25 @@
 /**
  * MenuCard — The "Chameleon" Card
  * ─────────────────────────────────────────────────────────────────────────────
- * A fully reusable, dynamically themed product card. Its physical shape and
- * color scheme are entirely driven by props that come from the database, making
- * every cafe's menu look unique without a single line of custom CSS.
- *
- * Architecture:
- *  - Glassmorphism: translucent backdrop, backdrop-blur, fine border
- *  - Micro-interactions: hover lift (translateY), shadow expand, image scale
- *  - Shape props: borderRadius, borderWidth, borderColor, buttonShape, buttonColor
- *  - Uses `clsx` + `tailwind-merge` (via `cn`) to merge prop-driven overrides
- *    cleanly on top of defaults — no conflicting class names
- *  - Accent color for price / badge is read from `--theme-accent` CSS variable
+ * Premium editorial card with:
+ *  - Glassmorphism container (bg-black/40 backdrop-blur-md)
+ *  - Top-down image dissolve gradient overlay
+ *  - Framer Motion staggered whileInView entrance animation
+ *  - font-serif product title with serif typography
+ *  - Ghost/10%-opacity action button with dynamic primary color
+ *  - All dynamic theme props (borderRadius, buttonColor, etc.) preserved
  */
 
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ContactDropdown } from "./contact-dropdown";
 import type { ConvexMenuItem } from "./menu-section";
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
-/** Merges Tailwind classes, resolving conflicts with tailwind-merge. */
 function cn(...inputs: Parameters<typeof clsx>) {
   return twMerge(clsx(inputs));
 }
@@ -77,6 +73,8 @@ interface MenuCardProps {
   product: Product;
   socialLinks: any;
   shapeProps?: CardShapeProps;
+  /** Used to stagger the entrance animation per card within a category */
+  animationIndex?: number;
 }
 
 // ─── Border Radius Resolver ───────────────────────────────────────────────────
@@ -87,7 +85,6 @@ function resolveBorderRadius(
   if (!value || value === "rounded") return "16px";
   if (value === "sharp") return "0px";
   if (value === "pill") return "9999px";
-  // Custom rem/px value passed directly from DB
   return value;
 }
 
@@ -100,9 +97,21 @@ function resolveButtonRadius(
   return "8px";
 }
 
+// ─── Animation Variants ───────────────────────────────────────────────────────
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProps) {
+export function MenuCard({
+  product,
+  socialLinks,
+  shapeProps = {},
+  animationIndex = 0,
+}: MenuCardProps) {
   const {
     borderRadius,
     borderWidth = 1,
@@ -127,31 +136,48 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
   // Border color resolution: "glass" → rgba white, "accent" → CSS var
   const resolvedBorderColor =
     borderColor === "glass"
-      ? "rgba(255,255,255,0.12)"
+      ? "rgba(255,255,255,0.05)"
       : borderColor === "accent"
       ? "var(--theme-accent, oklch(0.922 0 0))"
       : borderColor;
 
   // Accent for the price badge — always theme-accent
-  const accentColor = product.accentColor || "var(--theme-accent, oklch(0.922 0 0))";
+  const accentColor =
+    product.accentColor || "var(--theme-accent, oklch(0.922 0 0))";
+
+  // Ghost button color: 10% opacity of the primary/buttonColor
+  const ghostButtonBg = buttonColor
+    ? `color-mix(in srgb, ${buttonColor} 10%, transparent)`
+    : "rgba(255,255,255,0.07)";
+  const ghostButtonBorder = buttonColor
+    ? `color-mix(in srgb, ${buttonColor} 25%, transparent)`
+    : "rgba(255,255,255,0.1)";
 
   return (
     /**
-     * Glassmorphism card wrapper
-     * ─────────────────────────────────────────────────────────────────────────
-     * - `backdrop-blur-md`: frosted glass effect
-     * - `bg-white/[0.05]`: very subtle white tint over the theme background
-     * - `translate-y-0 hover:-translate-y-1.5`: micro-lift on hover
-     * - `shadow-lg hover:shadow-2xl`: shadow expand on hover
-     * - All shape/border props applied inline so they override class defaults
+     * ── Framer Motion wrapper ────────────────────────────────────────────────
+     * whileInView triggers the animation only when the card enters the viewport.
+     * `once: true` prevents re-triggering on scroll-up.
+     * `margin: "-50px"` fires just before the card fully appears.
+     * The cubic-bezier [0.25, 0.1, 0.25, 1] gives a buttery premium deceleration.
      */
-    <div
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
+        delay: animationIndex * 0.08, // Stagger cards within a group
+      }}
       className={cn(
         "group relative overflow-hidden",
-        "bg-white/[0.05] backdrop-blur-md",
+        // Glassmorphism: dark base with backdrop blur
+        "bg-black/40 backdrop-blur-md",
         "transition-all duration-500 ease-out",
-        "translate-y-0 hover:-translate-y-1.5",
-        "shadow-lg hover:shadow-2xl hover:shadow-black/30"
+        "translate-y-0 hover:-translate-y-2",
+        "shadow-lg hover:shadow-2xl hover:shadow-black/50"
       )}
       style={{
         borderRadius: cardRadius,
@@ -161,8 +187,7 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
       }}
     >
       {/* ── Image container ─────────────────────────────────────────────────
-       * overflow-hidden is on the image wrapper, not the card, to keep the
-       * border-radius of the card visible during the hover scale effect.
+       * The top half is entirely image, dissolving into the card below.
        */}
       <div
         className="relative aspect-[4/3] overflow-hidden"
@@ -183,12 +208,15 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
           priority={product.sortOrder <= 3}
         />
 
-        {/* Gradient overlay — darkens bottom of image for text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        {/* ── Image dissolve gradient overlay ──────────────────────────────
+         * Fades the image into the card's black/40 background at the bottom,
+         * eliminating any hard visual edge between image and content area.
+         */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
         {/* Category badge — glassmorphic pill */}
         <div
-          className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium tracking-wide"
+          className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium tracking-wide z-10"
           style={{
             background: "rgba(0,0,0,0.45)",
             backdropFilter: "blur(8px)",
@@ -202,41 +230,49 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
         {/* Accent dot — uses accentColor from DB or falls back to --theme-accent */}
         {product.accentColor && (
           <div
-            className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full ring-2 ring-white/20"
+            className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full ring-2 ring-white/20 z-10"
             style={{ background: accentColor }}
           />
         )}
+
+        {/* Price floating over the image bottom — visible on hover */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+          <span
+            className="text-xl font-bold tabular-nums"
+            style={{ color: "var(--theme-accent, var(--primary))" }}
+          >
+            ₾{displayPrice}
+          </span>
+        </div>
       </div>
 
       {/* ── Content area ─────────────────────────────────────────────────── */}
       <div className="p-5">
-        {/* Title + Price */}
+        {/* Title + Price (static, below image) */}
         <div className="flex justify-between items-start mb-2 gap-2">
+          {/* font-serif applied to product title per spec */}
           <h3
-            className="text-base font-semibold leading-snug"
+            className="font-serif text-base leading-snug"
             style={{ color: "var(--theme-text, var(--foreground))" }}
           >
             {productName}
           </h3>
           <span
-            className="text-base font-bold tabular-nums shrink-0"
+            className="text-sm font-bold tabular-nums shrink-0"
             style={{ color: "var(--theme-accent, var(--primary))" }}
           >
             ₾{displayPrice}
           </span>
         </div>
 
-        {/* Description */}
+        {/* Description — light sans-serif per spec */}
         {description && (
-          <p
-            className="text-sm mb-4 line-clamp-2 leading-relaxed"
-            style={{ color: "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 40%)" }}
-          >
+          <p className="text-gray-400 font-light text-sm mb-4 line-clamp-2 leading-relaxed">
             {description}
           </p>
         )}
 
-        {/* Tags / Benefits */}
+        {/* Tags */}
         {product.tags && product.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-5">
             {product.tags.map((tag) => (
@@ -244,9 +280,10 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
                 key={tag}
                 className="px-2.5 py-0.5 text-xs font-medium rounded-full"
                 style={{
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 30%)",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  color:
+                    "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 30%)",
                 }}
               >
                 {tag}
@@ -255,12 +292,15 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
           </div>
         )}
 
-        {/* ── Order Button (ContactDropdown) ───────────────────────────────
-         * We pass `btnRadius` and `buttonColor` down so ContactDropdown can
-         * apply the correct shape. ContactDropdown already reads
-         * `--radius` via its inline style — here we override it per-card.
+        {/* ── Ghost Action Button ───────────────────────────────────────────
+         * Subtle ghost style (10% opacity of primaryColor) keeps visual
+         * hierarchy focused on the image and title.
+         * On hover: fills to full primaryColor.
          */}
-        <div className="flex justify-end pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div
+          className="flex justify-end pt-4"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
           <ContactDropdown
             productName={productName}
             productCategory={product.categoryName}
@@ -269,9 +309,12 @@ export function MenuCard({ product, socialLinks, shapeProps = {} }: MenuCardProp
             socialLinks={socialLinks}
             buttonRadius={btnRadius}
             buttonColor={buttonColor}
+            // Ghost styling override passed to ContactDropdown
+            ghostBg={ghostButtonBg}
+            ghostBorder={ghostButtonBorder}
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,19 +1,16 @@
 /**
  * MenuSection
  * ─────────────────────────────────────────────────────────────────────────────
- * Renders the full product catalog section: category filter pills + card grid.
- *
- * Upgrade notes:
- *  - Replaced `ProductCard` with the new `MenuCard` (Chameleon card)
- *  - `themeSettings` is passed in so shape props (borderRadius, buttonShape,
- *    buttonColor) can be derived from the DB and forwarded to each card.
- *  - Category filter pills now have a glassmorphic active state.
- *  - The section heading uses a gradient underline on the italic accent span.
+ * Upgraded to:
+ *  - Sticky horizontal-scrolling category pill nav
+ *  - Grouped by category with editorial section headers + separator lines
+ *  - Staggered card entrance animations via MenuCard (Framer Motion)
+ *  - All dynamic theme props preserved (primaryColor, textColor, buttonRadius)
  */
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { MenuCard } from "./menu-card";
 import type { CardShapeProps } from "./menu-card";
 
@@ -49,31 +46,19 @@ interface ThemeSettings {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/**
- * Derives CardShapeProps from the org-level themeSettings.
- * This is the single source of truth for card shape — no per-item overrides
- * needed (the DB doesn't store them yet).
- */
 function deriveShapeProps(theme: ThemeSettings | null): CardShapeProps {
   if (!theme) return {};
-
-  // Map the stored buttonRadius CSS value → one of our named presets or pass
-  // through as a raw value so the card can apply it directly.
   const buttonRadius = theme.buttonRadius;
-
-  // If the admin stored "9999px" or "pill", make it pill-shaped buttons.
   const buttonShape: CardShapeProps["buttonShape"] =
     buttonRadius === "9999px" || buttonRadius === "pill"
       ? "pill"
       : buttonRadius === "0" || buttonRadius === "0px" || buttonRadius === "sharp"
       ? "squared"
       : "rounded";
-
   return {
-    // Use the button radius for cards too — keeps visual language consistent.
     borderRadius: buttonRadius,
     borderWidth: 1,
-    borderColor: "glass",   // Semi-transparent glassmorphic border
+    borderColor: "glass",
     buttonShape,
     buttonColor: theme.primaryColor,
   };
@@ -94,87 +79,127 @@ export function MenuSection({
   socialLinks: any;
   themeSettings: ThemeSettings | null;
 }) {
+  const pillNavRef = useRef<HTMLDivElement>(null);
+
   const CATEGORIES = [
     "All",
     ...categories.map((c) => c.name["en"] || Object.values(c.name)[0]),
   ];
 
-  const filteredProducts = useMemo(() => {
+  /**
+   * When "All" is selected → return an array of { name, items } groups
+   * When a specific category is selected → return that single group
+   */
+  const groupedCategories = useMemo(() => {
     if (activeCategory === "All") {
-      return categories.flatMap((c) =>
-        c.items.map((item) => ({
-          ...item,
-          categoryName: c.name["en"] || Object.values(c.name)[0],
-        }))
-      );
+      return categories
+        .filter((c) => c.items.length > 0)
+        .map((c) => ({
+          id: c._id,
+          name: c.name["en"] || Object.values(c.name)[0],
+          items: c.items.map((item) => ({
+            ...item,
+            categoryName: c.name["en"] || Object.values(c.name)[0],
+          })),
+        }));
     }
     const category = categories.find(
       (c) => (c.name["en"] || Object.values(c.name)[0]) === activeCategory
     );
     if (!category) return [];
-    return category.items.map((item) => ({
-      ...item,
-      categoryName: category.name["en"] || Object.values(category.name)[0],
-    }));
+    return [
+      {
+        id: category._id,
+        name: activeCategory,
+        items: category.items.map((item) => ({
+          ...item,
+          categoryName: activeCategory,
+        })),
+      },
+    ];
   }, [activeCategory, categories]);
 
-  // Derive card shape props once from org theme settings
   const shapeProps = deriveShapeProps(themeSettings);
 
+  // Scroll to the section when a pill is clicked
+  const handleCategoryChange = (cat: string) => {
+    onCategoryChange(cat);
+    if (cat !== "All") {
+      // Give React one tick to render the section, then scroll to it
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`category-section-${cat}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const totalItems = groupedCategories.reduce((acc, g) => acc + g.items.length, 0);
+
   return (
-    <section id="menu" className="py-24 md:py-32">
+    <section id="menu" className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         {/* ── Section Header ─────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-          <div>
-            {/* Eyebrow label */}
+        <div className="mb-10 md:mb-14">
+          <span
+            className="text-xs font-semibold tracking-[0.25em] uppercase mb-3 block"
+            style={{ color: "var(--theme-accent, var(--primary))" }}
+          >
+            Our Selection
+          </span>
+          <h2
+            className="text-4xl md:text-5xl font-serif text-balance"
+            style={{ color: "var(--theme-text, var(--foreground))" }}
+          >
+            Curated essentials for the
+            <br className="hidden md:block" />
             <span
-              className="text-xs font-semibold tracking-[0.25em] uppercase mb-3 block"
+              className="italic relative inline-block"
               style={{ color: "var(--theme-accent, var(--primary))" }}
             >
-              Our Selection
-            </span>
-            <h2
-              className="text-4xl md:text-5xl font-serif text-balance"
-              style={{ color: "var(--theme-text, var(--foreground))" }}
-            >
-              Curated essentials for the
-              <br className="hidden md:block" />
-              {/* Accent italic span with animated gradient underline */}
+              modern palette
               <span
-                className="italic relative inline-block"
-                style={{ color: "var(--theme-accent, var(--primary))" }}
-              >
-                modern palette
-                {/* Underline element — grows on hover via CSS */}
-                <span
-                  aria-hidden
-                  className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 transition-transform duration-500"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, var(--theme-accent, var(--primary)) 0%, transparent 100%)",
-                  }}
-                />
-              </span>
-            </h2>
-          </div>
+                aria-hidden
+                className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 transition-transform duration-500"
+                style={{
+                  background:
+                    "linear-gradient(90deg, var(--theme-accent, var(--primary)) 0%, transparent 100%)",
+                }}
+              />
+            </span>
+          </h2>
+        </div>
 
-          {/* ── Category Filter Pills ───────────────────────────────────── */}
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+        {/* ── Sticky Horizontal Category Pill Nav ─────────────────────── */}
+        <div
+          className="sticky top-0 z-20 -mx-6 px-6 py-3 mb-12"
+          style={{
+            background: "var(--theme-bg, var(--background))",
+            // Subtle bottom shadow to separate from content below
+            boxShadow: "0 1px 0 0 rgba(255,255,255,0.05), 0 4px 24px -4px rgba(0,0,0,0.5)",
+            backdropFilter: "blur(16px)",
+          }}
+        >
+          <div
+            ref={pillNavRef}
+            className="flex gap-2 overflow-x-auto scrollbar-none pb-0.5"
+            role="group"
+            aria-label="Filter by category"
+            style={{ scrollbarWidth: "none" }}
+          >
             {CATEGORIES.map((cat) => {
               const isActive = activeCategory === cat;
               return (
                 <button
                   key={cat}
-                  onClick={() => onCategoryChange(cat)}
+                  onClick={() => handleCategoryChange(cat)}
                   aria-pressed={isActive}
-                  className="px-4 py-2 text-sm font-medium tracking-wide transition-all duration-300"
+                  className="shrink-0 px-4 py-1.5 text-sm font-medium tracking-wide transition-all duration-300 whitespace-nowrap"
                   style={{
                     borderRadius: themeSettings?.buttonRadius || "9999px",
-                    /*
-                     * Active: filled with theme accent + glass border
-                     * Inactive: transparent with subtle glass border
-                     */
                     background: isActive
                       ? "var(--theme-accent, var(--primary))"
                       : "rgba(255,255,255,0.05)",
@@ -195,20 +220,52 @@ export function MenuSection({
           </div>
         </div>
 
-        {/* ── Product Grid ─────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <MenuCard
-              key={product._id}
-              product={product}
-              socialLinks={socialLinks}
-              shapeProps={shapeProps}
-            />
+        {/* ── Grouped Category Sections ─────────────────────────────────── */}
+        <div className="space-y-16">
+          {groupedCategories.map((group, groupIndex) => (
+            <div
+              key={group.id}
+              id={`category-section-${group.name}`}
+              className="scroll-mt-24"
+            >
+              {/* Category Section Header — only show when "All" is active */}
+              {activeCategory === "All" && (
+                <div className="flex items-center gap-4 mb-8">
+                  <h3
+                    className="font-serif text-2xl md:text-3xl shrink-0"
+                    style={{ color: "rgba(220,220,220,0.9)" }}
+                  >
+                    {group.name}
+                  </h3>
+                  {/* Minimalist separator line */}
+                  <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
+                  <span
+                    className="text-xs font-medium tracking-widest uppercase shrink-0"
+                    style={{ color: "rgba(255,255,255,0.25)" }}
+                  >
+                    {group.items.length} items
+                  </span>
+                </div>
+              )}
+
+              {/* Card grid for this category */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {group.items.map((product, itemIndex) => (
+                  <MenuCard
+                    key={product._id}
+                    product={product}
+                    socialLinks={socialLinks}
+                    shapeProps={shapeProps}
+                    animationIndex={itemIndex}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
         {/* Empty state */}
-        {filteredProducts.length === 0 && (
+        {totalItems === 0 && (
           <div className="text-center py-20">
             <p
               className="text-lg font-serif"

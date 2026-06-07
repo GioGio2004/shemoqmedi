@@ -4,9 +4,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { ClerkProvider } from "@/components/clerk-provider";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { Analytics } from "@vercel/analytics/next"
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { Analytics } from "@vercel/analytics/next";
+import CustomScrollIndicator from "@/components/layout/CustomScrollIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,10 +19,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://shemoqmedi.space';
+const baseUrl = process.env.NEXT_PUBLIC_URL || "https://shemoqmedi.space";
 
 export async function generateMetadata({
-  params
+  params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
@@ -38,15 +39,32 @@ export async function generateMetadata({
     ? messages.Landing.Hero.subtitle.substring(0, 160)
     : "Create a modern digital experience for your business with Shemoqmedi.";
 
-  const keywords = locale === 'ka'
-    ? ["შემოქმედი", "ვებგვერდი", "როგორ შევქმნათ ვებგვერდი", "ვებ დიზაინი", "საიტის დამზადება", "shemoqmedi", "website builder georgia"]
-    : ["website builder", "web design", "digital transformation", "business website", "ecommerce", "shemoqmedi", "create website"];
+  const keywords =
+    locale === "ka"
+      ? [
+          "შემოქმედი",
+          "ვებგვერდი",
+          "როგორ შევქმნათ ვებგვერდი",
+          "ვებ დიზაინი",
+          "საიტის დამზადება",
+          "shemoqmedi",
+          "website builder georgia",
+        ]
+      : [
+          "website builder",
+          "web design",
+          "digital transformation",
+          "business website",
+          "ecommerce",
+          "shemoqmedi",
+          "create website",
+        ];
 
   return {
     metadataBase: new URL(baseUrl),
     title: {
       default: title,
-      template: `%s | Shemoqmedi`
+      template: `%s | Shemoqmedi`,
     },
     description: description,
     keywords: keywords,
@@ -55,7 +73,7 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       locale: locale,
-      alternateLocale: locale === 'ka' ? 'en' : 'ka',
+      alternateLocale: locale === "ka" ? "en" : "ka",
       url: `${baseUrl}/${locale}`,
       title: title,
       description: description,
@@ -83,8 +101,8 @@ export async function generateMetadata({
     alternates: {
       canonical: `${baseUrl}/${locale}`,
       languages: {
-        'en': `${baseUrl}/en`,
-        'ka': `${baseUrl}/ka`,
+        en: `${baseUrl}/en`,
+        ka: `${baseUrl}/ka`,
       },
     },
     robots: {
@@ -93,17 +111,17 @@ export async function generateMetadata({
       googleBot: {
         index: true,
         follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
       },
     },
-    manifest: '/site.webmanifest',
-    applicationName: 'Shemoqmedi',
+    manifest: "/site.webmanifest",
+    applicationName: "Shemoqmedi",
     appleWebApp: {
       capable: true,
-      statusBarStyle: 'black-translucent',
-      title: 'Shemoqmedi',
+      statusBarStyle: "black-translucent",
+      title: "Shemoqmedi",
     },
     formatDetection: {
       telephone: false,
@@ -124,15 +142,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
 };
 
 export default async function RootLayout({
   children,
 
-  params
+  params,
 }: Readonly<{
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
@@ -151,9 +169,9 @@ export default async function RootLayout({
       >
         {/* 4. Wrap everything in NextIntlClientProvider first */}
         <ClerkProvider>
-
           <NextIntlClientProvider messages={messages}>
             <ConvexClientProvider>
+              <CustomScrollIndicator />
               {children}
             </ConvexClientProvider>
           </NextIntlClientProvider>

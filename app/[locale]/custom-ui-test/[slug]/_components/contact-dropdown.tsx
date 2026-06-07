@@ -12,6 +12,10 @@ interface ContactDropdownProps {
   buttonRadius?: string;
   /** Passed from MenuCard to apply per-card button color overrides */
   buttonColor?: string;
+  /** Ghost background: 10% opacity of buttonColor — applied when not hovered */
+  ghostBg?: string;
+  /** Ghost border: 25% opacity of buttonColor */
+  ghostBorder?: string;
   socialLinks?: {
     whatsapp?: string;
     instagram?: string;
@@ -27,6 +31,8 @@ export function ContactDropdown({
   socialLinks,
   buttonRadius,
   buttonColor,
+  ghostBg,
+  ghostBorder,
 }: ContactDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,11 +72,14 @@ export function ContactDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-wide transition-all duration-300"
+        className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-wide transition-all duration-300 hover:brightness-125"
         style={{
           borderRadius: buttonRadius || 'var(--radius, 9999px)',
-          background: buttonColor || 'var(--theme-accent, var(--primary))',
-          color: 'var(--primary-foreground, #000)',
+          background: ghostBg || buttonColor || 'var(--theme-accent, var(--primary))',
+          border: `1px solid ${ghostBorder || 'rgba(255,255,255,0.1)'}`,
+          color: ghostBg
+            ? 'color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 10%)'
+            : 'var(--primary-foreground, #000)',
         }}
       >
         Order
