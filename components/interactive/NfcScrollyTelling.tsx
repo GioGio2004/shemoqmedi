@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { Suspense, lazy } from "react";
+import Image from "next/image";
 import { Application, SPEObject } from "@splinetool/runtime";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -73,6 +74,7 @@ export default function NfcScrollyTelling({
 
     const heroUI = document.getElementById("hero-ui-layer");
     const scrollContainer = document.getElementById("hero-scroll-container");
+    const heroBg = document.getElementById("hero-bg-layer");
     if (!heroUI || !scrollContainer) return;
 
     const chip = chipObjRef.current;
@@ -102,6 +104,19 @@ export default function NfcScrollyTelling({
         },
         0,
       );
+
+      // ── Act 1: Background fades out slowly ───────────────────────────────
+      if (heroBg) {
+        heroTl.to(
+          heroBg,
+          {
+            opacity: 0,
+            duration: 1, // Slow fade as requested
+            ease: "power1.inOut",
+          },
+          0,
+        );
+      }
 
       // ── Act 1: Chip scales down and rotates ──────────────────────────────
       if (chip && app) {
@@ -135,12 +150,23 @@ export default function NfcScrollyTelling({
   }, [splineLoaded]);
 
   return (
-    <div ref={wrapperRef}>
+    <div ref={wrapperRef} className="relative z-0">
+      {/* ── Layer 0: Background Image ── */}
+      <div id="hero-bg-layer" className="fixed inset-0 w-full h-dvh z-0">
+        <Image
+          src="/bg-coffee.jpg"
+          alt="Coffee Background"
+          fill
+          className="object-cover object-center opacity-60"
+          priority
+        />
+      </div>
+
       {/* ── Layer 1: Fixed Spline 3D Canvas ── */}
-      <div className="fixed inset-0 w-full h-dvh z-0 pointer-events-none">
+      <div className="fixed inset-0 w-full h-dvh z-10 pointer-events-none">
         <Suspense
           fallback={
-            <div className="w-full h-full bg-black" aria-hidden="true" />
+            <div className="w-full h-full bg-transparent" aria-hidden="true" />
           }
         >
           <Spline scene={sceneUrl} onLoad={onLoad} />
