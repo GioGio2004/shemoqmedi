@@ -16,7 +16,10 @@ export default function HeroSection() {
       aria-label="Hero section"
     >
       {/* ── Top-left overline ─────────────────────────────────── */}
-      <div className="absolute top-8 left-8 md:top-10 md:left-12">
+      <div
+        className="absolute left-8 md:left-12"
+        style={{ top: "max(env(safe-area-inset-top), 2rem)" }}
+      >
         <p
           className="text-[10px] tracking-[0.5em] uppercase text-white/30 font-light"
           style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}
@@ -26,7 +29,10 @@ export default function HeroSection() {
       </div>
 
       {/* ── Bottom-center scroll cue ─────────────────────────── */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+      <div
+        className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        style={{ bottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+      >
         <p
           className="text-[9px] tracking-[0.4em] uppercase text-white/20 font-light"
           style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}

@@ -136,7 +136,35 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Expose safe-area insets as CSS custom properties for JS consumption.
+       The actual clamping is done per-element with max() so full-bleed
+       backgrounds are never clipped. */
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
   }
+}
+
+/* ── Safe-area utility classes ──────────────────────────────────────────────
+ * Use these on fixed/absolute elements that sit at the screen edges.
+ * The max() ensures a minimum comfortable padding on non-notch devices.
+ * ──────────────────────────────────────────────────────────────────────── */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 1.5rem);
+}
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+}
+.pl-safe {
+  padding-left: max(env(safe-area-inset-left), 0px);
+}
+.pr-safe {
+  padding-right: max(env(safe-area-inset-right), 0px);
+}
+/* Variant with a tighter minimum (used for nav pills) */
+.pt-safe-sm {
+  padding-top: max(env(safe-area-inset-top), 1rem);
 }
 
 /* Force text color universally based on database themeSettings */

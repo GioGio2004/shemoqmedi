@@ -57,11 +57,12 @@ export default function Navbar() {
       <nav
         ref={desktopNavRef}
         id="main-navbar"
-        className="hidden md:flex fixed top-6 left-1/2 -translate-x-1/2 z-50
+        className="hidden md:flex fixed left-1/2 -translate-x-1/2 z-50
                    items-center gap-8 px-8 py-3
                    backdrop-blur-md bg-black/40 border border-white/10
                    rounded-full shadow-2xl shadow-black/30
                    opacity-0"
+        style={{ top: "max(env(safe-area-inset-top), 1.5rem)" }}
       >
         {/* Logo */}
         <a
@@ -110,7 +111,10 @@ export default function Navbar() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-50
                    flex items-center justify-between px-5
                    backdrop-blur-xl bg-black/70 border-t border-white/[0.08]"
-        style={{ paddingBottom: "calc(0.875rem + env(safe-area-inset-bottom))", paddingTop: "0.875rem" }}
+        style={{
+          paddingBottom: "max(env(safe-area-inset-bottom), 0.875rem)",
+          paddingTop: "0.875rem",
+        }}
       >
         {/* Logo */}
         <a
