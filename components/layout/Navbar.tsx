@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -14,22 +14,22 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-  const navRef = useRef<HTMLElement>(null);
+  const desktopNavRef = useRef<HTMLElement>(null);
   const showAnim = useRef<gsap.core.Tween | null>(null);
 
   useGSAP(() => {
-    if (!navRef.current) return;
+    if (!desktopNavRef.current) return;
 
     // Initial entrance animation
     gsap.fromTo(
-      navRef.current,
+      desktopNavRef.current,
       { y: -80, opacity: 0 },
       { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.5 }
     );
 
     // Build the show/hide tween (paused)
     showAnim.current = gsap
-      .from(navRef.current, {
+      .from(desktopNavRef.current, {
         yPercent: -150,
         paused: true,
         duration: 0.3,
@@ -37,16 +37,14 @@ export default function Navbar() {
       })
       .progress(1);
 
-    // ScrollTrigger watches scroll direction
+    // ScrollTrigger watches scroll direction — desktop only
     ScrollTrigger.create({
       start: "top top",
       end: "max",
       onUpdate: (self) => {
         if (self.direction === -1) {
-          // Scrolling UP → show
           showAnim.current?.play();
         } else {
-          // Scrolling DOWN → hide
           showAnim.current?.reverse();
         }
       },
@@ -54,52 +52,100 @@ export default function Navbar() {
   });
 
   return (
-    <nav
-      ref={navRef}
-      id="main-navbar"
-      className="fixed top-6 left-1/2 -translate-x-1/2 z-50
-                 flex items-center gap-4 md:gap-8 px-5 md:px-8 py-2 md:py-3
-                 backdrop-blur-md bg-black/40 border border-white/10
-                 rounded-full shadow-2xl shadow-black/30
-                 opacity-0"
-    >
-      {/* Logo */}
-      <a
-        href="#"
-        className="text-white font-light text-base md:text-lg tracking-[0.1em] md:tracking-[0.15em] uppercase
-                   transition-opacity duration-300 hover:opacity-70"
+    <>
+      {/* ── Desktop: floating pill (hidden on mobile) ─────────────────── */}
+      <nav
+        ref={desktopNavRef}
+        id="main-navbar"
+        className="hidden md:flex fixed top-6 left-1/2 -translate-x-1/2 z-50
+                   items-center gap-8 px-8 py-3
+                   backdrop-blur-md bg-black/40 border border-white/10
+                   rounded-full shadow-2xl shadow-black/30
+                   opacity-0"
       >
-        Voloo
-      </a>
+        {/* Logo */}
+        <a
+          href="#"
+          className="text-white font-light text-lg tracking-[0.15em] uppercase
+                     transition-opacity duration-300 hover:opacity-70"
+        >
+          Voloo
+        </a>
 
-      {/* Divider */}
-      <div className="w-px h-5 bg-white/15 hidden md:block" />
+        {/* Divider */}
+        <div className="w-px h-5 bg-white/15" />
 
-      {/* Links */}
-      <ul className="hidden md:flex items-center gap-6">
-        {NAV_LINKS.map((link) => (
-          <li key={link.href}>
+        {/* Links */}
+        <ul className="flex items-center gap-6">
+          {NAV_LINKS.map((link) => (
+            <li key={link.href}>
+              <a
+                href={link.href}
+                className="text-white/60 text-sm font-light tracking-wide
+                           transition-all duration-300 hover:text-white"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {/* CTA */}
+        <a
+          href="#contact"
+          className="ml-2 px-5 py-1.5 text-sm font-light
+                     bg-white/10 border border-white/15 rounded-full
+                     text-white/80 transition-all duration-300
+                     hover:bg-white/20 hover:text-white hover:border-white/25"
+        >
+          Get Started
+        </a>
+      </nav>
+
+      {/* ── Mobile: always-visible bottom bar ────────────────────────── */}
+      {/* Fixed to the bottom so it's always within thumb reach on phones.
+          pb-safe-area-inset ensures it clears the PWA home indicator. */}
+      <nav
+        id="mobile-navbar"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50
+                   flex items-center justify-between px-5
+                   backdrop-blur-xl bg-black/70 border-t border-white/[0.08]"
+        style={{ paddingBottom: "calc(0.875rem + env(safe-area-inset-bottom))", paddingTop: "0.875rem" }}
+      >
+        {/* Logo */}
+        <a
+          href="#"
+          className="text-white font-light text-base tracking-[0.15em] uppercase"
+        >
+          Voloo
+        </a>
+
+        {/* Quick links — icon-sized tap targets */}
+        <div className="flex items-center gap-1">
+          {NAV_LINKS.map((link) => (
             <a
+              key={link.href}
               href={link.href}
-              className="text-white/60 text-sm font-light tracking-wide
-                         transition-all duration-300 hover:text-white"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center
+                         text-white/50 text-xs font-light tracking-wide
+                         hover:text-white transition-colors duration-200"
             >
               {link.label}
             </a>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
 
-      {/* CTA */}
-      <a
-        href="#contact"
-        className="md:ml-2 px-4 md:px-5 py-1.5 text-xs md:text-sm font-light
-                   bg-white/10 border border-white/15 rounded-full
-                   text-white/80 transition-all duration-300
-                   hover:bg-white/20 hover:text-white hover:border-white/25"
-      >
-        Get Started
-      </a>
-    </nav>
+        {/* CTA */}
+        <a
+          href="#contact"
+          className="px-4 py-2.5 text-xs font-light min-h-[44px] flex items-center
+                     bg-white/10 border border-white/15 rounded-full
+                     text-white/80 transition-all duration-300
+                     hover:bg-white/20 hover:text-white"
+        >
+          Get Started
+        </a>
+      </nav>
+    </>
   );
 }
