@@ -22,8 +22,8 @@ export default clerkMiddleware(async (_auth, req: NextRequest) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static assets
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|lottie)).*)",
+    // Skip Next.js internals and static assets, including sitemap.xml and robots.txt
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|lottie|xml|txt)).*)",
     // Always run for API routes so Clerk can handle auth when needed
     "/(api|trpc)(.*)",
   ],
