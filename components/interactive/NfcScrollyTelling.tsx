@@ -3,7 +3,11 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { Suspense, lazy } from "react";
 import Image from "next/image";
-import { Application, SPEObject } from "@splinetool/runtime";
+// Type-only import — erased at compile time by TypeScript.
+// This prevents the @splinetool/runtime bundle (~700 KB) from being included
+// in the initial page chunk and blocking the main thread during LCP.
+// The runtime is loaded on-demand only when the lazy <Spline> component mounts.
+import type { Application, SPEObject } from "@splinetool/runtime";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { CHIP_SCALE } from "@/components/HorizontalGallery";

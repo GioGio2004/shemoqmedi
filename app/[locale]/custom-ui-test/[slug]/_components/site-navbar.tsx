@@ -48,13 +48,18 @@ export function SiteNavbar({
               WebkitBackdropFilter: "blur(24px)",
               borderBottom: "1px solid rgba(255,255,255,0.10)",
               boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+              /* Push content below Dynamic Island / notch */
+              paddingTop: "max(env(safe-area-inset-top), 0px)",
             }
           : {
               background: "transparent",
+              /* Same clearance in transparent state */
+              paddingTop: "max(env(safe-area-inset-top), 0px)",
             }
       }
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      {/* py-4 split: top padding is handled by safe-area on the <nav> */}
+      <div className="max-w-7xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center">
 
         {/* ── Logo ──────────────────────────────────────────────────────── */}
         <a href="#" className="flex items-center gap-2 group" aria-label={`${organizationName} home`}>
