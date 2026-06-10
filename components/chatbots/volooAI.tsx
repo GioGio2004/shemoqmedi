@@ -1,381 +1,70 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, memo, startTransition } from "react";
-import { X, Send, Sparkles, Loader2, ArrowDownToLine, Eye, ShoppingBag, Plus, Minus, Trash2, RefreshCw, Star, SlidersHorizontal } from "lucide-react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  memo,
+  startTransition,
+} from "react";
+import {
+  X,
+  Send,
+  Sparkles,
+  Loader2,
+  ArrowDownToLine,
+  Eye,
+  ShoppingBag,
+  Plus,
+  Minus,
+  Trash2,
+  RefreshCw,
+  Star,
+  SlidersHorizontal,
+} from "lucide-react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ProductCard } from "@/components/chatbots/product-card-chat";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 // ─── Convex ────────────────────────────────────────────────────────────────────
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex-helpers-api";
 
+import { LightRays } from "@/components/ui/light-rays";
+import { FlickeringGrid } from "@/components/ui/flickering-grid";
+
 gsap.registerPlugin(ScrollTrigger);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export * from "./voloo-ui/types";
+import {
+  Message,
+  Product,
+  CafeTheme,
+  CafeConfig,
+  BasketItem,
+} from "./voloo-ui/types";
+import { FormatMessage } from "./voloo-ui/FormatMessage";
+import { ContextChip } from "./voloo-ui/ContextChip";
+import { ChatInput } from "./voloo-ui/ChatInput";
+import { ProductRow } from "./voloo-ui/ProductRow";
+import { BasketDrawer } from "./voloo-ui/BasketDrawer";
+import { PreferencesModal } from "./voloo-ui/PreferencesModal";
+import { DesktopTrigger } from "./voloo-ui/DesktopTrigger";
+import { MobileTrigger } from "./voloo-ui/MobileTrigger";
 
-/**
- * A single chat turn — shape shared between the Convex `messages` table
- * and local optimistic state used for instant UI feedback.
- */
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-  products?: number[];
-}
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  image: string;
-  color: string;
-  allergens?: string[];
-  ingredients?: string;
-  nutrition?: {
-    calories: number;
-    carbs: string;
-    sugar: string;
-    fat: string;
-    sodium: string;
-    caffeine: string;
-    isGlutenFree: boolean;
-  };
-}
-
-/**
- * Visual design tokens controlled by the cafe owner.
- * Every colour in the widget is derived from these values — no hardcoded
- * orange or zinc values survive in the JSX.
- */
-export interface CafeTheme {
-  /** Primary action colour, e.g. "#ea580c" (orange-600) */
-  primaryColor: string;
-  /** Lighter accent colour, e.g. "#f97316" (orange-500) */
-  primaryColorLight: string;
-  /** Full-screen overlay background, e.g. "#09090b" */
-  backgroundColor: string;
-  /** Floating pill / surface background, e.g. "rgba(24,24,27,0.88)" */
-  surfaceColor: string;
-  /** Main body text colour, e.g. "#e4e4e7" */
-  textColor: string;
-  /** Subtle inner glow applied to accented elements, e.g. "rgba(249,115,22,0.08)" */
-  accentGlow: string;
-}
-
-/**
- * Per-tenant configuration passed as a single prop to Coffee3.
- * One config object completely controls the widget's identity and look.
- */
-export interface CafeConfig {
-  /** Unique tenant slug stored alongside every message in Convex */
-  cafeId: string;
-  /** Displayed in the chat header, e.g. "Voloo AI" */
-  brandName: string;
-  theme: CafeTheme;
-}
-
-interface VolooAIChatProps {
+export interface VolooAIChatProps {
   apiEndpoint?: string;
   localizedProducts?: Product[];
   /** Required — controls branding, colours, and Convex tenant isolation */
   cafeConfig: CafeConfig;
 }
 
-/**
- * A single item in the user's order basket.
- * Quantity is stored separately from the Product so we never mutate the catalog.
- */
-interface BasketItem {
-  product: Product;
-  quantity: number;
-}
-
 // ─── Storage keys ──────────────────────────────────────────────────────────────
 const CONTEXT_KEY = "voloo_chat_selected_context";
 const BASKET_KEY = "voloo_order_basket";
-
-// ─── FormatMessage ─────────────────────────────────────────────────────────────
-// Accepts `accentColor` from the parent's theme so bold text uses the
-// cafe's brand colour instead of a hardcoded orange.
-const FormatMessage = memo(
-  ({ content, accentColor }: { content: string; accentColor: string }) => {
-    if (!content) return null;
-    return (
-      <div className="space-y-1.5">
-        {content.split("\n").map((line, i) => {
-          if (!line.trim()) return <div key={i} className="h-1" />;
-          return (
-            <p key={i} className="leading-relaxed text-sm">
-              {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
-                if (part.startsWith("**") && part.endsWith("**")) {
-                  return (
-                    <span key={j} className="font-bold" style={{ color: accentColor }}>
-                      {part.slice(2, -2)}
-                    </span>
-                  );
-                }
-                return part;
-              })}
-            </p>
-          );
-        })}
-      </div>
-    );
-  }
-);
-FormatMessage.displayName = "FormatMessage";
-
-// ─── ContextChip ──────────────────────────────────────────────────────────────
-// A compact, removable chip that sits above the floating input pill.
-const ContextChip = memo(
-  ({
-    product,
-    onRemove,
-  }: {
-    product: Product;
-    onRemove: (id: number) => void;
-  }) => {
-    const chipRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      if (!chipRef.current) return;
-      // Entrance: fade in + slide up from the input pill
-      gsap.fromTo(
-        chipRef.current,
-        { opacity: 0, y: 8, scale: 0.92 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(1.8)" }
-      );
-    }, []);
-
-    const handleRemove = () => {
-      if (!chipRef.current) {
-        onRemove(product.id);
-        return;
-      }
-      // Exit animation before removing from state
-      gsap.to(chipRef.current, {
-        opacity: 0,
-        scale: 0.85,
-        y: 4,
-        duration: 0.2,
-        ease: "power2.in",
-        onComplete: () => onRemove(product.id),
-      });
-    };
-
-    return (
-      <div
-        ref={chipRef}
-        className="flex items-center gap-1.5 pl-0.5 pr-1.5 py-0.5 rounded-full"
-        style={{
-          backgroundColor: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.10)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        {/* Tiny thumbnail */}
-        <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 border border-white/10">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="20px"
-          />
-        </div>
-
-        {/* Name — capped width */}
-        <span className="text-[10px] font-semibold text-zinc-300 max-w-[90px] truncate">
-          {product.name}
-        </span>
-
-        {/* Remove button */}
-        <button
-          onClick={handleRemove}
-          aria-label={`Remove ${product.name} from context`}
-          className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-all duration-150 shrink-0"
-        >
-          <X className="w-2.5 h-2.5" />
-        </button>
-      </div>
-    );
-  }
-);
-ContextChip.displayName = "ContextChip";
-
-// ─── ChatInput ─────────────────────────────────────────────────────────────────
-//
-// PERFORMANCE: Owns its own `inputValue` state so keystroke updates are isolated
-// to this tiny component. The parent VolooAI never re-renders on typing.
-//
-// When the user submits (Enter or Send button), it calls `onSend(text)` which
-// triggers the parent's `sendMessage` function, and resets the local input.
-interface ChatInputProps {
-  onSend: (text: string) => void;
-  isProcessing: boolean;
-  chatMode: "collapse" | "keep";
-  hasContext: boolean;
-  contextName?: string;
-  placeholder: string;
-  theme: CafeTheme;
-  onTyping?: () => void;
-}
-
-const ChatInput = memo(({
-  onSend,
-  isProcessing,
-  chatMode,
-  hasContext,
-  contextName,
-  placeholder,
-  theme,
-  onTyping,
-}: ChatInputProps) => {
-  const [inputValue, setInputValue] = useState("");
-
-  const handleSubmit = () => {
-    const trimmed = inputValue.trim();
-    if (!trimmed || (isProcessing && chatMode === "collapse")) return;
-    onSend(trimmed);
-    setInputValue("");
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
-  return (
-    <div
-      className="flex items-center gap-2 px-4 py-2.5 rounded-[2rem]"
-      style={{
-        backgroundColor: theme.surfaceColor,
-        border: hasContext
-          ? `1px solid ${theme.primaryColor}40`
-          : "1px solid rgba(255,255,255,0.09)",
-        backdropFilter: "blur(24px) saturate(150%)",
-        WebkitBackdropFilter: "blur(24px) saturate(150%)",
-        boxShadow: hasContext
-          ? `0 8px 40px rgba(0,0,0,0.55), 0 0 12px ${theme.accentGlow} inset, inset 0 1px 0 rgba(255,255,255,0.04)`
-          : "0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
-        transition: "border-color 0.3s, box-shadow 0.3s",
-      }}
-    >
-      {/* Context-active dot */}
-      {hasContext && (
-        <div
-          className="w-1.5 h-1.5 rounded-full shrink-0"
-          style={{
-            backgroundColor: theme.primaryColorLight,
-            boxShadow: `0 0 6px ${theme.primaryColorLight}b3`,
-          }}
-        />
-      )}
-
-      <input
-        type="text"
-        value={inputValue}
-        onChange={(e) => {
-          setInputValue(e.target.value);
-          onTyping?.();
-        }}
-        onKeyDown={handleKeyDown}
-        placeholder={hasContext && contextName ? `Ask about ${contextName}…` : placeholder}
-        className="flex-1 bg-transparent outline-none text-[16px] text-zinc-200 placeholder:text-zinc-600 font-medium"
-        autoComplete="off"
-      />
-
-      <button
-        onClick={handleSubmit}
-        disabled={!inputValue.trim() || (isProcessing && chatMode === "collapse")}
-        aria-label="Send message"
-        className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105"
-        style={{
-          background: inputValue.trim()
-            ? `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`
-            : "rgba(255,255,255,0.08)",
-          boxShadow: inputValue.trim() ? `0 4px 16px ${theme.primaryColor}60` : "none",
-        }}
-      >
-        <Send className="w-4 h-4 text-white" />
-      </button>
-    </div>
-  );
-});
-ChatInput.displayName = "ChatInput";
-
-
-const ProductRow = memo(
-  ({
-    productIds,
-    localizedProducts,
-    isBackgroundDark,
-    rowId,
-    selectedContext,
-    onToggleSelection,
-    onAddToBasket,
-    primaryColor,
-    primaryColorLight,
-  }: {
-    productIds: number[];
-    localizedProducts: Product[];
-    isBackgroundDark: boolean;
-    rowId: string;
-    selectedContext: Product[];
-    onToggleSelection: (product: Product) => void;
-    onAddToBasket: (product: Product) => void;
-    primaryColor: string;
-    primaryColorLight: string;
-  }) => {
-    const rowRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      if (!rowRef.current) return;
-      gsap.fromTo(
-        rowRef.current,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", delay: 0.1 }
-      );
-    }, []);
-
-    const products = productIds
-      .map((id) => localizedProducts.find((p) => p.id === id))
-      .filter(Boolean) as Product[];
-
-    if (products.length === 0) return null;
-
-    return (
-      <div ref={rowRef} className={`product-row-${rowId} mt-3`}>
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-2 ml-0.5">
-          Recommendations
-        </p>
-        <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide pb-2">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product as any}
-              isBackgroundDark={isBackgroundDark}
-              isSelected={selectedContext.some((p) => p.id === product.id)}
-              onToggle={onToggleSelection}
-              onAddToBasket={onAddToBasket}
-              primaryColor={primaryColor}
-              primaryColorLight={primaryColorLight}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
-);
-ProductRow.displayName = "ProductRow";
 
 // ─── Main Component ────────────────────────────────────────────────────────────────────
 export function VolooAI({
@@ -388,12 +77,32 @@ export function VolooAI({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Destructure theme once so every reference stays short
-  const { theme, cafeId, brandName } = cafeConfig;
+  // ── Database Theme Override ──
+  const { cafeId, brandName } = cafeConfig;
+  // Fetch DB theme — only reads background animation template + color overrides saved by admin.
+  const activeThemeData = useQuery(api.aiChatThemes?.getBySlug, { slug: cafeId });
+
+  // Merge DB values with cafeConfig defaults — DB wins when a value is set.
+  const theme = {
+    primaryColor:       activeThemeData?.primaryColor      || cafeConfig.theme.primaryColor,
+    primaryColorLight:  activeThemeData?.textColor         || cafeConfig.theme.primaryColorLight,
+    backgroundColor:    activeThemeData?.backgroundColor   || cafeConfig.theme.backgroundColor,
+    surfaceColor:       activeThemeData?.userMessageBg     || cafeConfig.theme.surfaceColor,
+    textColor:          activeThemeData?.textColor         || cafeConfig.theme.textColor,
+    accentGlow:         cafeConfig.theme.accentGlow,
+    // Extended fields (only available when admin saves via new page)
+    userBubbleBg:       activeThemeData?.userMessageBg     || "rgba(255,255,255,0.08)",
+    userBubbleText:     activeThemeData?.userMessageText   || cafeConfig.theme.textColor,
+    botBubbleText:      activeThemeData?.botMessageText    || "#a1a1aa",
+  };
+
+  // "none" = no animation (default when nothing saved)
+  const backgroundTemplate = activeThemeData?.backgroundTemplate ?? "none";
 
   // ── State ──
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [chatMode, setChatMode] = useState<"collapse" | "keep">("collapse");
   // Note: inputValue is now owned by the <ChatInput> child component.
   // Keeping it out of the parent prevents re-renders on every keystroke.
@@ -427,18 +136,20 @@ export function VolooAI({
   // component whenever a new message is inserted from any device/tab.
   const convexMessages = useQuery(
     api.chat.getMessages,
-    sessionId ? { sessionId, cafeId } : "skip"
+    sessionId ? { sessionId, cafeId } : "skip",
   );
 
   // Map Convex docs to the local Message shape used by the renderer.
   // Convex docs have a `_id` and `_creationTime` on top of our fields;
   // we strip those to keep the renderer type-safe.
-  const messages: Message[] = (convexMessages ?? []).map((m: { role: any; content: any; timestamp: any; products: any; }) => ({
-    role: m.role,
-    content: m.content,
-    timestamp: m.timestamp,
-    products: m.products,
-  }));
+  const messages: Message[] = (convexMessages ?? []).map(
+    (m: { role: any; content: any; timestamp: any; products: any }) => ({
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp,
+      products: m.products,
+    }),
+  );
 
   // Optimistic pending state: instantly shown before Convex round-trip
   // completes. Cleared once `convexMessages` re-renders with the new row.
@@ -463,7 +174,7 @@ export function VolooAI({
       await placeOrder({
         cafeId,
         seatNumber: Number(seatNumber),
-        items: basket.map(item => ({
+        items: basket.map((item) => ({
           productId: item.product.id,
           name: item.product.name,
           price: item.product.price,
@@ -508,7 +219,9 @@ export function VolooAI({
   const toggleSelection = useCallback((product: Product) => {
     setSelectedContext((prev) => {
       const exists = prev.some((p) => p.id === product.id);
-      return exists ? prev.filter((p) => p.id !== product.id) : [...prev, product];
+      return exists
+        ? prev.filter((p) => p.id !== product.id)
+        : [...prev, product];
     });
   }, []);
 
@@ -524,7 +237,9 @@ export function VolooAI({
     try {
       const stored = sessionStorage.getItem(`${BASKET_KEY}_${cafeId}`);
       if (stored) setBasket(JSON.parse(stored) as BasketItem[]);
-    } catch { /* private-browsing or malformed JSON — stay empty */ }
+    } catch {
+      /* private-browsing or malformed JSON — stay empty */
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -533,10 +248,13 @@ export function VolooAI({
     try {
       sessionStorage.setItem(`${BASKET_KEY}_${cafeId}`, JSON.stringify(basket));
       const count = basket.reduce((sum, item) => sum + item.quantity, 0);
-      window.dispatchEvent(new CustomEvent("basket-updated", { detail: { count } }));
-    } catch { /* private-browsing — ignore */ }
+      window.dispatchEvent(
+        new CustomEvent("basket-updated", { detail: { count } }),
+      );
+    } catch {
+      /* private-browsing — ignore */
+    }
   }, [basket, cafeId]);
-
 
   const [isBasketOpen, setIsBasketOpen] = useState(false);
 
@@ -547,7 +265,8 @@ export function VolooAI({
       setIsBasketOpen(true);
     };
     window.addEventListener("open-voloo-basket", handleOpenBasket);
-    return () => window.removeEventListener("open-voloo-basket", handleOpenBasket);
+    return () =>
+      window.removeEventListener("open-voloo-basket", handleOpenBasket);
   }, []);
 
   // ── Rating State ──
@@ -562,7 +281,9 @@ export function VolooAI({
   const [userAllergies, setUserAllergies] = useState<string[]>([]);
   const toggleAllergy = useCallback((allergy: string) => {
     setUserAllergies((prev) =>
-      prev.includes(allergy) ? prev.filter((a) => a !== allergy) : [...prev, allergy]
+      prev.includes(allergy)
+        ? prev.filter((a) => a !== allergy)
+        : [...prev, allergy],
     );
   }, []);
 
@@ -599,24 +320,27 @@ export function VolooAI({
   /**
    * updateQuantity — sets an exact quantity; removes the row if qty drops to 0.
    */
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromBasket(productId);
-      return;
-    }
-    setBasket((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
-  }, [removeFromBasket]);
+  const updateQuantity = useCallback(
+    (productId: number, quantity: number) => {
+      if (quantity <= 0) {
+        removeFromBasket(productId);
+        return;
+      }
+      setBasket((prev) =>
+        prev.map((item) =>
+          item.product.id === productId ? { ...item, quantity } : item,
+        ),
+      );
+    },
+    [removeFromBasket],
+  );
 
   // Derived: total number of individual items in the basket (for badge)
   const basketCount = basket.reduce((sum, item) => sum + item.quantity, 0);
   // Derived: order total price
   const basketTotal = basket.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0
+    0,
   );
 
   // ── Refs ──
@@ -659,7 +383,7 @@ export function VolooAI({
       gsap.fromTo(
         `.message-item-${idx}`,
         { opacity: 0, y: 14 },
-        { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }
+        { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" },
       );
     }
   }, [allMessages, isOpen]);
@@ -699,17 +423,23 @@ export function VolooAI({
       .fromTo(
         overlayRef.current,
         { clipPath: "inset(50% 0% 50% 0%)" },
-        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.75, ease: "expo.inOut" }
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.75, ease: "expo.inOut" },
       )
       .to(
         chatContainerRef.current,
         { opacity: 1, duration: 0.45, onComplete: () => setIsOpen(true) },
-        "-=0.35"
+        "-=0.35",
       )
       .from(
         ".voloo-ui-element",
-        { y: 16, opacity: 0, stagger: 0.08, duration: 0.35, ease: "power2.out" },
-        "-=0.2"
+        {
+          y: 16,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.35,
+          ease: "power2.out",
+        },
+        "-=0.2",
       );
     return tl;
   };
@@ -726,7 +456,7 @@ export function VolooAI({
       .to(
         overlayRef.current,
         { clipPath: "inset(50% 0% 50% 0%)", duration: 0.7, ease: "expo.inOut" },
-        "-=0.25"
+        "-=0.25",
       )
       .to(overlayRef.current, { opacity: 0, duration: 0.2 }, "-=0.2");
     return tl;
@@ -737,11 +467,24 @@ export function VolooAI({
     tl.to(chatContainerRef.current, { opacity: 0, duration: 0.25 })
       .to(
         overlayRef.current,
-        { clipPath: "inset(50% 0% 50% 0%)", duration: 0.55, ease: "expo.inOut" },
-        "-=0.25"
+        {
+          clipPath: "inset(50% 0% 50% 0%)",
+          duration: 0.55,
+          ease: "expo.inOut",
+        },
+        "-=0.25",
       )
-      .set(processingPillRef.current, { display: "flex", opacity: 0, scale: 0.85 })
-      .to(processingPillRef.current, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.7)" })
+      .set(processingPillRef.current, {
+        display: "flex",
+        opacity: 0,
+        scale: 0.85,
+      })
+      .to(processingPillRef.current, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: "back.out(1.7)",
+      })
       .to(overlayRef.current, { opacity: 0, duration: 0.2 }, "-=0.2")
       .add(() => {
         unlockScroll();
@@ -788,9 +531,15 @@ export function VolooAI({
       // Step 2: Build product context string for the Gemini system prompt
       const productContext = localizedProducts
         .map((p) => {
-          const ingredientsStr = p.ingredients ? `Ingredients: ${p.ingredients}.` : "";
-          const allergenStr = p.allergens ? `Allergens: ${p.allergens.join(", ")}.` : "";
-          const nutritionStr = p.nutrition ? `Nutrition: ${JSON.stringify(p.nutrition)}.` : "";
+          const ingredientsStr = p.ingredients
+            ? `Ingredients: ${p.ingredients}.`
+            : "";
+          const allergenStr = p.allergens
+            ? `Allergens: ${p.allergens.join(", ")}.`
+            : "";
+          const nutritionStr = p.nutrition
+            ? `Nutrition: ${JSON.stringify(p.nutrition)}.`
+            : "";
           return `ID: ${p.id} | ${p.name} (${p.category}) - $${p.price}: ${p.description}. ${ingredientsStr} ${allergenStr} ${nutritionStr}`;
         })
         .join("\n\n");
@@ -819,7 +568,8 @@ export function VolooAI({
       const data = await response.json();
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.response || "I apologize, but I couldn't process that request.",
+        content:
+          data.response || "I apologize, but I couldn't process that request.",
         timestamp: Date.now(),
         products: data.productIds || [],
       };
@@ -843,16 +593,20 @@ export function VolooAI({
       // Step 5: Clear optimistic messages — Convex `useQuery` will now
       // return the real persisted rows and re-render the list.
       setPendingMessages([]);
+      setIsProcessing(false);
 
       if (chatMode === "collapse") {
-        setTimeout(() => openChatAnimation(), 300);
+        setIsReady(true);
+        setTimeout(() => {
+          setIsReady(false);
+          openChatAnimation();
+        }, 2500);
       }
     } catch (error) {
       console.error("VolooAI Error", error);
+      setIsProcessing(false);
       // On error keep the optimistic user message visible so the user can retry
       if (chatMode === "collapse") setTimeout(() => openChatAnimation(), 500);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -880,38 +634,29 @@ export function VolooAI({
     <>
       {/* Scrollbar hide global style */}
       <style jsx global>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
 
-      {/* ── Floating Trigger ── */}
-      {!isOpen && !isProcessing && (
-        <button
-          onClick={openChatAnimation}
-          className="fixed z-50 p-4 text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 group"
-          style={{
-            /* On mobile: sit above the bottom navbar (safe-area + ~60px bar).
-               On desktop: classic bottom-right corner.                        */
-            bottom: "calc(env(safe-area-inset-bottom) + 5rem)",
-            right: "1.25rem",
-            background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
-            boxShadow: `0 20px 60px -10px ${theme.primaryColor}80`,
-          }}
-        >
-          <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" />
-        </button>
-      )}
-
-      {/* ── Processing Pill ── */}
-      <div ref={processingPillRef} className="fixed z-[100] hidden"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)", right: "1.5rem" }}
-      >
-        <div className="px-6 py-3 bg-zinc-900/90 text-white rounded-full shadow-2xl flex items-center gap-2.5 border border-white/10 backdrop-blur-xl">
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: theme.primaryColorLight }} />
-          <span className="font-bold text-xs uppercase tracking-wider">{t("thinking")}</span>
-        </div>
-      </div>
+      <DesktopTrigger
+        isOpen={isOpen}
+        isProcessing={isProcessing}
+        isReady={isReady}
+        openChatAnimation={openChatAnimation}
+        theme={theme}
+        processingPillRef={processingPillRef}
+      />
+      <MobileTrigger
+        isOpen={isOpen}
+        isProcessing={isProcessing}
+        isReady={isReady}
+        openChatAnimation={openChatAnimation}
+      />
 
       {/* ── Full-screen Overlay Shell ── */}
       <div
@@ -933,8 +678,34 @@ export function VolooAI({
         <div
           ref={chatContainerRef}
           className="w-full h-full flex flex-col opacity-0 relative overflow-hidden"
-          style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}
+          style={{
+            backgroundColor: theme.backgroundColor,
+            color: theme.textColor,
+          }}
         >
+          {/* --- AI CHAT AMBIENT BACKGROUND --- */}
+          {backgroundTemplate !== "none" && (
+            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+              {backgroundTemplate === "light_rays" && (
+                <LightRays
+                  color={`${theme.primaryColor}30`}
+                  count={5}
+                  blur={32}
+                />
+              )}
+              {backgroundTemplate === "flickering_grid" && (
+                <FlickeringGrid
+                  className="absolute inset-0 z-0"
+                  squareSize={3}
+                  gridGap={6}
+                  color={theme.primaryColor}
+                  maxOpacity={0.18}
+                  flickerChance={0.06}
+                />
+              )}
+            </div>
+          )}
+
           {/* ════════ HEADER ════════ */}
           <div
             className="voloo-ui-element flex items-center justify-between px-4 py-2.5 sticky top-0 z-10"
@@ -988,14 +759,18 @@ export function VolooAI({
               >
                 {/* ── Onboarding Tooltip ── */}
                 {showTooltip && (
-                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[160px] p-2 rounded-lg text-center text-xs font-semibold text-white shadow-2xl animate-fade-in pointer-events-none"
+                  <div
+                    className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[160px] p-2 rounded-lg text-center text-xs font-semibold text-white shadow-2xl animate-fade-in pointer-events-none"
                     style={{
                       background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
-                      boxShadow: `0 8px 32px ${theme.primaryColor}50`
+                      boxShadow: `0 8px 32px ${theme.primaryColor}50`,
                     }}
                   >
                     Chat auto-minimizes so you can view the menu.
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45" style={{ backgroundColor: theme.primaryColor }} />
+                    <div
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
+                      style={{ backgroundColor: theme.primaryColor }}
+                    />
                   </div>
                 )}
                 <button
@@ -1041,7 +816,12 @@ export function VolooAI({
                 onClick={() => setIsBasketOpen(true)}
                 aria-label="Open order basket"
                 className="relative min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all duration-200 hover:bg-white/5"
-                style={{ color: basketCount > 0 ? theme.primaryColorLight : "rgba(255,255,255,0.4)" }}
+                style={{
+                  color:
+                    basketCount > 0
+                      ? theme.primaryColorLight
+                      : "rgba(255,255,255,0.4)",
+                }}
               >
                 <ShoppingBag className="w-4 h-4" />
                 {basketCount > 0 && (
@@ -1065,15 +845,19 @@ export function VolooAI({
           </div>
 
           {/* ════════ MESSAGES AREA ════════ */}
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto scrollbar-hide">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto scrollbar-hide"
+          >
             {/*
               pb is dynamic:
               • 36 = base clearance for the floating pill (~144px)
               • +8 (~32px) extra when context chips are visible
             */}
             <div
-              className={`max-w-3xl mx-auto w-full px-4 py-6 space-y-6 transition-[padding] duration-300 ${hasContext ? "pb-44" : "pb-36"
-                }`}
+              className={`max-w-3xl mx-auto w-full px-4 py-6 space-y-6 transition-[padding] duration-300 ${
+                hasContext ? "pb-44" : "pb-36"
+              }`}
             >
               {/* ── Welcome State ── */}
               {allMessages.length === 0 && (
@@ -1084,7 +868,10 @@ export function VolooAI({
                       background: `linear-gradient(135deg, ${theme.primaryColor}33, ${theme.primaryColorLight}0d)`,
                     }}
                   >
-                    <Sparkles className="w-6 h-6" style={{ color: theme.primaryColorLight }} />
+                    <Sparkles
+                      className="w-6 h-6"
+                      style={{ color: theme.primaryColorLight }}
+                    />
                   </div>
                   <div className="voloo-ui-element">
                     <h3 className="font-black text-xl tracking-tight text-zinc-100">
@@ -1099,25 +886,36 @@ export function VolooAI({
                   <div className="voloo-ui-element w-full px-2 mt-2 flex justify-center">
                     <button
                       onClick={() => setIsPreferencesOpen(true)}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-200 group"
-                      style={{
-                        backgroundColor: "rgba(255,255,255,0.02)",
-                        borderColor: "rgba(255,255,255,0.08)",
-                        color: theme.textColor
-                      }}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-[27.5px] relative overflow-hidden backdrop-blur-[20px] bg-gradient-to-b from-white/10 to-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.1)] active:scale-95 active:bg-white/20 transition-all duration-300 group"
+                      style={{ color: theme.textColor }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = `${theme.primaryColor}80`;
-                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${theme.primaryColor}0d`;
+                        const border = e.currentTarget.querySelector(
+                          ".inner-border",
+                        ) as HTMLDivElement;
+                        if (border)
+                          border.style.borderColor = `${theme.primaryColor}80`;
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.08)";
-                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.02)";
+                        const border = e.currentTarget.querySelector(
+                          ".inner-border",
+                        ) as HTMLDivElement;
+                        if (border)
+                          border.style.borderColor = "rgba(255,255,255,0.2)";
                       }}
                     >
-                      <SlidersHorizontal className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" style={{ color: theme.primaryColorLight }} />
-                      <span className="text-xs font-bold uppercase tracking-wider">Dietary Requirements</span>
+                      <div className="inner-border absolute inset-0 rounded-[27.5px] border border-white/20 pointer-events-none transition-colors duration-300" />
+                      <SlidersHorizontal
+                        className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180"
+                        style={{ color: theme.primaryColorLight }}
+                      />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        Dietary Requirements
+                      </span>
                       {userAllergies.length > 0 && (
-                        <span className="w-2 h-2 rounded-full ml-1 animate-pulse" style={{ backgroundColor: theme.primaryColor }} />
+                        <span
+                          className="w-2 h-2 rounded-full ml-1 animate-pulse"
+                          style={{ backgroundColor: theme.primaryColor }}
+                        />
                       )}
                     </button>
                   </div>
@@ -1127,16 +925,23 @@ export function VolooAI({
                       <button
                         key={idx}
                         onClick={() => sendMessage(suggestion)}
-                        className="px-4 py-2.5 text-xs font-semibold rounded-full border border-white/10 text-zinc-400 hover:text-zinc-100 transition-all duration-200 min-h-[44px]"
+                        className="relative overflow-hidden px-4 py-2.5 text-xs font-semibold rounded-[27.5px] text-zinc-300 hover:text-zinc-100 active:scale-95 transition-all duration-300 min-h-[44px] backdrop-blur-[20px] bg-gradient-to-b from-white/10 to-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.1)]"
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = `${theme.primaryColor}80`;
-                          (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${theme.primaryColor}0d`;
+                          const border = e.currentTarget.querySelector(
+                            ".inner-border",
+                          ) as HTMLDivElement;
+                          if (border)
+                            border.style.borderColor = `${theme.primaryColor}80`;
                         }}
                         onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "";
-                          (e.currentTarget as HTMLButtonElement).style.backgroundColor = "";
+                          const border = e.currentTarget.querySelector(
+                            ".inner-border",
+                          ) as HTMLDivElement;
+                          if (border)
+                            border.style.borderColor = "rgba(255,255,255,0.2)";
                         }}
                       >
+                        <div className="inner-border absolute inset-0 rounded-[27.5px] border border-white/20 pointer-events-none transition-colors duration-300" />
                         {suggestion}
                       </button>
                     ))}
@@ -1150,17 +955,14 @@ export function VolooAI({
                   animation fires on both real and in-flight turns.
               */}
               {allMessages.map((msg, idx) => (
-                <div key={`${msg.timestamp}-${idx}`} className={`message-item-${idx}`}>
+                <div
+                  key={`${msg.timestamp}-${idx}`}
+                  className={`message-item-${idx}`}
+                >
                   {msg.role === "user" ? (
                     <div className="flex justify-end">
-                      <div
-                        className="max-w-[75%] px-4 py-2.5 rounded-2xl text-zinc-100 text-sm leading-relaxed"
-                        style={{
-                          backgroundColor: "rgba(255,255,255,0.06)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          backdropFilter: "blur(12px)",
-                        }}
-                      >
+                      <div className="max-w-[75%] px-4 py-2.5 rounded-[27.5px] rounded-br-sm text-zinc-100 text-sm leading-relaxed relative overflow-hidden backdrop-blur-[20px] bg-gradient-to-b from-white/10 to-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.1)]">
+                        <div className="absolute inset-0 rounded-[27.5px] rounded-br-sm border border-white/20 pointer-events-none" />
                         {msg.content}
                       </div>
                     </div>
@@ -1185,7 +987,10 @@ export function VolooAI({
                       {/* Unboxed text on the dark canvas */}
                       <div className="text-zinc-300 pl-1">
                         {/* Pass the cafe's accent colour so bold (**text**) matches the brand */}
-                        <FormatMessage content={msg.content} accentColor={theme.primaryColorLight} />
+                        <FormatMessage
+                          content={msg.content}
+                          accentColor={theme.primaryColorLight}
+                        />
                       </div>
 
                       {/* Horizontal product card row */}
@@ -1209,13 +1014,11 @@ export function VolooAI({
 
               {/* ── Rating UI ── */}
               {allMessages.length >= 4 && !hasRated && (
-                <div className="mt-8 p-6 rounded-[2rem] border border-white/10 text-center animate-fade-in"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    backdropFilter: "blur(20px)"
-                  }}
-                >
-                  <h4 className="text-zinc-200 font-bold text-sm mb-4">How is your AI experience?</h4>
+                <div className="mt-8 p-6 rounded-[27.5px] text-center animate-fade-in relative overflow-hidden backdrop-blur-[20px] bg-gradient-to-b from-white/10 to-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.1)]">
+                  <div className="absolute inset-0 rounded-[27.5px] border border-white/20 pointer-events-none" />
+                  <h4 className="text-zinc-200 font-bold text-sm mb-4">
+                    How is your AI experience?
+                  </h4>
                   <div className="flex justify-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -1223,7 +1026,10 @@ export function VolooAI({
                         onClick={() => {
                           submitRating({ sessionId, cafeId, rating: star });
                           setHasRated(true);
-                          sessionStorage.setItem(`rated_${cafeId}_${sessionId}`, "true");
+                          sessionStorage.setItem(
+                            `rated_${cafeId}_${sessionId}`,
+                            "true",
+                          );
                         }}
                         className="p-2 text-zinc-500 hover:text-yellow-400 hover:scale-110 transition-all duration-200"
                       >
@@ -1235,7 +1041,12 @@ export function VolooAI({
               )}
               {allMessages.length >= 4 && hasRated && (
                 <div className="mt-8 p-4 text-center animate-fade-in">
-                  <p className="text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColorLight }}>Thank you!</p>
+                  <p
+                    className="text-xs font-bold uppercase tracking-wider"
+                    style={{ color: theme.primaryColorLight }}
+                  >
+                    Thank you!
+                  </p>
                 </div>
               )}
 
@@ -1244,7 +1055,9 @@ export function VolooAI({
                 <div className="flex items-center gap-1.5 pl-1">
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})` }}
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
+                    }}
                   >
                     <Sparkles className="w-2.5 h-2.5 text-white" />
                   </div>
@@ -1255,9 +1068,18 @@ export function VolooAI({
                       border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.primaryColorLight }} />
-                    <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.primaryColorLight }} />
-                    <div className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.primaryColorLight }} />
+                    <div
+                      className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
+                      style={{ backgroundColor: theme.primaryColorLight }}
+                    />
+                    <div
+                      className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
+                      style={{ backgroundColor: theme.primaryColorLight }}
+                    />
+                    <div
+                      className="w-1.5 h-1.5 rounded-full animate-bounce"
+                      style={{ backgroundColor: theme.primaryColorLight }}
+                    />
                   </div>
                 </div>
               )}
@@ -1272,8 +1094,12 @@ export function VolooAI({
               2. The pill input itself
           */}
           <div className="voloo-ui-element absolute bottom-0 left-0 right-0 pointer-events-none">
-            <div className="max-w-3xl mx-auto px-4 flex flex-col gap-2 pointer-events-auto" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}>
-
+            <div
+              className="max-w-3xl mx-auto px-4 flex flex-col gap-2 pointer-events-auto"
+              style={{
+                paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))",
+              }}
+            >
               {/* ── Context Chip Bar ──
                   Rendered above the pill when products are selected.
                   Each chip is individually GSAP-animated on mount/unmount.
@@ -1289,7 +1115,9 @@ export function VolooAI({
                       key={product.id}
                       product={product}
                       onRemove={(id) =>
-                        setSelectedContext((prev) => prev.filter((p) => p.id !== id))
+                        setSelectedContext((prev) =>
+                          prev.filter((p) => p.id !== id),
+                        )
                       }
                     />
                   ))}
@@ -1304,276 +1132,39 @@ export function VolooAI({
                 hasContext={hasContext}
                 contextName={selectedContext[0]?.name}
                 placeholder={t("input_placeholder")}
-                theme={theme}
                 onTyping={() => setShowTooltip(false)}
               />
-
             </div>
           </div>
           {/* end floating input */}
 
-
-          {/* ════════ ORDER BASKET DRAWER ════════
-              A slide-in panel from the right edge of the chat overlay.
-              Uses CSS transitions (translateX) instead of GSAP so it stays
-              performant even while the AI is streaming. The panel renders
-              inside chatContainerRef so it inherits the cafe's background.
-
-              Key design rules:
-              • backdrop-filter: blur(24px) — glassy premium feel
-              • All colours from theme — zero hardcoded values
-              • ShoppingBag icon in header matches badge colour
-          */}
-          <div
-            className="absolute inset-y-0 right-0 z-20 flex flex-col"
-            style={{
-              width: "min(360px, 100%)",
-              transform: isBasketOpen ? "translateX(0)" : "translateX(100%)",
-              transition: "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
-              backgroundColor: `${theme.backgroundColor}f0`,
-              backdropFilter: "blur(28px) saturate(180%)",
-              WebkitBackdropFilter: "blur(28px) saturate(180%)",
-              borderLeft: "1px solid rgba(255,255,255,0.07)",
-              boxShadow: "-24px 0 80px rgba(0,0,0,0.5)",
-            }}
-          >
-            {/* Drawer Header */}
-            <div
-              className="flex items-center justify-between px-5 py-3.5 shrink-0"
-              style={{
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                backgroundColor: `${theme.backgroundColor}cc`,
-                backdropFilter: "blur(20px)",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4" style={{ color: theme.primaryColorLight }} />
-                <span className="font-black text-sm uppercase tracking-tight" style={{ color: theme.textColor }}>
-                  Order
-                </span>
-                {basketCount > 0 && (
-                  <span
-                    className="px-1.5 py-0.5 rounded-full text-white text-[9px] font-black"
-                    style={{ backgroundColor: theme.primaryColor }}
-                  >
-                    {basketCount}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => setIsBasketOpen(false)}
-                aria-label="Close basket"
-                className="p-1 rounded-lg hover:bg-white/5 transition-colors duration-150 text-zinc-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Drawer Body — scrollable item list */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-3 space-y-2">
-              {basket.length === 0 ? (
-                /* Empty state */
-                <div className="flex flex-col items-center justify-center h-full gap-3 py-12">
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                    style={{
-                      background: `linear-gradient(135deg, ${theme.primaryColor}26, ${theme.primaryColorLight}0d)`,
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <ShoppingBag className="w-6 h-6 opacity-30" style={{ color: theme.primaryColorLight }} />
-                  </div>
-                  <p className="text-xs font-semibold opacity-30 text-center" style={{ color: theme.textColor }}>
-                    Your basket is empty.<br />Tap <strong>ADD</strong> on any product card.
-                  </p>
-                </div>
-              ) : (
-                /* Item rows */
-                basket.map(({ product, quantity }) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-3 p-2.5 rounded-xl transition-colors duration-150"
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    {/* Thumbnail */}
-                    <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0">
-                      <Image src={product.image} alt={product.name} fill className="object-cover" sizes="44px" />
-                    </div>
-
-                    {/* Name + price */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate" style={{ color: theme.textColor }}>{product.name}</p>
-                      <p className="text-[10px] font-mono opacity-50" style={{ color: theme.textColor }}>
-                        ${(product.price * quantity).toFixed(2)}
-                      </p>
-                    </div>
-
-                    {/* Quantity controls — bigger touch targets */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => updateQuantity(product.id, quantity - 1)}
-                        aria-label="Decrease quantity"
-                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-150"
-                        style={{
-                          backgroundColor: "rgba(255,255,255,0.07)",
-                          color: theme.textColor,
-                        }}
-                      >
-                        {quantity === 1 ? (
-                          <Trash2 className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
-                        ) : (
-                          <Minus className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-
-                      <span
-                        className="w-6 text-center text-sm font-black tabular-nums"
-                        style={{ color: theme.textColor }}
-                      >
-                        {quantity}
-                      </span>
-
-                      <button
-                        onClick={() => updateQuantity(product.id, quantity + 1)}
-                        aria-label="Increase quantity"
-                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-150"
-                        style={{
-                          backgroundColor: `${theme.primaryColor}33`,
-                          color: theme.primaryColorLight,
-                        }}
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Drawer Footer — total + Send Order */}
-            {basket.length > 0 && (
-              <div
-                className="shrink-0 px-4 py-4"
-                style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-              >
-                {/* Total row */}
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest opacity-40" style={{ color: theme.textColor }}>
-                    Total
-                  </span>
-                  <span className="text-base font-black font-mono" style={{ color: theme.primaryColorLight }}>
-                    ${basketTotal.toFixed(2)}
-                  </span>
-                </div>
-
-                {orderSuccess ? (
-                  <div className="w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider text-white text-center bg-green-500/20 border border-green-500/50 text-green-400">
-                    Order Placed!
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        placeholder="Seat No."
-                        value={seatNumber}
-                        onChange={(e) => setSeatNumber(e.target.value)}
-                        className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-center outline-none focus:border-white/30"
-                        style={{ color: theme.textColor }}
-                        min="1"
-                        max="100"
-                      />
-                      <button
-                        onClick={handlePlaceOrder}
-                        disabled={!seatNumber || isPlacingOrder}
-                        className="flex-1 py-3 rounded-xl font-black text-sm uppercase tracking-wider text-white transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-95"
-                        style={{
-                          background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
-                          boxShadow: `0 8px 32px ${theme.primaryColor}50`,
-                        }}
-                      >
-                        {isPlacingOrder ? <Loader2 className="w-4 h-4 mx-auto animate-spin" /> : "Place Order"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* ════════ ORDER BASKET DRAWER ════════ */}
+          <BasketDrawer
+            isBasketOpen={isBasketOpen}
+            setIsBasketOpen={setIsBasketOpen}
+            basket={basket}
+            basketCount={basketCount}
+            basketTotal={basketTotal}
+            theme={theme}
+            updateQuantity={updateQuantity}
+            handlePlaceOrder={handlePlaceOrder}
+            isPlacingOrder={isPlacingOrder}
+            orderSuccess={orderSuccess}
+            seatNumber={seatNumber}
+            setSeatNumber={setSeatNumber}
+          />
           {/* end basket drawer */}
-
         </div>
       </div>
 
       {/* ════════ PREFERENCES MODAL ════════ */}
-      {isPreferencesOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
-          style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
-        >
-          <div
-            className="relative w-full max-w-[320px] rounded-[2rem] p-6 border shadow-2xl"
-            style={{
-              backgroundColor: `${theme.backgroundColor}f0`,
-              borderColor: "rgba(255,255,255,0.08)",
-              backdropFilter: "blur(24px) saturate(150%)"
-            }}
-          >
-            <button
-              onClick={() => setIsPreferencesOpen(false)}
-              className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/5 transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-2 mb-2">
-              <SlidersHorizontal className="w-4 h-4" style={{ color: theme.primaryColorLight }} />
-              <h3 className="text-sm font-black uppercase tracking-wider text-white">Dietary Needs</h3>
-            </div>
-            <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
-              Select any ingredients you'd like our AI to avoid when recommending menu items.
-            </p>
-
-            <div className="flex flex-wrap gap-2 mb-8">
-              {["Lactose/Dairy", "Nuts", "Gluten", "Vegan"].map((allergy) => {
-                const isActive = userAllergies.includes(allergy);
-                return (
-                  <button
-                    key={allergy}
-                    onClick={() => toggleAllergy(allergy)}
-                    className="px-3.5 py-1.5 text-xs font-bold rounded-full border transition-all duration-200"
-                    style={isActive ? {
-                      backgroundColor: theme.primaryColor,
-                      borderColor: theme.primaryColor,
-                      color: "#fff",
-                      boxShadow: `0 4px 12px ${theme.primaryColor}50`
-                    } : {
-                      backgroundColor: "rgba(255,255,255,0.02)",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#a1a1aa"
-                    }}
-                  >
-                    {allergy}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setIsPreferencesOpen(false)}
-              className="w-full py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 shadow-lg"
-              style={{
-                background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.primaryColorLight})`,
-                boxShadow: `0 8px 24px ${theme.primaryColor}40`
-              }}
-            >
-              Save Preferences
-            </button>
-          </div>
-        </div>
-      )}
+      <PreferencesModal
+        isPreferencesOpen={isPreferencesOpen}
+        setIsPreferencesOpen={setIsPreferencesOpen}
+        userAllergies={userAllergies}
+        toggleAllergy={toggleAllergy}
+        theme={theme}
+      />
     </>
   );
 }

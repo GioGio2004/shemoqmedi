@@ -1,22 +1,9 @@
-/**
- * product-card-chat.tsx
- *
- * A compact product card rendered inside the VolooAI chat widget.
- *
- * Phase 2 changes:
- *  - Removed ContactDropdown entirely (replaced by the in-app basket flow)
- *  - Added `onAddToBasket` prop — fires when the user taps the ADD button
- *  - Added `primaryColor` / `primaryColorLight` theme props so the ADD button
- *    and selection border use the cafe's brand colour instead of hardcoded orange
- */
 "use client";
 
 import { useRef } from "react";
 import Image from "next/image";
 import { Check, Plus } from "lucide-react";
 import gsap from "gsap";
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface Product {
   id: number;
@@ -25,50 +12,26 @@ interface Product {
   price: number;
   image: string;
   description: string;
-  color: string;
+  nutrition?: { isGlutenFree: boolean };
   allergens?: string[];
-  ingredients?: string;
-  nutrition?: {
-    calories: number;
-    carbs: string;
-    sugar: string;
-    fat: string;
-    sodium: string;
-    caffeine: string;
-    isGlutenFree: boolean;
-  };
 }
 
 interface ProductCardChatProps {
   product: Product;
-  isBackgroundDark: boolean;
-  // ── Context-selection props ──
   isSelected: boolean;
   onToggle: (product: Product) => void;
-  // ── Basket props ──
-  /** Called when the user taps the ADD button in the card footer */
   onAddToBasket: (product: Product) => void;
-  /** The cafe's primary brand colour — used for the ADD button gradient */
-  primaryColor: string;
-  /** The cafe's lighter accent colour — used for price badge and ADD button */
-  primaryColorLight: string;
 }
-
-// ─── ProductCard ───────────────────────────────────────────────────────────────
 
 export function ProductCard({
   product,
-  isBackgroundDark,
   isSelected,
   onToggle,
   onAddToBasket,
-  primaryColor,
-  primaryColorLight,
 }: ProductCardChatProps) {
   const toggleBtnRef = useRef<HTMLButtonElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
-  // GSAP pop on every context-toggle (the ✓ / + button in the image corner)
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggle(product);
@@ -76,20 +39,19 @@ export function ProductCard({
       gsap.fromTo(
         toggleBtnRef.current,
         { scale: 0.6 },
-        { scale: 1, duration: 0.4, ease: "back.out(2.5)" }
+        { scale: 1, duration: 0.4, ease: "back.out(2.5)" },
       );
     }
   };
 
-  // Micro-bounce on ADD tap to signal success
   const handleAddToBasket = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAddToBasket(product);
     if (addBtnRef.current) {
       gsap.fromTo(
         addBtnRef.current,
-        { scale: 0.75 },
-        { scale: 1, duration: 0.35, ease: "back.out(3)" }
+        { scale: 0.8 },
+        { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.4)" },
       );
     }
   };
@@ -99,152 +61,94 @@ export function ProductCard({
       className="
         group relative flex-none w-[190px] h-[240px]
         flex flex-col overflow-hidden rounded-2xl
-        border shadow-2xl shadow-black/60
-        snap-start
-        transition-transform duration-300 ease-out
-        hover:-translate-y-1.5
+        snap-start transition-all duration-400 ease-out
+        hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]
       "
       style={{
-        backgroundColor: isBackgroundDark
-          ? "rgba(30, 30, 35, 0.85)"
-          : "rgba(255, 255, 255, 0.85)",
+        backgroundColor: "rgba(255, 255, 255, 0.15)", // Frosted glass
         borderColor: isSelected
-          ? `${primaryColor}8c`        // brand-tinted glow border when selected
-          : isBackgroundDark
-            ? "rgba(255,255,255,0.08)"
-            : "rgba(0,0,0,0.08)",
-        backdropFilter: "blur(24px) saturate(160%)",
-        WebkitBackdropFilter: "blur(24px) saturate(160%)",
+          ? "rgba(255, 255, 255, 0.9)"
+          : "rgba(255, 255, 255, 0.2)",
+        borderWidth: "1px",
+        borderStyle: "solid",
+        backdropFilter: "blur(32px) saturate(200%)",
+        WebkitBackdropFilter: "blur(32px) saturate(200%)",
         boxShadow: isSelected
-          ? `0 0 0 1px ${primaryColor}66, 0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${primaryColor}1f inset`
-          : "0 20px 40px rgba(0,0,0,0.6)",
+          ? "0 0 24px rgba(255,255,255,0.15) inset, 0 12px 32px rgba(0,0,0,0.05)"
+          : "0 12px 32px rgba(0,0,0,0.03)",
       }}
     >
-      {/* ── Top 60%: Image ── */}
-      <div className="relative w-full" style={{ height: "60%" }}>
+      {/* ── Image Section ── */}
+      <div className="relative w-full h-[60%]">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           sizes="190px"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        {/* Gradient scrim */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-
-        {/* Category and Dietary Badges */}
-        <div className="absolute top-2 left-2 flex gap-1 items-center">
-          <span
-            className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white"
-            style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
-          >
+        {/* Minimalist Badges */}
+        <div className="absolute top-3 left-3 flex gap-1.5 items-center">
+          <span className="px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-widest text-white bg-black/60 backdrop-blur-md border border-white/10">
             {product.category}
           </span>
-          {product.nutrition?.isGlutenFree && (
-            <span
-              className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest"
-              style={{ 
-                backgroundColor: `${primaryColor}22`, 
-                color: primaryColor,
-                backdropFilter: "blur(6px)" 
-              }}
-            >
-              GF
-            </span>
-          )}
-          {product.allergens?.includes("Vegan") && (
-            <span
-              className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest"
-              style={{ 
-                backgroundColor: `${primaryColor}22`, 
-                color: primaryColor,
-                backdropFilter: "blur(6px)" 
-              }}
-            >
-              V
-            </span>
-          )}
         </div>
 
-        {/*
-          Context-Select Toggle Button (top-right corner)
-          Unselected: faint circle + Plus icon
-          Selected:   brand-coloured circle + Check icon + glow
-        */}
+        {/* Stark White Toggle Button */}
         <button
           ref={toggleBtnRef}
           onClick={handleToggle}
-          aria-label={isSelected ? "Remove from context" : "Add to context"}
-          className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-150 focus:outline-none"
+          className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
           style={
             isSelected
               ? {
-                  backgroundColor: primaryColor,
-                  boxShadow: `0 0 10px ${primaryColor}8c, 0 0 4px ${primaryColor}66`,
-                  border: "1.5px solid rgba(255,255,255,0.30)",
+                  backgroundColor: "#ffffff",
+                  color: "#000000",
+                  border: "none",
+                  boxShadow: "0 4px 12px rgba(255,255,255,0.3)",
                 }
               : {
-                  backgroundColor: "rgba(0,0,0,0.45)",
-                  border: "1.5px solid rgba(255,255,255,0.25)",
-                  backdropFilter: "blur(6px)",
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  backdropFilter: "blur(8px)",
                 }
           }
         >
           {isSelected ? (
-            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            <Check className="w-3.5 h-3.5" strokeWidth={3} />
           ) : (
-            <Plus className="w-3 h-3 text-white/70" strokeWidth={2.5} />
+            <Plus className="w-3.5 h-3.5 text-white/70" strokeWidth={2} />
           )}
         </button>
       </div>
 
-      {/* ── Bottom 40%: Info ── */}
-      <div
-        className="flex flex-col justify-between flex-1 px-3 pt-2 pb-2.5"
-        style={{ height: "40%" }}
-      >
+      {/* ── Info Section ── */}
+      <div className="flex flex-col justify-between flex-1 px-4 pt-3 pb-4">
         <div className="min-w-0">
-          <h3
-            className="text-xs font-black leading-tight truncate transition-colors duration-300"
-            style={{ color: isSelected ? primaryColorLight : undefined }}
-          >
+          <h3 className="text-sm font-black leading-tight truncate tracking-tight text-zinc-900 mix-blend-color-burn dark:text-white dark:mix-blend-normal">
             {product.name}
           </h3>
-          <p className="text-[10px] leading-snug line-clamp-2 mt-0.5 opacity-55">
+          <p className="text-[10px] leading-snug line-clamp-2 mt-1 text-zinc-600 font-medium mix-blend-color-burn dark:text-zinc-400 dark:mix-blend-normal">
             {product.description}
           </p>
         </div>
 
         {/* Price + ADD row */}
-        <div className="flex items-center justify-between gap-2 mt-1.5">
-          {/* Price badge — uses brand accent colour */}
-          <span
-            className="text-xs font-black font-mono px-1.5 py-0.5 rounded-lg shrink-0"
-            style={{
-              backgroundColor: `${primaryColor}26`,
-              color: primaryColorLight,
-            }}
-          >
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-sm font-bold font-mono tracking-tighter text-zinc-900 mix-blend-color-burn dark:text-white dark:mix-blend-normal">
             ${product.price.toFixed(2)}
           </span>
 
-          {/*
-            ADD button — replaces ContactDropdown.
-            A sleek pill with a gradient background using the cafe's theme colour.
-            GSAP bounce fires on every tap (handleAddToBasket).
-          */}
           <button
             ref={addBtnRef}
             onClick={handleAddToBasket}
-            aria-label={`Add ${product.name} to basket`}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-white text-[9px] font-black uppercase tracking-wider transition-opacity duration-150 hover:opacity-90 active:opacity-75"
-            style={{
-              background: `linear-gradient(135deg, ${primaryColor}, ${primaryColorLight})`,
-              boxShadow: `0 4px 12px ${primaryColor}4d`,
-            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-[9px] font-black uppercase tracking-widest transition-all duration-200 hover:bg-zinc-200 active:scale-95"
+            style={{ boxShadow: "0 4px 12px rgba(255,255,255,0.15)" }}
           >
-            <Plus className="w-2.5 h-2.5" strokeWidth={3} />
+            <Plus className="w-3 h-3" strokeWidth={3} />
             ADD
           </button>
         </div>

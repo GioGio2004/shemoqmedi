@@ -48,7 +48,9 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
         <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-6">
           <span className="text-3xl">☕</span>
         </div>
-        <h1 className="font-serif text-4xl mb-4 text-balance">Cafe Not Found</h1>
+        <h1 className="font-serif text-4xl mb-4 text-balance">
+          Cafe Not Found
+        </h1>
         <p className="text-muted-foreground text-lg max-w-md">
           We couldn&apos;t find the menu you&apos;re looking for. Please check
           the URL or scan the QR code again.
@@ -68,27 +70,27 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
   const themeSettings = data.organization.themeSettings;
 
   const themeStyleObj: React.CSSProperties = themeSettings
-    ? {
+    ? ({
         // ── Dynamic theme tokens (the "new" variables) ──────────────────
         "--theme-accent": themeSettings.primaryColor,
-        "--theme-bg":     themeSettings.backgroundColor || "oklch(0.145 0 0)",
-        "--theme-text":   themeSettings.textColor        || "oklch(0.985 0 0)",
+        "--theme-bg": themeSettings.backgroundColor || "oklch(0.145 0 0)",
+        "--theme-text": themeSettings.textColor || "oklch(0.985 0 0)",
 
         // ── Override core Tailwind token variables ──────────────────────
         // This means classes like `bg-background`, `text-foreground`,
         // `bg-primary`, `text-primary` all pick up the org's DB colors,
         // so components that haven't been updated yet still theme correctly.
-        "--background":  themeSettings.backgroundColor || "oklch(0.145 0 0)",
-        "--foreground":  themeSettings.textColor        || "oklch(0.985 0 0)",
-        "--primary":     themeSettings.primaryColor,
+        "--background": themeSettings.backgroundColor || "oklch(0.145 0 0)",
+        "--foreground": themeSettings.textColor || "oklch(0.985 0 0)",
+        "--primary": themeSettings.primaryColor,
 
         // ── Font family ──────────────────────────────────────────────────
-        "--font-sans":  `"${themeSettings.fontFamily}", sans-serif`,
+        "--font-sans": `"${themeSettings.fontFamily}", sans-serif`,
         "--font-serif": `"${themeSettings.fontFamily}", serif`,
 
         // ── Border radius ────────────────────────────────────────────────
         "--radius": themeSettings.buttonRadius,
-      } as React.CSSProperties
+      } as React.CSSProperties)
     : {};
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -109,7 +111,7 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
         // Apply the dynamic background directly on the root element so there's
         // no flash of the default dark background before the style mounts.
         background: themeSettings?.backgroundColor || "oklch(0.145 0 0)",
-        color:      themeSettings?.textColor        || "oklch(0.985 0 0)",
+        color: themeSettings?.textColor || "oklch(0.985 0 0)",
       }}
     >
       {/* ── Real-time VolooAI alert banner (sticky, above navbar) ────────── */}

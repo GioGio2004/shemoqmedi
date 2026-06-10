@@ -251,6 +251,9 @@ export type PublicApiType = {
       any
     >;
   };
+  aiChatThemes: {
+    getBySlug: FunctionReference<"query", "public", { slug: string }, any>;
+  };
   chat: {
     getMessages: FunctionReference<
       "query",
