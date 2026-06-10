@@ -15,10 +15,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MegaMenu } from "./mega-menu";
 
 export function SiteNavbar({
-  onCategorySelect,
   organizationName,
   logoUrl,
 }: {
@@ -60,9 +58,12 @@ export function SiteNavbar({
     >
       {/* py-4 split: top padding is handled by safe-area on the <nav> */}
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center">
-
         {/* ── Logo ──────────────────────────────────────────────────────── */}
-        <a href="#" className="flex items-center gap-2 group" aria-label={`${organizationName} home`}>
+        <a
+          href="#"
+          className="flex items-center gap-2 group"
+          aria-label={`${organizationName} home`}
+        >
           {logoUrl ? (
             /* Image logo when the org has uploaded one */
             // eslint-disable-next-line @next/next/no-img-element
@@ -89,16 +90,18 @@ export function SiteNavbar({
         {/* ── Cart & Navigation ───── */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent("open-voloo-basket"))}
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("open-voloo-basket"))
+            }
             className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
             aria-label="Open Cart"
           >
-            <ShoppingBag className="w-5 h-5" style={{ color: "var(--theme-text, var(--foreground))" }} />
+            <ShoppingBag
+              className="w-5 h-5"
+              style={{ color: "var(--theme-text, var(--foreground))" }}
+            />
             <CartBadge />
           </button>
-          
-          {/* Navigation (MegaMenu — handles desktop + mobile drawer) */}
-          <MegaMenu onCategorySelect={onCategorySelect} />
         </div>
       </div>
     </nav>
@@ -115,10 +118,13 @@ function CartBadge() {
     // Check initial count from sessionStorage if available
     try {
       const keys = Object.keys(sessionStorage);
-      const basketKey = keys.find(k => k.startsWith("voloo_order_basket_"));
+      const basketKey = keys.find((k) => k.startsWith("voloo_order_basket_"));
       if (basketKey) {
         const stored = JSON.parse(sessionStorage.getItem(basketKey) || "[]");
-        const initialCount = stored.reduce((sum: number, item: any) => sum + item.quantity, 0);
+        const initialCount = stored.reduce(
+          (sum: number, item: any) => sum + item.quantity,
+          0,
+        );
         setCount(initialCount);
       }
     } catch (e) {

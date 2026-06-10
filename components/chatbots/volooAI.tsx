@@ -85,12 +85,12 @@ export function VolooAI({
   // Merge DB values with cafeConfig defaults — DB wins when a value is set.
   const theme = {
     primaryColor:       activeThemeData?.primaryColor      || cafeConfig.theme.primaryColor,
-    primaryColorLight:  activeThemeData?.textColor         || cafeConfig.theme.primaryColorLight,
+    primaryColorLight:  cafeConfig.theme.primaryColorLight,   // always from cafeConfig — no DB override
     backgroundColor:    activeThemeData?.backgroundColor   || cafeConfig.theme.backgroundColor,
     surfaceColor:       activeThemeData?.userMessageBg     || cafeConfig.theme.surfaceColor,
     textColor:          activeThemeData?.textColor         || cafeConfig.theme.textColor,
     accentGlow:         cafeConfig.theme.accentGlow,
-    // Extended fields (only available when admin saves via new page)
+    // Extended fields
     userBubbleBg:       activeThemeData?.userMessageBg     || "rgba(255,255,255,0.08)",
     userBubbleText:     activeThemeData?.userMessageText   || cafeConfig.theme.textColor,
     botBubbleText:      activeThemeData?.botMessageText    || "#a1a1aa",
@@ -103,7 +103,7 @@ export function VolooAI({
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [chatMode, setChatMode] = useState<"collapse" | "keep">("collapse");
+  const [chatMode, setChatMode] = useState<"collapse" | "keep">("keep");
   // Note: inputValue is now owned by the <ChatInput> child component.
   // Keeping it out of the parent prevents re-renders on every keystroke.
   const [isBackgroundDark] = useState(true);
@@ -257,16 +257,63 @@ export function VolooAI({
   }, [basket, cafeId]);
 
   const [isBasketOpen, setIsBasketOpen] = useState(false);
+  const openChatAnimationRef = useRef<(() => void) | null>(null);
+  const isOpenRef = useRef(isOpen);
+  
+  // Keep refs up-to-date for the event listener closure
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+    openChatAnimationRef.current = openChatAnimation;
+  });
 
   // Listen for navbar cart button clicks
   useEffect(() => {
     const handleOpenBasket = () => {
-      setIsOpen(true);
+      if (!isOpenRef.current && openChatAnimationRef.current) {
+        openChatAnimationRef.current();
+      }
       setIsBasketOpen(true);
     };
     window.addEventListener("open-voloo-basket", handleOpenBasket);
     return () =>
       window.removeEventListener("open-voloo-basket", handleOpenBasket);
+  }, []);
+
+  const sendMessageRef = useRef<((msg: string) => void) | null>(null);
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  });
+
+  // Listen for 'Ask AI' clicks from the storefront
+  useEffect(() => {
+    const handleAskAI = (e: any) => {
+      const { message, product, keepOpen } = e.detail || {};
+      
+      if (keepOpen) {
+        setChatMode("keep");
+      }
+
+      // Optionally focus the context chip on this product
+      if (product) {
+        setSelectedContext((prev) => {
+          if (!prev.some((p) => p.id === product.id)) return [...prev, product];
+          return prev;
+        });
+      }
+      
+      // Open the chat UI if it's not open already
+      if (!isOpenRef.current && openChatAnimationRef.current) {
+        openChatAnimationRef.current();
+      }
+
+      // Pre-fill and send the prompt
+      if (message && sendMessageRef.current) {
+        // slight delay to let GSAP timeline start rendering chat container
+        setTimeout(() => sendMessageRef.current?.(message), 300);
+      }
+    };
+    window.addEventListener("ask-voloo-ai", handleAskAI);
+    return () => window.removeEventListener("ask-voloo-ai", handleAskAI);
   }, []);
 
   // ── Rating State ──
@@ -334,6 +381,17 @@ export function VolooAI({
     },
     [removeFromBasket],
   );
+
+  // Listen for global "add-to-voloo-basket" events
+  useEffect(() => {
+    const handleAdd = (e: any) => {
+      if (e.detail?.product) {
+        addToBasket(e.detail.product);
+      }
+    };
+    window.addEventListener("add-to-voloo-basket", handleAdd);
+    return () => window.removeEventListener("add-to-voloo-basket", handleAdd);
+  }, [addToBasket]);
 
   // Derived: total number of individual items in the basket (for badge)
   const basketCount = basket.reduce((sum, item) => sum + item.quantity, 0);

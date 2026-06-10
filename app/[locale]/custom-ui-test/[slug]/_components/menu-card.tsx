@@ -16,8 +16,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ContactDropdown } from "./contact-dropdown";
 import type { ConvexMenuItem } from "./menu-section";
+import { Plus, Sparkles } from "lucide-react";
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 function cn(...inputs: Parameters<typeof clsx>) {
@@ -172,7 +172,7 @@ export function MenuCard({
         delay: animationIndex * 0.08, // Stagger cards within a group
       }}
       className={cn(
-        "group relative overflow-hidden",
+        "group relative overflow-hidden flex flex-col h-full",
         // Glassmorphism: dark base with backdrop blur
         "bg-black/40 backdrop-blur-md",
         "transition-all duration-500 ease-out",
@@ -247,7 +247,7 @@ export function MenuCard({
       </div>
 
       {/* ── Content area ─────────────────────────────────────────────────── */}
-      <div className="p-5">
+      <div className="p-5 flex flex-col flex-1">
         {/* Title + Price (static, below image) */}
         <div className="flex justify-between items-start mb-2 gap-2">
           {/* font-serif applied to product title per spec */}
@@ -298,21 +298,83 @@ export function MenuCard({
          * On hover: fills to full primaryColor.
          */}
         <div
-          className="flex justify-end pt-4"
+          className="flex justify-between items-center pt-4 mt-auto"
           style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
         >
-          <ContactDropdown
-            productName={productName}
-            productCategory={product.categoryName}
-            productPrice={Number(displayPrice)}
-            productImage={product.imageUrl || ""}
-            socialLinks={socialLinks}
-            buttonRadius={btnRadius}
-            buttonColor={buttonColor}
-            // Ghost styling override passed to ContactDropdown
-            ghostBg={ghostButtonBg}
-            ghostBorder={ghostButtonBorder}
-          />
+          {/* Ask AI Button */}
+          <button
+            onClick={() => {
+              const aiProduct = {
+                id: product._id as any,
+                name: productName,
+                category: product.categoryName,
+                price: product.price / 100,
+                image: product.imageUrl || "/placeholder.svg",
+                description: description,
+              };
+              window.dispatchEvent(
+                new CustomEvent("ask-voloo-ai", {
+                  detail: {
+                    message: `Tell me about the ${productName}`,
+                    product: aiProduct,
+                    keepOpen: true,
+                  },
+                })
+              );
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 font-medium tracking-wide transition-all duration-300"
+            style={{
+              borderRadius: btnRadius,
+              backgroundColor: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "var(--theme-text, var(--foreground))",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.03)";
+            }}
+          >
+            <Sparkles className="w-4 h-4" style={{ color: "var(--theme-accent, var(--primary))" }} />
+            <span>Ask AI</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const aiProduct = {
+                id: product._id as any,
+                name: productName,
+                category: product.categoryName,
+                price: product.price / 100,
+                image: product.imageUrl || "/placeholder.svg",
+                description: description,
+              };
+              window.dispatchEvent(
+                new CustomEvent("add-to-voloo-basket", {
+                  detail: { product: aiProduct },
+                })
+              );
+            }}
+            className="flex items-center gap-2 px-4 py-2 font-medium tracking-wide transition-all duration-300"
+            style={{
+              borderRadius: btnRadius,
+              backgroundColor: ghostButtonBg,
+              border: `1px solid ${ghostButtonBorder}`,
+              color: "var(--theme-text, var(--foreground))",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = buttonColor || "var(--theme-accent, var(--primary))";
+              e.currentTarget.style.color = "var(--primary-foreground, #000)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = ghostButtonBg;
+              e.currentTarget.style.color = "var(--theme-text, var(--foreground))";
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+          </button>
         </div>
       </div>
     </motion.div>

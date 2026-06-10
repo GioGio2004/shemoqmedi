@@ -121,7 +121,6 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
       <SiteNavbar
         organizationName={data.organization.name}
         logoUrl={data.organization.logoUrl}
-        onCategorySelect={(cat) => setActiveCategory(cat)}
       />
 
       {/* Full-bleed hero with staggered animations */}
@@ -177,7 +176,10 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
       />
 
       {/* Footer */}
-      <SiteFooter />
+      <SiteFooter
+        organizationName={data.organization.name}
+        socialLinks={data.organization.socialLinks}
+      />
     </main>
   );
 }
