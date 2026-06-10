@@ -13,23 +13,40 @@
 
 import { useEffect, useRef, useState } from "react";
 
-interface Props {
-  message: string | null | undefined;
+interface Announcement {
+  id: string;
+  message: string;
+  isActive: boolean;
 }
 
-export function StorefrontAlertBanner({ message }: Props) {
-  const [dismissed, setDismissed] = useState(false);
-  const prevMsg = useRef<string | null>(null);
+interface Props {
+  announcements?: Announcement[];
+  legacyMessage?: string | null;
+}
 
-  // If the server pushes a NEW message, un-dismiss so it shows again
+export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
+  const [dismissed, setDismissed] = useState(false);
+  const prevSignature = useRef<string>("");
+
+  // Determine active announcements
+  let activeMessages: string[] = [];
+  if (announcements && announcements.length > 0) {
+    activeMessages = announcements.filter(a => a.isActive).map(a => a.message);
+  } else if (legacyMessage) {
+    activeMessages = [legacyMessage];
+  }
+
+  const currentSignature = activeMessages.join("|||");
+
+  // If the server pushes a NEW set of messages, un-dismiss so they show again
   useEffect(() => {
-    if (message && message !== prevMsg.current) {
+    if (currentSignature && currentSignature !== prevSignature.current) {
       setDismissed(false);
     }
-    prevMsg.current = message ?? null;
-  }, [message]);
+    prevSignature.current = currentSignature;
+  }, [currentSignature]);
 
-  if (!message || dismissed) return null;
+  if (activeMessages.length === 0 || dismissed) return null;
 
   return (
     <>
@@ -190,19 +207,37 @@ export function StorefrontAlertBanner({ message }: Props) {
             }}
           />
 
-          {/* ── Message ────────────────────────────────────────────────────── */}
-          <p
-            style={{
-              margin: 0,
-              fontSize: "15px",
-              fontWeight: 450,
-              color: "rgba(255,255,255,0.88)",
-              lineHeight: 1.65,
-              letterSpacing: "0.01em",
-            }}
-          >
-            {message}
-          </p>
+          {/* ── Messages ───────────────────────────────────────────────────── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {activeMessages.map((msg, idx) => (
+              <div key={idx} style={{
+                display: "flex",
+                gap: "10px",
+                alignItems: "flex-start",
+                paddingBottom: idx !== activeMessages.length - 1 ? "12px" : "0",
+                borderBottom: idx !== activeMessages.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              }}>
+                <span style={{
+                  color: "rgba(255,255,255,0.4)",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  marginTop: "3px"
+                }}>•</span>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "15px",
+                    fontWeight: 450,
+                    color: "rgba(255,255,255,0.88)",
+                    lineHeight: 1.65,
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {msg}
+                </p>
+              </div>
+            ))}
+          </div>
 
           {/* ── Dismiss text button ────────────────────────────────────────── */}
           <button

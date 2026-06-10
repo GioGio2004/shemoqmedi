@@ -115,7 +115,7 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
       }}
     >
       {/* ── Real-time VolooAI alert banner (sticky, above navbar) ────────── */}
-      <StorefrontAlertBanner message={data.organization.storefrontAlert} />
+      <StorefrontAlertBanner announcements={(data.organization as any).announcements} legacyMessage={(data.organization as any).storefrontAlert} />
 
       {/* Glassmorphic, scroll-aware navigation bar */}
       <SiteNavbar
