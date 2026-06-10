@@ -55,6 +55,8 @@ export const ProductRow = memo(
               isSelected={selectedContext.some((p) => p.id === product.id)}
               onToggle={onToggleSelection}
               onAddToBasket={onAddToBasket}
+              primaryColor={primaryColor}
+              primaryColorLight={primaryColorLight}
             />
           ))}
         </div>

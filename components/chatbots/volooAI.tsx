@@ -665,9 +665,7 @@ export function VolooAI({
         style={{
           backgroundColor: theme.backgroundColor,
           clipPath: "inset(50% 0% 50% 0%)",
-          // dvh = dynamic viewport height: shrinks when the soft keyboard
-          // appears so the input stays above it without a white gap.
-          height: "100dvh",
+          height: "100%",
           // Prevent the entire overlay from being dragged/panned off-screen
           // on touch devices.
           overscrollBehavior: "none",
@@ -677,8 +675,9 @@ export function VolooAI({
       >
         <div
           ref={chatContainerRef}
-          className="w-full h-full flex flex-col opacity-0 relative overflow-hidden"
+          className="w-full flex flex-col opacity-0 relative overflow-hidden"
           style={{
+            height: "100dvh",
             backgroundColor: theme.backgroundColor,
             color: theme.textColor,
           }}

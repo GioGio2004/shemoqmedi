@@ -21,6 +21,8 @@ interface ProductCardChatProps {
   isSelected: boolean;
   onToggle: (product: Product) => void;
   onAddToBasket: (product: Product) => void;
+  primaryColor?: string;
+  primaryColorLight?: string;
 }
 
 export function ProductCard({
@@ -28,6 +30,8 @@ export function ProductCard({
   isSelected,
   onToggle,
   onAddToBasket,
+  primaryColor = "#ea580c",
+  primaryColorLight = "#f97316",
 }: ProductCardChatProps) {
   const toggleBtnRef = useRef<HTMLButtonElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
@@ -145,10 +149,13 @@ export function ProductCard({
           <button
             ref={addBtnRef}
             onClick={handleAddToBasket}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-[9px] font-black uppercase tracking-widest transition-all duration-200 hover:bg-zinc-200 active:scale-95"
-            style={{ boxShadow: "0 4px 12px rgba(255,255,255,0.15)" }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-[9px] font-black uppercase tracking-widest transition-all duration-200 hover:bg-white/10 active:scale-95"
+            style={{ 
+              backgroundColor: "transparent",
+              border: "1px solid rgba(255, 255, 255, 0.4)",
+            }}
           >
-            <Plus className="w-3 h-3" strokeWidth={3} />
+            <Plus className="w-3 h-3 text-white" strokeWidth={3} />
             ADD
           </button>
         </div>

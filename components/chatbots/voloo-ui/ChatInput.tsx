@@ -82,12 +82,16 @@ export const ChatInput = memo(
           style={
             isActive
               ? {
-                  backgroundColor: "#ffffff",
-                  color: "#000000",
+                  backgroundColor: "transparent",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.4)",
                   transform: "scale(1.05)",
-                  boxShadow: "0 0 20px rgba(255,255,255,0.2)",
                 }
-              : { backgroundColor: "rgba(255,255,255,0.05)", color: "#ffffff" }
+              : { 
+                  backgroundColor: "transparent",
+                  color: "rgba(255,255,255,0.5)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }
           }
         >
           <Send className="w-4 h-4" strokeWidth={isActive ? 2.5 : 2} />
