@@ -708,7 +708,7 @@ export function VolooAI({
 
           {/* ════════ HEADER ════════ */}
           <div
-            className="voloo-ui-element flex items-center justify-between px-4 py-2.5 sticky top-0 z-10"
+            className="voloo-ui-element flex items-center justify-between px-4 pb-[10px] pt-[calc(env(safe-area-inset-top)+10px)] sticky top-0 z-10"
             style={{
               borderBottom: "1px solid rgba(255,255,255,0.06)",
               // Header bg uses a slightly-opaque tint of the cafe's background colour

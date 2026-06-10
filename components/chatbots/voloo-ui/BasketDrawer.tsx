@@ -47,7 +47,7 @@ export function BasketDrawer({
     >
       {/* Drawer Header */}
       <div
-        className="flex items-center justify-between px-5 py-3.5 shrink-0"
+        className="flex items-center justify-between px-5 pb-[14px] pt-[calc(env(safe-area-inset-top)+14px)] shrink-0"
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           backgroundColor: `${theme.backgroundColor}cc`,
