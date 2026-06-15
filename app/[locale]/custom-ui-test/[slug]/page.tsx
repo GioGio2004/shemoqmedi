@@ -26,7 +26,7 @@
  */
 
 import type { Metadata } from "next";
-import VenueClientView from "./VenueClientView";
+import MenuRouterClient from "./_components/MenuRouterClient";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -167,13 +167,11 @@ export default async function Page({
       />
 
       {/*
-       * VenueClientView handles all real-time interactivity:
+       * MenuRouterClient handles all real-time interactivity:
        *  - Convex WebSocket subscription (useQuery)
-       *  - Dynamic CSS theme variable injection
-       *  - Category filter state
-       *  - Full component tree rendering
+       *  - Route to correct UI client component
        */}
-      <VenueClientView slug={slug} />
+      <MenuRouterClient slug={slug} />
     </>
   );
 }

@@ -1,25 +1,125 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { z } from "zod";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex-helpers-api";
+
+// ── Zod Schema ───────────────────────────────────────────────────────────
+const chatPayloadSchema = z.object({
+  message: z.string().min(1).max(1000),
+  conversationHistory: z.array(
+    z.object({
+      role: z.enum(["user", "assistant"]),
+      content: z.string(),
+      timestamp: z.number().optional(),
+    })
+  ).optional().default([]),
+  currentBasket: z.array(
+    z.object({
+      name: z.string(),
+      quantity: z.number(),
+      price: z.number(),
+    })
+  ).optional().default([]),
+  userAllergies: z.array(z.string()).optional().default([]),
+  focusedItems: z.array(z.string()).optional().default([]),
+  // Explicitly allowing other fields like scrollPosition to be stripped
+  scrollPosition: z.number().optional(),
+  language: z.string().optional(),
+  productContext: z.any().optional(), // stripped internally
+}).strip();
+
+// ── Upstash Redis Rate Limiting ──────────────────────────────────────────
+// Gracefully fallback if credentials are missing
+const isRedisConfigured =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+
+const ratelimit = isRedisConfigured
+  ? new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 requests per minute
+      analytics: true,
+    })
+  : null;
+
+function hashId(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) + hash + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // ── 1. Rate Limiting ──────────────────────────────────────────────────
+    if (ratelimit) {
+      const forwardedFor = request.headers.get("x-forwarded-for");
+      const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
+      const { success } = await ratelimit.limit(`ratelimit_chat_${ip}`);
+      if (!success) {
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later." },
+          { status: 429 }
+        );
+      }
+    } else {
+      console.warn("Upstash Redis is not configured. Bypassing rate limiting.");
+    }
+
+    // ── 2. Payload Validation ──────────────────────────────────────────────
+    const rawBody = await request.json();
+    const parsedBody = chatPayloadSchema.safeParse(rawBody);
+
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: "Invalid payload", details: parsedBody.error.format() },
+        { status: 400 }
+      );
+    }
+
     const {
       message,
-      productContext,
-      conversationHistory = [],
-      currentBasket = [],
-      userAllergies = [],
-      focusedItems = [],
-    } = body;
+      conversationHistory,
+      currentBasket,
+      userAllergies,
+      focusedItems,
+    } = parsedBody.data;
 
-    // ── Per-cafe context from query params ──────────────────────────────────
-    // MenuAIBridge passes ?cafeName=...&currency=... so the system prompt can
-    // reference the actual cafe name and currency instead of hardcoded values.
+    // ── 3. Server-Side Context ─────────────────────────────────────────────
     const { searchParams } = new URL(request.url);
     const cafeName = searchParams.get("cafeName") || "this cafe";
     const currency = searchParams.get("currency") || "GEL";
+    const cafeId = searchParams.get("cafeId");
 
+    if (!cafeId) {
+      return NextResponse.json({ error: "Missing cafeId query parameter" }, { status: 400 });
+    }
+
+    // Securely fetch menu from Convex
+    let productContext = "";
+    try {
+      const menuData = await fetchQuery(api.publicMenu.get, { slug: cafeId });
+      
+      // Build the product string strictly from trusted server data
+      productContext = menuData.categories
+        .flatMap((category: any) => category.items)
+        .map((p: any) => {
+          const ingredientsStr = p.description ? `Description: ${typeof p.description === "string" ? p.description : (p.description["en"] || Object.values(p.description)[0] || "")}.` : "";
+          const allergenStr = p.tags && p.tags.length > 0 ? `Allergens: ${p.tags.join(", ")}.` : "";
+          const name = p.name["en"] || Object.values(p.name)[0] || "Unknown";
+          return `ID: ${hashId(String(p._id))} | ${name} - ${currency}${(p.price / 100).toFixed(2)}: ${ingredientsStr} ${allergenStr}`;
+        })
+        .join("\n\n");
+    } catch (error) {
+      console.error("Failed to fetch menu context:", error);
+      return NextResponse.json({ error: "Failed to fetch cafe context" }, { status: 500 });
+    }
+
+    // ── 4. Gemini API ──────────────────────────────────────────────────────
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       return NextResponse.json(
         { error: "API configuration error" },
@@ -31,7 +131,6 @@ export async function POST(request: NextRequest) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY
     );
 
-    // ── Structured JSON output schema ────────────────────────────────────────
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: {
@@ -56,20 +155,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // ── Format conversation history for the SDK ──────────────────────────────
-    const history = conversationHistory.map((msg: any) => ({
+    const history = conversationHistory.map((msg) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.content }],
     }));
-
-    // ── Build context strings ────────────────────────────────────────────────
 
     const basketContext =
       currentBasket.length > 0
         ? `\nCURRENT ORDER BASKET: The user currently has these items: ${JSON.stringify(currentBasket)}.`
         : "";
 
-    // CRITICAL SAFETY FILTER — allergen awareness
     const allergyContext =
       userAllergies.length > 0
         ? `\nCRITICAL DIETARY RESTRICTIONS: The user has marked that they are allergic to or avoiding: ${userAllergies.join(", ")}.
@@ -82,13 +177,6 @@ export async function POST(request: NextRequest) {
         ? `\nCURRENTLY FOCUSED ITEMS: The user has explicitly pinned these items to their screen: ${focusedItems.join(", ")}. If the user uses pronouns like "this", "it", or asks a vague question about a product, THEY ARE REFERRING TO THESE SPECIFIC ITEMS. Prioritize discussing these.`
         : "";
 
-    // ── System Prompt — fully dynamic, cafe-aware ────────────────────────────
-    //
-    // KEY UPGRADE vs the old static prompt:
-    //  - cafeName comes from the DB via MenuAIBridge query param
-    //  - currency is the org's real currency code (GEL, USD, etc.)
-    //  - The AI knows exactly which cafe it represents
-    //
     const systemInstruction = `
       You are the AI assistant for "${cafeName}".
       IDENTITY: You represent ${cafeName} exclusively. Never mention other cafes or brands.
@@ -98,7 +186,7 @@ export async function POST(request: NextRequest) {
       Use this data to accurately answer questions about calories, caffeine, or diet,
       but always prioritize the user's conversational flow over data dumps.
 
-      PRODUCT CATALOG for ${cafeName} (Includes IDs, prices in ${currency}/100, allergens):
+      PRODUCT CATALOG for ${cafeName} (Includes IDs, prices, allergens):
       ${productContext}
 
       ${basketContext}
@@ -134,7 +222,6 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    // ── Send and parse guaranteed JSON ───────────────────────────────────────
     const result = await chat.sendMessage(message);
     const jsonText = result.response.text();
     const parsedData = JSON.parse(jsonText);

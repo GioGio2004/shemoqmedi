@@ -326,6 +326,7 @@ export function VolooAI({
   // ── Allergies State & Modal ──
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [userAllergies, setUserAllergies] = useState<string[]>([]);
+  const [hasConsent, setHasConsent] = useState(false);
   const toggleAllergy = useCallback((allergy: string) => {
     setUserAllergies((prev) =>
       prev.includes(allergy)
@@ -613,7 +614,7 @@ export function VolooAI({
           conversationHistory: messages,
           language: locale,
           focusedItems: selectedContext.map((p) => p.name),
-          userAllergies,
+          userAllergies: hasConsent ? userAllergies : [],
           // Basket context — lets Gemini acknowledge the cart and suggest pairings
           currentBasket: basket.map((item) => ({
             name: item.product.name,
@@ -1220,6 +1221,8 @@ export function VolooAI({
         setIsPreferencesOpen={setIsPreferencesOpen}
         userAllergies={userAllergies}
         toggleAllergy={toggleAllergy}
+        hasConsent={hasConsent}
+        setHasConsent={setHasConsent}
         theme={theme}
       />
     </>

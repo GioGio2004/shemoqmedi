@@ -17,47 +17,21 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex-helpers-api";
 import { SiteNavbar } from "./_components/site-navbar";
 import { HeroSection } from "./_components/hero-section";
 import { MenuSection } from "./_components/menu-section";
 import { InfoSection } from "./_components/info-section";
 import { SiteFooter } from "./_components/site-footer";
-import { MenuSkeleton } from "./_components/menu-skeleton";
 import { MenuAIBridge } from "./_components/menu-ai-bridge";
 import { StorefrontAlertBanner } from "./_components/storefront-alert-banner";
 
 interface VenueClientViewProps {
   slug: string;
+  data: any;
 }
 
-export default function VenueClientView({ slug }: VenueClientViewProps) {
-  const data = useQuery(api.publicMenu.get, { slug });
+export default function VenueClientView({ slug, data }: VenueClientViewProps) {
   const [activeCategory, setActiveCategory] = useState("All");
-
-  // ── Loading state — full-page skeleton ──────────────────────────────────────
-  if (data === undefined) {
-    return <MenuSkeleton />;
-  }
-
-  // ── 404 state ───────────────────────────────────────────────────────────────
-  if (data === null) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground px-6 text-center">
-        <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-6">
-          <span className="text-3xl">☕</span>
-        </div>
-        <h1 className="font-serif text-4xl mb-4 text-balance">
-          Cafe Not Found
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-md">
-          We couldn&apos;t find the menu you&apos;re looking for. Please check
-          the URL or scan the QR code again.
-        </p>
-      </div>
-    );
-  }
 
   // ── Build the runtime CSS custom property object ─────────────────────────────
   /**
@@ -115,7 +89,10 @@ export default function VenueClientView({ slug }: VenueClientViewProps) {
       }}
     >
       {/* ── Real-time VolooAI alert banner (sticky, above navbar) ────────── */}
-      <StorefrontAlertBanner announcements={(data.organization as any).announcements} legacyMessage={(data.organization as any).storefrontAlert} />
+      <StorefrontAlertBanner
+        announcements={(data.organization as any).announcements}
+        legacyMessage={(data.organization as any).storefrontAlert}
+      />
 
       {/* Glassmorphic, scroll-aware navigation bar */}
       <SiteNavbar

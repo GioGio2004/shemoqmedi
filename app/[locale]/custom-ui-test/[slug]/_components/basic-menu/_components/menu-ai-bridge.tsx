@@ -187,7 +187,7 @@ export function MenuAIBridge({
    * API endpoint per cafe. The actual menu items are already sent in the
    * request body by VolooAI's `sendMessage` function as `productContext`.
    */
-  const apiEndpoint = `/api/chat?cafeName=${encodeURIComponent(organizationName)}&currency=${encodeURIComponent(currency)}`;
+  const apiEndpoint = `/api/chat?cafeId=${encodeURIComponent(slug)}&cafeName=${encodeURIComponent(organizationName)}&currency=${encodeURIComponent(currency)}`;
 
   return (
     <VolooAI
