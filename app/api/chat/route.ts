@@ -7,29 +7,37 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
 
 // ── Zod Schema ───────────────────────────────────────────────────────────
-const chatPayloadSchema = z.object({
-  message: z.string().min(1).max(1000),
-  conversationHistory: z.array(
-    z.object({
-      role: z.enum(["user", "assistant"]),
-      content: z.string(),
-      timestamp: z.number().optional(),
-    })
-  ).optional().default([]),
-  currentBasket: z.array(
-    z.object({
-      name: z.string(),
-      quantity: z.number(),
-      price: z.number(),
-    })
-  ).optional().default([]),
-  userAllergies: z.array(z.string()).optional().default([]),
-  focusedItems: z.array(z.string()).optional().default([]),
-  // Explicitly allowing other fields like scrollPosition to be stripped
-  scrollPosition: z.number().optional(),
-  language: z.string().optional(),
-  productContext: z.any().optional(), // stripped internally
-}).strip();
+const chatPayloadSchema = z
+  .object({
+    message: z.string().min(1).max(1000),
+    conversationHistory: z
+      .array(
+        z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+          timestamp: z.number().optional(),
+        }),
+      )
+      .optional()
+      .default([]),
+    currentBasket: z
+      .array(
+        z.object({
+          name: z.string(),
+          quantity: z.number(),
+          price: z.number(),
+        }),
+      )
+      .optional()
+      .default([]),
+    userAllergies: z.array(z.string()).optional().default([]),
+    focusedItems: z.array(z.string()).optional().default([]),
+    // Explicitly allowing other fields like scrollPosition to be stripped
+    scrollPosition: z.number().optional(),
+    language: z.string().optional(),
+    productContext: z.any().optional(), // stripped internally
+  })
+  .strip();
 
 // ── Upstash Redis Rate Limiting ──────────────────────────────────────────
 // Gracefully fallback if credentials are missing
@@ -63,7 +71,7 @@ export async function POST(request: NextRequest) {
       if (!success) {
         return NextResponse.json(
           { error: "Too many requests. Please try again later." },
-          { status: 429 }
+          { status: 429 },
         );
       }
     } else {
@@ -77,7 +85,7 @@ export async function POST(request: NextRequest) {
     if (!parsedBody.success) {
       return NextResponse.json(
         { error: "Invalid payload", details: parsedBody.error.format() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -96,39 +104,50 @@ export async function POST(request: NextRequest) {
     const cafeId = searchParams.get("cafeId");
 
     if (!cafeId) {
-      return NextResponse.json({ error: "Missing cafeId query parameter" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing cafeId query parameter" },
+        { status: 400 },
+      );
     }
 
     // Securely fetch menu from Convex
     let productContext = "";
     try {
       const menuData = await fetchQuery(api.publicMenu.get, { slug: cafeId });
-      
+
       // Build the product string strictly from trusted server data
       productContext = menuData.categories
         .flatMap((category: any) => category.items)
         .map((p: any) => {
-          const ingredientsStr = p.description ? `Description: ${typeof p.description === "string" ? p.description : (p.description["en"] || Object.values(p.description)[0] || "")}.` : "";
-          const allergenStr = p.tags && p.tags.length > 0 ? `Allergens: ${p.tags.join(", ")}.` : "";
+          const ingredientsStr = p.description
+            ? `Description: ${typeof p.description === "string" ? p.description : p.description["en"] || Object.values(p.description)[0] || ""}.`
+            : "";
+          const allergenStr =
+            p.tags && p.tags.length > 0
+              ? `Allergens: ${p.tags.join(", ")}.`
+              : "";
           const name = p.name["en"] || Object.values(p.name)[0] || "Unknown";
           return `ID: ${hashId(String(p._id))} | ${name} - ${currency}${(p.price / 100).toFixed(2)}: ${ingredientsStr} ${allergenStr}`;
         })
         .join("\n\n");
     } catch (error) {
       console.error("Failed to fetch menu context:", error);
-      return NextResponse.json({ error: "Failed to fetch cafe context" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to fetch cafe context" },
+        { status: 500 },
+      );
     }
 
     // ── 4. Gemini API ──────────────────────────────────────────────────────
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       return NextResponse.json(
         { error: "API configuration error" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const genAI = new GoogleGenerativeAI(
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     );
 
     const model = genAI.getGenerativeModel({
@@ -177,6 +196,36 @@ export async function POST(request: NextRequest) {
         ? `\nCURRENTLY FOCUSED ITEMS: The user has explicitly pinned these items to their screen: ${focusedItems.join(", ")}. If the user uses pronouns like "this", "it", or asks a vague question about a product, THEY ARE REFERRING TO THESE SPECIFIC ITEMS. Prioritize discussing these.`
         : "";
 
+    // const systemInstruction = `
+    //   You are the AI assistant for "${cafeName}".
+    //   IDENTITY: You represent ${cafeName} exclusively. Never mention other cafes or brands.
+    //   BRAND VOICE: Warm, knowledgeable, and enthusiastic about ${cafeName}'s menu.
+    //   CURRENCY: All prices are in ${currency}. Always use the ${currency} symbol or abbreviation when mentioning prices.
+    //   You have access to exact nutritional macros, allergens, and tasting notes for every item.
+    //   Use this data to accurately answer questions about calories, caffeine, or diet,
+    //   but always prioritize the user's conversational flow over data dumps.
+
+    //   PRODUCT CATALOG for ${cafeName} (Includes IDs, prices, allergens):
+    //   ${productContext}
+
+    //   ${basketContext}
+    //   ${allergyContext}
+    //   ${focusContext}
+
+    //   RESPONSE RULES:
+    //   1. When users ask for recommendations or ask about products, find the most relevant,
+    //      SAFE items from the PRODUCT CATALOG above.
+    //   2. Provide a brief, helpful text response in the language the user is speaking.
+    //      If they write in Georgian (ქართული), respond in Georgian. If English, respond in English.
+    //   3. CRITICAL: You must include the EXACT integer "ID:" from the PRODUCT CATALOG for
+    //      the items you are recommending in the "productIds" JSON array.
+    //      NEVER hallucinate or invent IDs. If you recommend "Honey Lavender" which has "ID: 1234567",
+    //      you MUST return 1234567 in the array.
+    //   4. Keep your response under 60 words — mobile users read in short bursts.
+    //   5. If the user asks something unrelated to the menu or ${cafeName}, politely steer
+    //      the conversation back to what you can help with: the menu, ingredients, and recommendations.
+    // `;
+
     const systemInstruction = `
       You are the AI assistant for "${cafeName}".
       IDENTITY: You represent ${cafeName} exclusively. Never mention other cafes or brands.
@@ -205,8 +254,8 @@ export async function POST(request: NextRequest) {
       4. Keep your response under 60 words — mobile users read in short bursts.
       5. If the user asks something unrelated to the menu or ${cafeName}, politely steer
          the conversation back to what you can help with: the menu, ingredients, and recommendations.
+      6. UPSELLING & ALLERGIES: When suggesting an item, naturally recommend one complementary pairing (e.g., "This pairs perfectly with our [Item]"). CRITICAL: The paired upsell MUST strictly respect all active ALLERGIES and dietary restrictions. Include the integer IDs for BOTH the primary item and the upsell item in your "productIds" array.
     `;
-
     const chat = model.startChat({
       history: [
         { role: "user", parts: [{ text: systemInstruction }] },
@@ -234,7 +283,7 @@ export async function POST(request: NextRequest) {
     console.error("Chat API Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

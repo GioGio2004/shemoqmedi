@@ -2,25 +2,25 @@ import { X, SlidersHorizontal, Check } from "lucide-react";
 import { CafeTheme } from "./types";
 
 interface PreferencesModalProps {
-  isPreferencesOpen: boolean;
-  setIsPreferencesOpen: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   userAllergies: string[];
-  toggleAllergy: (allergy: string) => void;
+  onToggleAllergy: (allergy: string) => void;
   hasConsent: boolean;
-  setHasConsent: (consent: boolean) => void;
-  theme: CafeTheme;
+  onConsentChange: (consent: boolean) => void;
+  primaryColor: string;
 }
 
 export function PreferencesModal({
-  isPreferencesOpen,
-  setIsPreferencesOpen,
+  isOpen,
+  onClose,
   userAllergies,
-  toggleAllergy,
+  onToggleAllergy,
   hasConsent,
-  setHasConsent,
-  theme,
+  onConsentChange,
+  primaryColor,
 }: PreferencesModalProps) {
-  if (!isPreferencesOpen) return null;
+  if (!isOpen) return null;
 
   const requiresConsent = userAllergies.length > 0;
   const canSave = !requiresConsent || hasConsent;
@@ -37,7 +37,7 @@ export function PreferencesModal({
         className="relative w-full max-w-[320px] rounded-[2rem] p-6 border shadow-2xl bg-black/80 backdrop-blur-xl border-white/10"
       >
         <button
-          onClick={() => setIsPreferencesOpen(false)}
+          onClick={onClose}
           className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/5 transition-all"
         >
           <X className="w-4 h-4" />
@@ -61,7 +61,7 @@ export function PreferencesModal({
             return (
               <button
                 key={allergy}
-                onClick={() => toggleAllergy(allergy)}
+                onClick={() => onToggleAllergy(allergy)}
                 className={`px-3.5 py-1.5 text-xs font-bold rounded-full border transition-all duration-200 ${
                   isActive
                     ? "bg-white border-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]"
@@ -81,7 +81,7 @@ export function PreferencesModal({
                 type="checkbox"
                 className="peer sr-only"
                 checked={hasConsent}
-                onChange={(e) => setHasConsent(e.target.checked)}
+                onChange={(e) => onConsentChange(e.target.checked)}
               />
               <div
                 className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
@@ -106,7 +106,7 @@ export function PreferencesModal({
 
         <button
           onClick={() => {
-            if (canSave) setIsPreferencesOpen(false);
+            if (canSave) onClose();
           }}
           disabled={!canSave}
           className={`w-full py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all shadow-lg ${

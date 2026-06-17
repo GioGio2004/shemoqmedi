@@ -3,6 +3,7 @@
  * and local optimistic state used for instant UI feedback.
  */
 export interface Message {
+  _id?: string;
   role: "user" | "assistant";
   content: string;
   timestamp: number;

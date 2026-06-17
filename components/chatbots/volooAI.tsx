@@ -5,6 +5,7 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
   memo,
   startTransition,
 } from "react";
@@ -54,6 +55,7 @@ import { BasketDrawer } from "./voloo-ui/BasketDrawer";
 import { PreferencesModal } from "./voloo-ui/PreferencesModal";
 import { DesktopTrigger } from "./voloo-ui/DesktopTrigger";
 import { MobileTrigger } from "./voloo-ui/MobileTrigger";
+import { ProductDetailPopup } from "./voloo-ui/ProductDetailPopup";
 
 export interface VolooAIChatProps {
   apiEndpoint?: string;
@@ -142,21 +144,22 @@ export function VolooAI({
   // Map Convex docs to the local Message shape used by the renderer.
   // Convex docs have a `_id` and `_creationTime` on top of our fields;
   // we strip those to keep the renderer type-safe.
-  const messages: Message[] = (convexMessages ?? []).map(
-    (m: { role: any; content: any; timestamp: any; products: any }) => ({
+  const messages: Message[] = useMemo(() => (convexMessages ?? []).map(
+    (m: { _id?: string; role: any; content: any; timestamp: any; products: any }) => ({
+      _id: m._id,
       role: m.role,
       content: m.content,
       timestamp: m.timestamp,
       products: m.products,
-    }),
-  );
+    })
+  ), [convexMessages]);
 
   // Optimistic pending state: instantly shown before Convex round-trip
   // completes. Cleared once `convexMessages` re-renders with the new row.
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
 
   // Combined view: persisted history + any in-flight optimistic messages
-  const allMessages = [...messages, ...pendingMessages];
+  const allMessages = useMemo(() => [...messages, ...pendingMessages], [messages, pendingMessages]);
 
   // ── Convex: save message mutation ──────────────────────────────────────────────────
   const saveMessage = useMutation(api.chat.sendMessage);
@@ -214,6 +217,9 @@ export function VolooAI({
       // sessionStorage unavailable (private browsing etc.) — silently ignore
     }
   }, [selectedContext]);
+
+  // ── Detail Popup State ──
+  const [selectedDetailProduct, setSelectedDetailProduct] = useState<Product | null>(null);
 
   // ── Toggle helper — add or remove a product from the context ──
   const toggleSelection = useCallback((product: Product) => {
@@ -1014,7 +1020,7 @@ export function VolooAI({
               */}
               {allMessages.map((msg, idx) => (
                 <div
-                  key={`${msg.timestamp}-${idx}`}
+                  key={msg._id || `${msg.timestamp}-${idx}`}
                   className={`message-item-${idx}`}
                 >
                   {msg.role === "user" ? (
@@ -1061,6 +1067,7 @@ export function VolooAI({
                           selectedContext={selectedContext}
                           onToggleSelection={toggleSelection}
                           onAddToBasket={addToBasket}
+                          onOpenDetails={setSelectedDetailProduct}
                           primaryColor={theme.primaryColor}
                           primaryColorLight={theme.primaryColorLight}
                         />
@@ -1217,14 +1224,25 @@ export function VolooAI({
 
       {/* ════════ PREFERENCES MODAL ════════ */}
       <PreferencesModal
-        isPreferencesOpen={isPreferencesOpen}
-        setIsPreferencesOpen={setIsPreferencesOpen}
+        isOpen={isPreferencesOpen}
+        onClose={() => setIsPreferencesOpen(false)}
         userAllergies={userAllergies}
-        toggleAllergy={toggleAllergy}
+        onToggleAllergy={toggleAllergy}
         hasConsent={hasConsent}
-        setHasConsent={setHasConsent}
-        theme={theme}
+        onConsentChange={setHasConsent}
+        primaryColor={theme.primaryColor}
       />
+
+      {/* ── Product Detail Popup ── */}
+      {selectedDetailProduct && (
+        <ProductDetailPopup
+          product={selectedDetailProduct}
+          isOpen={!!selectedDetailProduct}
+          onClose={() => setSelectedDetailProduct(null)}
+          onAddToBasket={addToBasket}
+          primaryColor={theme.primaryColor}
+        />
+      )}
     </>
   );
 }
