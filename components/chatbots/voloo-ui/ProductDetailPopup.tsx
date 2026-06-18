@@ -2,14 +2,14 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { X, Plus, Info } from "lucide-react";
 import gsap from "gsap";
-import { Product } from "./types";
+import { Product, CafeTheme } from "./types";
 
 interface ProductDetailPopupProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
   onAddToBasket: (product: Product) => void;
-  primaryColor: string;
+  theme: CafeTheme;
 }
 
 export function ProductDetailPopup({
@@ -17,7 +17,7 @@ export function ProductDetailPopup({
   isOpen,
   onClose,
   onAddToBasket,
-  primaryColor,
+  theme,
 }: ProductDetailPopupProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -64,7 +64,8 @@ export function ProductDetailPopup({
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-zinc-50 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+        className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+        style={{ backgroundColor: theme.backgroundColor }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -76,7 +77,7 @@ export function ProductDetailPopup({
         </button>
 
         {/* Hero Image */}
-        <div className="relative w-full h-64 bg-zinc-200">
+        <div className="relative w-full h-64 bg-black/20">
           <Image
             src={product.image}
             alt={product.name}
@@ -85,7 +86,10 @@ export function ProductDetailPopup({
             sizes="(max-width: 768px) 100vw, 400px"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-50 via-transparent to-transparent opacity-90" />
+          <div 
+            className="absolute inset-0 opacity-90"
+            style={{ background: `linear-gradient(to top, ${theme.backgroundColor}, transparent)` }}
+          />
         </div>
 
         {/* Content Section */}
@@ -95,24 +99,24 @@ export function ProductDetailPopup({
             <div>
               <span 
                 className="text-[10px] uppercase tracking-widest font-black mb-1 block"
-                style={{ color: primaryColor }}
+                style={{ color: theme.primaryColor }}
               >
                 {product.category}
               </span>
-              <h2 className="text-2xl font-black text-zinc-900 leading-tight">
+              <h2 className="text-2xl font-black leading-tight" style={{ color: theme.textColor }}>
                 {product.name}
               </h2>
             </div>
             <div 
               className="text-xl font-bold font-mono tracking-tighter shrink-0"
-              style={{ color: primaryColor }}
+              style={{ color: theme.primaryColor }}
             >
               ${product.price.toFixed(2)}
             </div>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-zinc-600 leading-relaxed mb-6">
+          <p className="text-sm leading-relaxed mb-6" style={{ color: theme.textColor, opacity: 0.8 }}>
             {product.description}
           </p>
 
@@ -120,10 +124,10 @@ export function ProductDetailPopup({
           <div className="flex flex-col gap-4 mb-8">
             {product.ingredients && (
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
+                <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: theme.textColor }}>
                   <Info className="w-3.5 h-3.5" /> Ingredients
                 </span>
-                <span className="text-xs text-zinc-500">{product.ingredients}</span>
+                <span className="text-xs" style={{ color: theme.textColor, opacity: 0.6 }}>{product.ingredients}</span>
               </div>
             )}
             {product.allergens && product.allergens.length > 0 && (
@@ -141,11 +145,11 @@ export function ProductDetailPopup({
           </div>
 
           {/* Action Button */}
-          <div className="mt-auto pt-4 border-t border-zinc-200">
+          <div className="mt-auto pt-4 border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
             <button
               onClick={handleAddToBasket}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-sm tracking-wide shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95"
-              style={{ backgroundColor: primaryColor }}
+              style={{ backgroundColor: theme.primaryColor }}
             >
               <Plus className="w-4 h-4" strokeWidth={3} />
               Add to Order — ${product.price.toFixed(2)}

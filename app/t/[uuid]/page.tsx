@@ -43,14 +43,19 @@ export default async function TagRouter({
       ? await fetchQuery(api.volootagsAdmin.getOrgTagSettingsPublic, { orgId: physicalTag.orgId })
       : null;
 
-    // If a menu URL is configured + the tag has a table name, bake the
-    // table param into the URL so the CafeHubUI "Menu" button goes straight
+    // If a menu URL is configured, bake the table and seat parameters 
+    // into the URL so the CafeHubUI "Menu" button goes straight
     // to the correct seat — no auto-redirect needed.
     let menuUrl = orgSettings?.hubMenuUrl ?? undefined;
-    if (menuUrl && physicalTag.tableName) {
+    if (menuUrl) {
       try {
         const u = new URL(menuUrl);
-        u.searchParams.set("table", physicalTag.tableName);
+        if (physicalTag.tableName) {
+          u.searchParams.set("table", physicalTag.tableName);
+        }
+        if (physicalTag.seatNumber !== undefined && physicalTag.seatNumber !== null) {
+          u.searchParams.set("seat", String(physicalTag.seatNumber));
+        }
         menuUrl = u.toString();
       } catch {
         // URL parse failed — leave menuUrl as-is

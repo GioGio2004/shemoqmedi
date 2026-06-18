@@ -28,7 +28,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 // ─── Convex ────────────────────────────────────────────────────────────────────
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex-helpers-api";
@@ -78,6 +78,8 @@ export function VolooAI({
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const seatParam = searchParams.get("seat");
 
   // ── Database Theme Override ──
   const { cafeId, brandName } = cafeConfig;
@@ -166,7 +168,7 @@ export function VolooAI({
 
   // ── Convex: order mutation ─────────────────────────────────────────────────────────
   const placeOrder = useMutation(api.orders.placeOrder);
-  const [seatNumber, setSeatNumber] = useState("");
+  const [seatNumber, setSeatNumber] = useState(seatParam || "");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
@@ -1240,7 +1242,7 @@ export function VolooAI({
           isOpen={!!selectedDetailProduct}
           onClose={() => setSelectedDetailProduct(null)}
           onAddToBasket={addToBasket}
-          primaryColor={theme.primaryColor}
+          theme={theme}
         />
       )}
     </>
