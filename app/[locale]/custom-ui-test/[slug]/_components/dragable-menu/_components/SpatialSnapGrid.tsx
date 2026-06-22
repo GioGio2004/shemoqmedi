@@ -887,15 +887,17 @@ export default function SpatialSnapGrid({
       />
 
       {/* ── VolooAI Widget ── */}
-      <div className="relative z-50">
-        <MenuAIBridge
-          organizationName={data.organization.name}
-          slug={slug}
-          categories={data.categories}
-          themeSettings={data.organization.themeSettings ?? null}
-          currency={data.organization.currency}
-        />
-      </div>
+      {data.organization.features?.hasAiManager !== false && (
+        <div className="relative z-50">
+          <MenuAIBridge
+            organizationName={data.organization.name}
+            slug={slug}
+            categories={data.categories}
+            themeSettings={data.organization.themeSettings ?? null}
+            currency={data.organization.currency}
+          />
+        </div>
+      )}
     </div>
   );
 }

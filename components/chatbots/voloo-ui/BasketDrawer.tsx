@@ -1,4 +1,4 @@
-import { X, ShoppingBag, Trash2, Minus, Plus, Loader2 } from "lucide-react";
+import { X, ShoppingBag, Trash2, Minus, Plus, Loader2, Lock } from "lucide-react";
 import Image from "next/image";
 import { CafeTheme, BasketItem } from "./types";
 
@@ -15,6 +15,7 @@ interface BasketDrawerProps {
   orderSuccess: boolean;
   seatNumber: string;
   setSeatNumber: (seat: string) => void;
+  isDineIn?: boolean;
 }
 
 export function BasketDrawer({
@@ -30,6 +31,7 @@ export function BasketDrawer({
   orderSuccess,
   seatNumber,
   setSeatNumber,
+  isDineIn = false,
 }: BasketDrawerProps) {
   return (
     <div
@@ -218,7 +220,7 @@ export function BasketDrawer({
             <div className="w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider text-white text-center bg-green-500/20 border border-green-500/50 text-green-400">
               Order Placed!
             </div>
-          ) : (
+          ) : isDineIn ? (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <input
@@ -248,6 +250,20 @@ export function BasketDrawer({
                 </button>
               </div>
             </div>
+          ) : (
+            /* ONLINE-ONLY: checkout blocked */
+            <button
+              disabled
+              className="w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all duration-150 cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.4)",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Available for Dine-In Only
+            </button>
           )}
         </div>
       )}

@@ -144,13 +144,15 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
        *  - Passes cafeName + currency to the API route via query params so
        *    Gemini's system prompt knows exactly which cafe it represents
        */}
-      <MenuAIBridge
-        organizationName={data.organization.name}
-        slug={slug}
-        categories={data.categories}
-        themeSettings={themeSettings ?? null}
-        currency={data.organization.currency}
-      />
+      {data.organization.features?.hasAiManager !== false && (
+        <MenuAIBridge
+          organizationName={data.organization.name}
+          slug={slug}
+          categories={data.categories}
+          themeSettings={themeSettings ?? null}
+          currency={data.organization.currency}
+        />
+      )}
 
       {/* Footer */}
       <SiteFooter

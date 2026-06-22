@@ -10,8 +10,9 @@
 
 "use client";
 
-import { useMemo, useRef } from "react";
-import { MenuCard } from "./menu-card";
+import { useMemo, useRef, useState } from "react";
+import { MenuCard, ProductPopupModal } from "./menu-card";
+import { AnimatePresence } from "framer-motion";
 import type { CardShapeProps } from "./menu-card";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -19,8 +20,13 @@ import type { CardShapeProps } from "./menu-card";
 export interface ConvexCategory {
   _id: string;
   name: Record<string, string>;
+  imageUrl?: string;
   sortOrder: number;
   items: ConvexMenuItem[];
+}
+
+export interface Product extends ConvexMenuItem {
+  categoryName: string;
 }
 
 export interface ConvexMenuItem {
@@ -80,6 +86,7 @@ export function MenuSection({
   themeSettings: ThemeSettings | null;
 }) {
   const pillNavRef = useRef<HTMLDivElement>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const CATEGORIES = [
     "All",
@@ -192,15 +199,18 @@ export function MenuSection({
           >
             {CATEGORIES.map((cat) => {
               const isActive = activeCategory === cat;
+              const categoryData = categories.find((c) => (c.name["en"] || Object.values(c.name)[0]) === cat);
+              const imageUrl = categoryData?.imageUrl;
+
               return (
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
                   aria-pressed={isActive}
-                  className="shrink-0 px-4 py-1.5 text-sm font-medium tracking-wide transition-all duration-300 whitespace-nowrap"
+                  className="group relative overflow-hidden shrink-0 flex items-center justify-center px-6 py-2.5 text-sm font-medium tracking-wide transition-all duration-300 whitespace-nowrap"
                   style={{
                     borderRadius: themeSettings?.buttonRadius || "9999px",
-                    background: isActive
+                    background: isActive && !imageUrl
                       ? "var(--theme-accent, var(--primary))"
                       : "rgba(255,255,255,0.05)",
                     border: "1px solid",
@@ -208,12 +218,28 @@ export function MenuSection({
                       ? "var(--theme-accent, var(--primary))"
                       : "rgba(255,255,255,0.12)",
                     color: isActive
-                      ? "var(--primary-foreground, #000)"
+                      ? (imageUrl ? "var(--theme-accent, var(--primary))" : "var(--primary-foreground, #000)")
                       : "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 30%)",
                     backdropFilter: "blur(8px)",
                   }}
                 >
-                  {cat}
+                  {imageUrl && cat !== "All" && (
+                    <div className="absolute inset-0 z-0">
+                      <img 
+                        src={imageUrl} 
+                        alt={cat} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                      />
+                      {/* Dark overlay to ensure text is readable */}
+                      <div className="absolute inset-0 bg-black/50" />
+                    </div>
+                  )}
+                  <span className="relative z-10" style={{
+                    color: imageUrl && cat !== "All" && !isActive ? "rgba(255,255,255,0.9)" : undefined,
+                    textShadow: imageUrl && cat !== "All" ? "0 2px 4px rgba(0,0,0,0.5)" : undefined,
+                  }}>
+                    {cat}
+                  </span>
                 </button>
               );
             })}
@@ -249,7 +275,7 @@ export function MenuSection({
               )}
 
               {/* Card grid for this category */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                 {group.items.map((product, itemIndex) => (
                   <MenuCard
                     key={product._id}
@@ -257,6 +283,7 @@ export function MenuSection({
                     socialLinks={socialLinks}
                     shapeProps={shapeProps}
                     animationIndex={itemIndex}
+                    onClick={() => setSelectedProduct(product)}
                   />
                 ))}
               </div>
@@ -277,6 +304,17 @@ export function MenuSection({
             </p>
           </div>
         )}
+
+        {/* Product Popup Modal */}
+        <AnimatePresence>
+          {selectedProduct && (
+            <ProductPopupModal
+              product={selectedProduct}
+              shapeProps={shapeProps}
+              onClose={() => setSelectedProduct(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

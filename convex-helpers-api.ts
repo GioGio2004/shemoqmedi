@@ -286,6 +286,7 @@ export type PublicApiType = {
       "public",
       {
         cafeId: string;
+        guestId: string;
         items: Array<{
           name: string;
           price: number;
@@ -293,6 +294,7 @@ export type PublicApiType = {
           quantity: number;
         }>;
         seatNumber: number;
+        sessionId: Id<"tableSessions">;
         totalPrice: number;
       },
       any
@@ -401,7 +403,7 @@ export type PublicApiType = {
     provisionPhysicalTag: FunctionReference<
       "mutation",
       "public",
-      { orgId?: string; tableName?: string; volooTagsUUID: string },
+      { orgId?: string; seatNumber?: number; tableName?: string; volooTagsUUID: string },
       any
     >;
     updatePhysicalTag: FunctionReference<
@@ -410,6 +412,7 @@ export type PublicApiType = {
       {
         isActive?: boolean;
         orgId?: string;
+        seatNumber?: number;
         tableName?: string;
         tagId: Id<"physicalTags">;
       },
@@ -544,6 +547,14 @@ export type PublicApiType = {
       { alertMessage: string; orgId: string },
       any
     >;
+  };
+  tableSessions: {
+    joinSession: FunctionReference<"mutation", "public", { orgId: string; tagId: Id<"physicalTags">; guestId: string }, Id<"tableSessions">>;
+    freeTable: FunctionReference<"mutation", "public", { sessionId: Id<"tableSessions">; tagId: Id<"physicalTags"> }, any>;
+    getSession: FunctionReference<"query", "public", { sessionId?: Id<"tableSessions"> }, any>;
+    getSessionOrders: FunctionReference<"query", "public", { sessionId?: Id<"tableSessions"> }, any>;
+    broadcastSuggestion: FunctionReference<"mutation", "public", { sessionId: Id<"tableSessions">; itemName: string; suggestedBy: string }, any>;
+    syncCart: FunctionReference<"mutation", "public", { sessionId: Id<"tableSessions">; guestId: string; items: any }, any>;
   };
 };
 export type InternalApiType = {};

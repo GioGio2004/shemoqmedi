@@ -5,12 +5,24 @@ import { api } from "@/convex-helpers-api";
 import VenueClientView from "./basic-menu/VenueClientView";
 import SpatialSnapGrid from "./dragable-menu/_components/SpatialSnapGrid";
 import { MenuSkeleton } from "./basic-menu/_components/menu-skeleton";
+import { MultiplayerProvider } from "@/components/multiplayer/MultiplayerContext";
+import { TableSuggestionToast } from "@/components/multiplayer/TableSuggestionToast";
 
 interface MenuRouterClientProps {
   slug: string;
+  guestId?: string | null;
+  sessionId?: string | null;
+  tagId?: string | null;
+  seatNumber?: number | null;
 }
 
-export default function MenuRouterClient({ slug }: MenuRouterClientProps) {
+export default function MenuRouterClient({
+  slug,
+  guestId = null,
+  sessionId = null,
+  tagId = null,
+  seatNumber = null,
+}: MenuRouterClientProps) {
   const data = useQuery(api.publicMenu.get, { slug });
 
   // ── Loading state — full-page skeleton ──────────────────────────────────────
@@ -38,9 +50,22 @@ export default function MenuRouterClient({ slug }: MenuRouterClientProps) {
 
   const menuType = data.organization.themeSettings?.menuType || "basic";
 
-  if (menuType === "dragable") {
-    return <SpatialSnapGrid data={data} slug={slug} />;
-  }
-
-  return <VenueClientView data={data} slug={slug} />;
+  return (
+    <MultiplayerProvider
+      guestId={guestId}
+      sessionId={sessionId}
+      tagId={tagId}
+      seatNumber={seatNumber}
+    >
+      <TableSuggestionToast
+        catalog={data.categories || []}
+        themeSettings={data.organization.themeSettings ?? null}
+      />
+      {menuType === "dragable" ? (
+        <SpatialSnapGrid data={data} slug={slug} />
+      ) : (
+        <VenueClientView data={data} slug={slug} />
+      )}
+    </MultiplayerProvider>
+  );
 }

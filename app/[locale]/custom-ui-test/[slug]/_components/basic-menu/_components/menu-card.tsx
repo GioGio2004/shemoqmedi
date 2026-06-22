@@ -16,8 +16,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { ConvexMenuItem } from "./menu-section";
-import { Plus, Sparkles } from "lucide-react";
+import type { Product } from "./menu-section";
+import { Plus, Sparkles, X } from "lucide-react";
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 function cn(...inputs: Parameters<typeof clsx>) {
@@ -65,16 +65,13 @@ export interface CardShapeProps {
 
 // ─── Component Props ─────────────────────────────────────────────────────────
 
-interface Product extends ConvexMenuItem {
-  categoryName: string;
-}
-
 interface MenuCardProps {
   product: Product;
   socialLinks: any;
   shapeProps?: CardShapeProps;
   /** Used to stagger the entrance animation per card within a category */
   animationIndex?: number;
+  onClick?: () => void;
 }
 
 // ─── Border Radius Resolver ───────────────────────────────────────────────────
@@ -111,6 +108,7 @@ export function MenuCard({
   socialLinks,
   shapeProps = {},
   animationIndex = 0,
+  onClick,
 }: MenuCardProps) {
   const {
     borderRadius,
@@ -166,15 +164,14 @@ export function MenuCard({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-50px" }}
+      onClick={onClick}
       transition={{
         duration: 0.6,
         ease: [0.25, 0.1, 0.25, 1],
         delay: animationIndex * 0.08, // Stagger cards within a group
       }}
       className={cn(
-        "group relative overflow-hidden flex flex-col h-full",
-        // Glassmorphism: dark base with backdrop blur
-        "bg-black/40 backdrop-blur-md",
+        "group relative overflow-hidden flex flex-col h-[280px] sm:h-[320px] w-full cursor-pointer",
         "transition-all duration-500 ease-out",
         "translate-y-0 hover:-translate-y-2",
         "shadow-lg hover:shadow-2xl hover:shadow-black/50"
@@ -184,17 +181,11 @@ export function MenuCard({
         borderWidth: `${borderWidth}px`,
         borderStyle: "solid",
         borderColor: resolvedBorderColor,
+        backgroundColor: "#000",
       }}
     >
-      {/* ── Image container ─────────────────────────────────────────────────
-       * The top half is entirely image, dissolving into the card below.
-       */}
-      <div
-        className="relative aspect-[4/3] overflow-hidden"
-        style={{
-          borderRadius: `${cardRadius} ${cardRadius} 0 0`,
-        }}
-      >
+      {/* ── Full Card Background Image ── */}
+      <div className="absolute inset-0 z-0">
         <Image
           src={product.imageUrl || "/placeholder.svg"}
           alt={productName}
@@ -207,103 +198,41 @@ export function MenuCard({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={product.sortOrder <= 3}
         />
-
-        {/* ── Image dissolve gradient overlay ──────────────────────────────
-         * Fades the image into the card's black/40 background at the bottom,
-         * eliminating any hard visual edge between image and content area.
-         */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-
-        {/* Category badge — glassmorphic pill */}
-        <div
-          className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium tracking-wide z-10"
-          style={{
-            background: "rgba(0,0,0,0.45)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            color: "rgba(255,255,255,0.9)",
-          }}
-        >
-          {product.categoryName}
-        </div>
-
-        {/* Accent dot — uses accentColor from DB or falls back to --theme-accent */}
-        {product.accentColor && (
-          <div
-            className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full ring-2 ring-white/20 z-10"
-            style={{ background: accentColor }}
-          />
-        )}
-
-        {/* Price floating over the image bottom — visible on hover */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
-          <span
-            className="text-xl font-bold tabular-nums"
-            style={{ color: "var(--theme-accent, var(--primary))" }}
-          >
-            ₾{displayPrice}
-          </span>
-        </div>
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
       </div>
 
-      {/* ── Content area ─────────────────────────────────────────────────── */}
-      <div className="p-5 flex flex-col flex-1">
-        {/* Title + Price (static, below image) */}
-        <div className="flex justify-between items-start mb-2 gap-2">
-          {/* font-serif applied to product title per spec */}
-          <h3
-            className="font-serif text-base leading-snug"
-            style={{ color: "var(--theme-text, var(--foreground))" }}
-          >
-            {productName}
-          </h3>
-          <span
-            className="text-sm font-bold tabular-nums shrink-0"
-            style={{ color: "var(--theme-accent, var(--primary))" }}
-          >
-            ₾{displayPrice}
-          </span>
-        </div>
+      {/* ── Top Header (Title + Price) ── */}
+      <div className="relative z-10 p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-start gap-1">
+        <h3 className="font-sans text-[11px] sm:text-xs font-bold text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
+          {productName}
+        </h3>
+        <span className="text-[11px] sm:text-xs font-bold text-white tabular-nums shrink-0 drop-shadow-md">
+          {displayPrice} ₾
+        </span>
+      </div>
 
-        {/* Description — light sans-serif per spec */}
-        {description && (
-          <p className="text-gray-400 font-light text-sm mb-4 line-clamp-2 leading-relaxed">
-            {description}
-          </p>
-        )}
+      {/* Spacer */}
+      <div className="flex-1" />
 
-        {/* Tags */}
-        {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-5">
-            {product.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2.5 py-0.5 text-xs font-medium rounded-full"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  color:
-                    "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 30%)",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+      {/* ── Bottom Glassmorphic Panel ── */}
+      <div
+        className="relative z-20 p-2 sm:p-4 pt-3 pb-3 sm:pt-5 sm:pb-5 flex flex-col justify-end"
+        style={{
+          background: "linear-gradient(180deg, color-mix(in srgb, var(--theme-accent, #D9D9D9) 45%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #FFFFFF) 15%, transparent) 100%)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderTop: "1px solid rgba(255, 255, 255, 0.4)",
+        }}
+      >
+        <p className="text-white font-medium text-[10px] sm:text-[11px] leading-snug mb-2 sm:mb-3 line-clamp-2 drop-shadow">
+          {description || "A delicious treat made with the finest ingredients."}
+        </p>
 
-        {/* ── Ghost Action Button ───────────────────────────────────────────
-         * Subtle ghost style (10% opacity of primaryColor) keeps visual
-         * hierarchy focused on the image and title.
-         * On hover: fills to full primaryColor.
-         */}
-        <div
-          className="flex justify-between items-center pt-4 mt-auto"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          {/* Ask AI Button */}
+        <div className="flex justify-between items-center mt-1">
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               const aiProduct = {
                 id: product._id as any,
                 name: productName,
@@ -322,26 +251,15 @@ export function MenuCard({
                 })
               );
             }}
-            className="flex items-center gap-1.5 px-4 py-2 font-medium tracking-wide transition-all duration-300"
-            style={{
-              borderRadius: btnRadius,
-              backgroundColor: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "var(--theme-text, var(--foreground))",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.03)";
-            }}
+            className="text-white text-[10px] sm:text-[11px] font-bold border-b-2 border-white/70 pb-0.5 hover:text-white/80 transition-colors drop-shadow"
           >
-            <Sparkles className="w-4 h-4" style={{ color: "var(--theme-accent, var(--primary))" }} />
-            <span>Ask AI</span>
+            ask AI
           </button>
 
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               const aiProduct = {
                 id: product._id as any,
                 name: productName,
@@ -356,27 +274,159 @@ export function MenuCard({
                 })
               );
             }}
-            className="flex items-center gap-2 px-4 py-2 font-medium tracking-wide transition-all duration-300"
+            className="text-white text-[10px] sm:text-xs font-bold px-3 py-1 sm:px-4 sm:py-1.5 transition-transform hover:scale-105"
             style={{
-              borderRadius: btnRadius,
-              backgroundColor: ghostButtonBg,
-              border: `1px solid ${ghostButtonBorder}`,
-              color: "var(--theme-text, var(--foreground))",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = buttonColor || "var(--theme-accent, var(--primary))";
-              e.currentTarget.style.color = "var(--primary-foreground, #000)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = ghostButtonBg;
-              e.currentTarget.style.color = "var(--theme-text, var(--foreground))";
+              backgroundColor: "var(--theme-accent, #B91C1C)",
+              borderRadius: "9999px",
             }}
           >
-            <Plus className="w-4 h-4" />
-            <span>Add</span>
+            ADD+
           </button>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
+  const {
+    borderRadius,
+    borderWidth = 1,
+    borderColor = "glass",
+  } = shapeProps;
+
+  const productName = product.name["en"] || Object.values(product.name)[0] || "Unknown";
+  const displayPrice = (product.price / 100).toFixed(2);
+  const description = product.description
+    ? typeof product.description === "string"
+      ? product.description
+      : product.description["en"] || Object.values(product.description)[0]
+    : "";
+
+  const cardRadius = resolveBorderRadius(borderRadius);
+  const resolvedBorderColor = borderColor === "glass" ? "rgba(255,255,255,0.05)" : borderColor === "accent" ? "var(--theme-accent, oklch(0.922 0 0))" : borderColor;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      />
+      
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative w-full max-w-sm sm:max-w-md overflow-hidden flex flex-col h-[400px] sm:h-[450px] shadow-2xl shadow-black/80"
+        style={{
+          borderRadius: cardRadius,
+          borderWidth: `${borderWidth}px`,
+          borderStyle: "solid",
+          borderColor: resolvedBorderColor,
+          backgroundColor: "#000",
+        }}
+      >
+        <button 
+          onClick={onClose} 
+          className="absolute top-3 right-3 z-30 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={product.imageUrl || "/placeholder.svg"}
+            alt={productName}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 400px"
+            priority
+          />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
+        </div>
+
+        <div className="relative z-10 p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start gap-2">
+          <h3 className="font-sans text-sm sm:text-base font-bold text-white tracking-wide leading-tight drop-shadow-md">
+            {productName}
+          </h3>
+          <span className="text-sm sm:text-base font-bold text-white tabular-nums shrink-0 drop-shadow-md">
+            {displayPrice} ₾
+          </span>
+        </div>
+
+        <div className="flex-1" />
+
+        <div
+          className="relative z-20 p-4 sm:p-5 pt-4 pb-4 sm:pt-6 sm:pb-6 flex flex-col justify-end"
+          style={{
+            background: "linear-gradient(180deg, color-mix(in srgb, var(--theme-accent, #D9D9D9) 45%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #FFFFFF) 15%, transparent) 100%)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.4)",
+          }}
+        >
+          <p className="text-white font-medium text-xs sm:text-sm leading-snug mb-3 sm:mb-4 drop-shadow">
+            {description || "A delicious treat made with the finest ingredients."}
+          </p>
+
+          <div className="flex justify-between items-center mt-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                const aiProduct = {
+                  id: product._id as any,
+                  name: productName,
+                  category: product.categoryName,
+                  price: product.price / 100,
+                  image: product.imageUrl || "/placeholder.svg",
+                  description: description,
+                };
+                window.dispatchEvent(
+                  new CustomEvent("ask-voloo-ai", {
+                    detail: {
+                      message: `Tell me about the ${productName}`,
+                      product: aiProduct,
+                      keepOpen: true,
+                    },
+                  })
+                );
+              }}
+              className="text-white text-xs sm:text-sm font-bold border-b-2 border-white/70 pb-0.5 hover:text-white/80 transition-colors drop-shadow"
+            >
+              ask AI
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                const aiProduct = {
+                  id: product._id as any,
+                  name: productName,
+                  category: product.categoryName,
+                  price: product.price / 100,
+                  image: product.imageUrl || "/placeholder.svg",
+                  description: description,
+                };
+                window.dispatchEvent(
+                  new CustomEvent("add-to-voloo-basket", {
+                    detail: { product: aiProduct },
+                  })
+                );
+              }}
+              className="text-white text-xs sm:text-sm font-bold px-5 py-2 sm:px-6 sm:py-2.5 transition-transform hover:scale-105"
+              style={{
+                backgroundColor: "var(--theme-accent, #B91C1C)",
+                borderRadius: "9999px",
+              }}
+            >
+              ADD+
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }

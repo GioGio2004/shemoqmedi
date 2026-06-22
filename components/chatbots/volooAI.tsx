@@ -56,6 +56,8 @@ import { PreferencesModal } from "./voloo-ui/PreferencesModal";
 import { DesktopTrigger } from "./voloo-ui/DesktopTrigger";
 import { MobileTrigger } from "./voloo-ui/MobileTrigger";
 import { ProductDetailPopup } from "./voloo-ui/ProductDetailPopup";
+import { useMultiplayer } from "@/components/multiplayer/MultiplayerContext";
+import { SharedCart } from "@/components/multiplayer/SharedCart";
 
 export interface VolooAIChatProps {
   apiEndpoint?: string;
@@ -80,6 +82,9 @@ export function VolooAI({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const seatParam = searchParams.get("seat");
+
+  // ── Multiplayer session from NFC cookie ──
+  const { guestId: multiplayerGuestId, sessionId: multiplayerSessionId, isDineIn } = useMultiplayer();
 
   // ── Database Theme Override ──
   const { cafeId, brandName } = cafeConfig;
@@ -166,29 +171,49 @@ export function VolooAI({
   // ── Convex: save message mutation ──────────────────────────────────────────────────
   const saveMessage = useMutation(api.chat.sendMessage);
 
-  // ── Convex: order mutation ─────────────────────────────────────────────────────────
+  // ── Convex: order & sync mutations ─────────────────────────────────────────────────────────
   const placeOrder = useMutation(api.orders.placeOrder);
+  const syncCartMutation = useMutation(api.tableSessions.syncCart);
+
   const [seatNumber, setSeatNumber] = useState(seatParam || "");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (customItems?: any[], customTotal?: number) => {
     if (!seatNumber || isNaN(Number(seatNumber))) return;
+    // ── SECURITY GUARD: block online-only users ──
+    if (!isDineIn || !multiplayerSessionId || !multiplayerGuestId) {
+      console.warn("Order blocked: no valid dine-in session.");
+      return;
+    }
     setIsPlacingOrder(true);
+    
+    // Use custom items if provided (from SharedCart table order), else use local basket
+    const orderItems = customItems ? customItems.map(item => ({
+      productId: !isNaN(Number(item.id)) ? Number(item.id) : item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    })) : basket.map((item) => ({
+      productId: !isNaN(Number(item.product.id)) ? Number(item.product.id) : item.product.id,
+      name: item.product.name,
+      price: item.product.price,
+      quantity: item.quantity,
+    }));
+    
+    const orderTotal = customTotal !== undefined ? customTotal : basketTotal;
+
     try {
       await placeOrder({
         cafeId,
         seatNumber: Number(seatNumber),
-        items: basket.map((item) => ({
-          productId: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          quantity: item.quantity,
-        })),
-        totalPrice: basketTotal,
+        sessionId: multiplayerSessionId as any,
+        guestId: multiplayerGuestId,
+        items: orderItems,
+        totalPrice: orderTotal,
       });
       setOrderSuccess(true);
-      setBasket([]);
+      setBasket([]); // clear local basket
       setTimeout(() => {
         setOrderSuccess(false);
         setIsBasketOpen(false);
@@ -222,6 +247,16 @@ export function VolooAI({
 
   // ── Detail Popup State ──
   const [selectedDetailProduct, setSelectedDetailProduct] = useState<Product | null>(null);
+
+  // Listen for global product detail requests
+  useEffect(() => {
+    const handleOpenDetail = (e: Event) => {
+      const customEvent = e as CustomEvent<{ product: Product }>;
+      setSelectedDetailProduct(customEvent.detail.product);
+    };
+    window.addEventListener("open-product-detail", handleOpenDetail);
+    return () => window.removeEventListener("open-product-detail", handleOpenDetail);
+  }, []);
 
   // ── Toggle helper — add or remove a product from the context ──
   const toggleSelection = useCallback((product: Product) => {
@@ -263,6 +298,23 @@ export function VolooAI({
       /* private-browsing — ignore */
     }
   }, [basket, cafeId]);
+
+  // Sync basket → Convex tableSessions if dine-in
+  useEffect(() => {
+    if (isDineIn && multiplayerSessionId && multiplayerGuestId) {
+      syncCartMutation({
+        sessionId: multiplayerSessionId as any,
+        guestId: multiplayerGuestId,
+        items: basket.map((b) => ({
+          id: b.product.id.toString(),
+          name: b.product.name,
+          price: b.product.price,
+          quantity: b.quantity,
+          image: b.product.image,
+        })),
+      });
+    }
+  }, [basket, isDineIn, multiplayerSessionId, multiplayerGuestId, syncCartMutation]);
 
   const [isBasketOpen, setIsBasketOpen] = useState(false);
   const openChatAnimationRef = useRef<(() => void) | null>(null);
@@ -1205,21 +1257,41 @@ export function VolooAI({
           </div>
           {/* end floating input */}
 
-          {/* ════════ ORDER BASKET DRAWER ════════ */}
-          <BasketDrawer
-            isBasketOpen={isBasketOpen}
-            setIsBasketOpen={setIsBasketOpen}
-            basket={basket}
-            basketCount={basketCount}
-            basketTotal={basketTotal}
-            theme={theme}
-            updateQuantity={updateQuantity}
-            handlePlaceOrder={handlePlaceOrder}
-            isPlacingOrder={isPlacingOrder}
-            orderSuccess={orderSuccess}
-            seatNumber={seatNumber}
-            setSeatNumber={setSeatNumber}
-          />
+          {/* ════════ ORDER BASKET DRAWER / SHARED CART ════════ */}
+          {isDineIn ? (
+            <SharedCart
+              isOpen={isBasketOpen}
+              onClose={() => setIsBasketOpen(false)}
+              localBasketItems={basket.map(b => ({
+                id: b.product.id.toString(),
+                name: b.product.name,
+                price: b.product.price,
+                quantity: b.quantity,
+                image: b.product.image,
+              }))}
+              onCheckout={(guestCount, items, total) => {
+                handlePlaceOrder(items, total);
+              }}
+              theme={theme}
+              updateQuantity={updateQuantity}
+            />
+          ) : (
+            <BasketDrawer
+              isBasketOpen={isBasketOpen}
+              setIsBasketOpen={setIsBasketOpen}
+              basket={basket}
+              basketCount={basketCount}
+              basketTotal={basketTotal}
+              theme={theme}
+              updateQuantity={updateQuantity}
+              handlePlaceOrder={handlePlaceOrder}
+              isPlacingOrder={isPlacingOrder}
+              orderSuccess={orderSuccess}
+              seatNumber={seatNumber}
+              setSeatNumber={setSeatNumber}
+              isDineIn={isDineIn}
+            />
+          )}
           {/* end basket drawer */}
         </div>
       </div>

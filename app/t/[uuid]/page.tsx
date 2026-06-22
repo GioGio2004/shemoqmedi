@@ -3,6 +3,7 @@ import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
 import { auth } from "@clerk/nextjs/server";
 import TapExperienceClient from "./_components/TapExperienceClient";
+import crypto from "crypto";
 
 export default async function TagRouter({
   params,
@@ -38,44 +39,11 @@ export default async function TagRouter({
       return <TapExperienceClient tag={inactiveSnapshot as any} isOwner={false} tagUuid={uuid} />;
     }
 
-    // Load the org's hub settings (animation + hub theme + links)
-    const orgSettings = physicalTag.orgId
-      ? await fetchQuery(api.volootagsAdmin.getOrgTagSettingsPublic, { orgId: physicalTag.orgId })
-      : null;
-
-    // If a menu URL is configured, bake the table and seat parameters 
-    // into the URL so the CafeHubUI "Menu" button goes straight
-    // to the correct seat — no auto-redirect needed.
-    let menuUrl = orgSettings?.hubMenuUrl ?? undefined;
-    if (menuUrl) {
-      try {
-        const u = new URL(menuUrl);
-        if (physicalTag.tableName) {
-          u.searchParams.set("table", physicalTag.tableName);
-        }
-        if (physicalTag.seatNumber !== undefined && physicalTag.seatNumber !== null) {
-          u.searchParams.set("seat", String(physicalTag.seatNumber));
-        }
-        menuUrl = u.toString();
-      } catch {
-        // URL parse failed — leave menuUrl as-is
-      }
-    }
-
-    // Build a TagSnapshot compatible with TapExperienceClient.
-    // No tableName here — we want the standard CafeHubUI flow, not auto-redirect.
-    const tagSnapshot = {
-      _id: physicalTag._id,
-      volooTagsUUID: physicalTag.volooTagsUUID,
-      isActive: physicalTag.isActive,
-      activeMode: "cafe_hub",
-      showAnimation: orgSettings?.showAnimation ?? true,
-      selectedAnimation: orgSettings?.selectedAnimation ?? "Coffee-love.lottie",
-      hubTheme: (orgSettings?.hubTheme as "dark" | "light" | "orange") ?? "dark",
-      hubMenuUrl: menuUrl,
-    };
-
-    return <TapExperienceClient tag={tagSnapshot as any} isOwner={false} tagUuid={uuid} />;
+    // ── ZERO-URL HANDSHAKE ──────────────────────────────────────────────────
+    // Server Components cannot set cookies directly. We redirect to a Route Handler
+    // that will generate the guestId, join the session, set the httpOnly cookie, 
+    // and perform the final redirect to the clean menu URL.
+    redirect(`/api/t-auth?uuid=${uuid}`);
   }
 
   // ── 2. Fall back to personal Voloo Magic tags ─────────────────────────────

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { X, Plus, Info } from "lucide-react";
 import gsap from "gsap";
 import { Product, CafeTheme } from "./types";
+import { BroadcastButton } from "@/components/multiplayer/BroadcastButton";
 
 interface ProductDetailPopupProps {
   product: Product;
@@ -144,8 +145,8 @@ export function ProductDetailPopup({
             )}
           </div>
 
-          {/* Action Button */}
-          <div className="mt-auto pt-4 border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+          {/* Action Buttons */}
+          <div className="mt-auto pt-4 border-t flex flex-col gap-3" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
             <button
               onClick={handleAddToBasket}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-sm tracking-wide shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95"
@@ -154,6 +155,7 @@ export function ProductDetailPopup({
               <Plus className="w-4 h-4" strokeWidth={3} />
               Add to Order — ${product.price.toFixed(2)}
             </button>
+            <BroadcastButton itemName={product.name} theme={theme} />
           </div>
         </div>
       </div>

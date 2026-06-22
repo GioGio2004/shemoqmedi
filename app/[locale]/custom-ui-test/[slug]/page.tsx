@@ -26,6 +26,7 @@
  */
 
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import MenuRouterClient from "./_components/MenuRouterClient";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -118,6 +119,33 @@ export default async function Page({
   // Await the Promise — required by Next.js App Router for dynamic segments.
   const { slug, locale } = await params;
 
+  // ── Read the secure NFC session cookie ────────────────────────────────────
+  // Set by app/t/[uuid]/page.tsx during the Zero-URL handshake.
+  // If absent, the user is an online-only browser — multiplayer is disabled
+  // and the final checkout action is blocked.
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("shemoqmedi_session");
+  let multiplayerSession: {
+    guestId: string | null;
+    sessionId: string | null;
+    tagId: string | null;
+    seatNumber: number | null;
+  } = { guestId: null, sessionId: null, tagId: null, seatNumber: null };
+
+  if (sessionCookie?.value) {
+    try {
+      const parsed = JSON.parse(sessionCookie.value);
+      multiplayerSession = {
+        guestId: parsed.guestId ?? null,
+        sessionId: parsed.sessionId ?? null,
+        tagId: parsed.tagId ?? null,
+        seatNumber: parsed.seatNumber ?? null,
+      };
+    } catch {
+      // Malformed cookie — treat as online-only
+    }
+  }
+
   const venueName = slugToVenueName(slug);
   const canonicalUrl = `${BASE_URL}/${locale}/${slug}`;
 
@@ -171,7 +199,13 @@ export default async function Page({
        *  - Convex WebSocket subscription (useQuery)
        *  - Route to correct UI client component
        */}
-      <MenuRouterClient slug={slug} />
+      <MenuRouterClient
+        slug={slug}
+        guestId={multiplayerSession.guestId}
+        sessionId={multiplayerSession.sessionId}
+        tagId={multiplayerSession.tagId}
+        seatNumber={multiplayerSession.seatNumber}
+      />
     </>
   );
 }
