@@ -16,10 +16,13 @@
 
 import Image from "next/image";
 import { ArrowDown } from "lucide-react";
+import { useLocale } from "next-intl";
 
 export interface StorefrontConfig {
-  heroHeadline: string;
-  heroSubheadline: string;
+  heroHeadline: any;
+  heroSubheadline: any;
+  primaryButtonText?: any;
+  secondaryButtonText?: any;
   coverImageUrl?: string;
   heroImageUrls: string[];
   address?: string;
@@ -32,6 +35,19 @@ const fadeSlideUp = (delayMs: number): React.CSSProperties => ({
 });
 
 export function HeroSection({ config }: { config: StorefrontConfig | null }) {
+  const locale = useLocale();
+
+  const getStr = (val: any) => {
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    return val[locale] || val["en"] || Object.values(val)[0] || "";
+  };
+
+  const headline = getStr(config?.heroHeadline);
+  const subheadline = getStr(config?.heroSubheadline);
+  const primaryBtn = getStr(config?.primaryButtonText) || "Explore Our Menu";
+  const secondaryBtn = getStr(config?.secondaryButtonText) || "Visit Us";
+
   return (
     <>
       {/*
@@ -96,7 +112,7 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
               className="font-serif text-6xl sm:text-7xl md:text-[6.5rem] leading-[0.9] mb-8 text-balance"
               style={{ color: "var(--theme-text, var(--foreground))" }}
             >
-              {config?.heroHeadline || (
+              {headline || (
                 <>
                   Optimal craftsmanship
                   <br />
@@ -121,7 +137,7 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
                   "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 35%)",
               }}
             >
-              {config?.heroSubheadline ||
+              {subheadline ||
                 "Transform your everyday coffee ritual into an artful experience with our handcrafted brews and fresh pastries."}
             </p>
           </div>
@@ -140,7 +156,7 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
                   color: "var(--primary-foreground, #000)",
                 }}
               >
-                Explore Our Menu
+                {primaryBtn}
                 <ArrowDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
               </a>
 
@@ -157,7 +173,7 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
                   color: "var(--theme-text, var(--foreground))",
                 }}
               >
-                Visit Us
+                {secondaryBtn}
               </a>
             </div>
           </div>

@@ -16,6 +16,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useLocale } from "next-intl";
 import type { Product } from "./menu-section";
 import { Plus, Sparkles, X } from "lucide-react";
 
@@ -118,13 +119,15 @@ export function MenuCard({
     buttonColor,
   } = shapeProps;
 
+  const locale = useLocale();
+
   const productName =
-    product.name["en"] || Object.values(product.name)[0] || "Unknown";
+    product.name[locale] || product.name["en"] || Object.values(product.name)[0] || "Unknown";
   const displayPrice = (product.price / 100).toFixed(2);
   const description = product.description
     ? typeof product.description === "string"
       ? product.description
-      : product.description["en"] || Object.values(product.description)[0]
+      : product.description[locale] || product.description["en"] || Object.values(product.description)[0]
     : "";
 
   // ── Resolved CSS values ────────────────────────────────────────────────────
@@ -295,12 +298,14 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
     borderColor = "glass",
   } = shapeProps;
 
-  const productName = product.name["en"] || Object.values(product.name)[0] || "Unknown";
+  const locale = useLocale();
+
+  const productName = product.name[locale] || product.name["en"] || Object.values(product.name)[0] || "Unknown";
   const displayPrice = (product.price / 100).toFixed(2);
   const description = product.description
     ? typeof product.description === "string"
       ? product.description
-      : product.description["en"] || Object.values(product.description)[0]
+      : product.description[locale] || product.description["en"] || Object.values(product.description)[0]
     : "";
 
   const cardRadius = resolveBorderRadius(borderRadius);

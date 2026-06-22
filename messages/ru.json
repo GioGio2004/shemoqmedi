@@ -1,0 +1,1080 @@
+{
+  "Navbar": {
+    "brand": "FUTURECLOTH",
+    "home": "Home",
+    "signIn": "Sign In"
+  },
+  "HomePage": {
+    "title": "Welcome to FUTURECLOTH",
+    "subtitle": "Handmade items from Georgia"
+  },
+  "TimberCraftTemplate": {
+    "Navbar": {
+      "brand_suffix": "CRAFT",
+      "products": "Products",
+      "materials": "Materials",
+      "about": "About",
+      "quote": "Request Quote"
+    },
+    "Hero": {
+      "since": "Since 1998",
+      "title_1": "Built to",
+      "title_2": "Last.",
+      "description": "Premium plywood, MDF, and structural panels sourced from responsibly managed forests. Every sheet is graded, inspected, and guaranteed.",
+      "btn_catalog": "Browse Catalog",
+      "btn_materials": "Our Materials"
+    },
+    "Marquee": "/ Plywood / MDF / OSB / Hardwood / Softwood / Timber / Marine Grade / Fire Rated / Structural /",
+    "Benefits": {
+      "heading": "Why TimberCraft",
+      "subheading": "Three decades of trusted building material supply",
+      "items": [
+        {
+          "title": "Certified Quality",
+          "desc": "FSC and PEFC certified materials from sustainable sources"
+        },
+        {
+          "title": "Fast Delivery",
+          "desc": "Same-day dispatch on in-stock items across the region"
+        },
+        {
+          "title": "Cut to Size",
+          "desc": "Custom cutting service with precision CNC machinery"
+        },
+        {
+          "title": "Trade & Bulk",
+          "desc": "Wholesale pricing for contractors and trade customers"
+        }
+      ]
+    },
+    "Catalog": {
+      "badge": "Our Catalog",
+      "title": "Products",
+      "subtitle": "Every sheet is graded, inspected, and delivered with our quality guarantee",
+      "price_unit": "/ sheet",
+      "details": "Details",
+      "items": [
+        {
+          "name": "Baltic Birch Plywood",
+          "description": "Premium multi-ply birch for furniture and cabinetry.",
+          "category": "Plywood",
+          "tags": [
+            "Furniture",
+            "Cabinetry",
+            "Interior"
+          ]
+        },
+        {
+          "name": "Marine Grade Ply",
+          "description": "Waterproof structural panels for exterior use.",
+          "category": "Marine",
+          "tags": [
+            "Exterior",
+            "Boat",
+            "Structural"
+          ]
+        },
+        {
+          "name": "MDF Sheets",
+          "description": "Smooth surface medium density fiberboard.",
+          "category": "MDF",
+          "tags": [
+            "Paintable",
+            "Molding",
+            "Interior"
+          ]
+        }
+      ]
+    },
+    "Stats": {
+      "years": "Years in business",
+      "projects": "Projects supplied",
+      "skus": "Product SKUs",
+      "satisfaction": "Satisfaction rate"
+    },
+    "Materials": {
+      "title_1": "Our",
+      "title_2": "Materials.",
+      "scroll_hint": "Scroll to explore →",
+      "items": [
+        {
+          "label": "STRUCTURAL",
+          "title": "Plywood",
+          "description": "Versatile, high-strength sheet material made from thin layers or 'plies' of wood veneer.",
+          "tags": [
+            "Birch",
+            "Pine",
+            "Marine"
+          ]
+        },
+        {
+          "label": "COMPOSITE",
+          "title": "MDF",
+          "description": "Engineered wood product made by breaking down hardwood or softwood residuals into wood fibers.",
+          "tags": [
+            "Standard",
+            "Moisture Resistant",
+            "Fire Rated"
+          ]
+        },
+        {
+          "label": "NATURAL",
+          "title": "Hardwood",
+          "description": "Solid timber sourced from deciduous trees, known for density and durability.",
+          "tags": [
+            "Oak",
+            "Walnut",
+            "Maple"
+          ]
+        }
+      ]
+    },
+    "Testimonials": {
+      "title": "Trusted by Builders",
+      "subtitle": "What our trade customers have to say",
+      "items": [
+        {
+          "text": "TimberCraft has been our go-to supplier for 8 years. Their Baltic Birch is consistently top quality, zero voids, always flat.",
+          "name": "James K.",
+          "role": "Cabinet Maker"
+        },
+        {
+          "text": "The marine grade plywood we ordered held up perfectly through two hurricane seasons. The BS 1088 certification isn't just a label here.",
+          "name": "Michael T.",
+          "role": "Boat Builder"
+        },
+        {
+          "text": "Fast delivery, competitive bulk pricing, and they actually answer the phone. The cut-to-size service saved us days of labor.",
+          "name": "Sarah W.",
+          "role": "General Contractor"
+        }
+      ]
+    },
+    "CTA": {
+      "title": "Ready to Build?",
+      "description": "Get a custom quote for your project. Bulk orders, trade accounts, and custom cutting services available.",
+      "btn_browse": "Browse Products",
+      "btn_contact": "Contact Sales"
+    },
+    "Footer": {
+      "description": "Premium building materials supplier since 1998. Plywood, MDF, OSB, and hardwood sourced from certified sustainable forests.",
+      "copyright": "© 2026 TimberCraft Ltd. All rights reserved.",
+      "links": {
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "products": [
+          "Plywood Sheets",
+          "MDF Boards",
+          "OSB Panels",
+          "Hardwood Timber"
+        ],
+        "services": [
+          "Cut to Size",
+          "Bulk Orders",
+          "Trade Accounts",
+          "Delivery"
+        ]
+      },
+      "headers": {
+        "products": "Products",
+        "services": "Services"
+      }
+    }
+  },
+  "BeautyTemplate": {
+    "Navbar": {
+      "shop": "Shop",
+      "ingredients": "Ingredients",
+      "about": "About",
+      "cart": "CART"
+    },
+    "Hero": {
+      "badge": "NEW COLLECTION 2026",
+      "title_1": "GLOW",
+      "title_2": "FROM WITHIN",
+      "description": "Plant-based skincare designed for radical radiance. No fillers. Just pure botanical power.",
+      "btn_shop": "Shop Essentials",
+      "btn_learn": "Learn More"
+    },
+    "Marquee": "• Cruelty Free • Vegan • Organic • Sustainable",
+    "Benefits": {
+      "title": "Why Choose AURASKIN",
+      "subtitle": "Science meets nature in every bottle",
+      "items": [
+        {
+          "title": "100% Natural",
+          "desc": "Pure botanical ingredients, no synthetic chemicals"
+        },
+        {
+          "title": "Dermatologist Tested",
+          "desc": "Clinically proven safe for all skin types"
+        },
+        {
+          "title": "Eco-Friendly",
+          "desc": "Sustainable packaging, carbon-neutral shipping"
+        },
+        {
+          "title": "Premium Quality",
+          "desc": "Small-batch production for maximum freshness"
+        }
+      ]
+    },
+    "Catalog": {
+      "badge": "BESTSELLERS",
+      "title": "Curated for You",
+      "subtitle": "Discover our most-loved formulas, handpicked for transformative results",
+      "btn_view_all": "View All Products",
+      "items": [
+        {
+          "name": "Rose Hip Serum",
+          "description": "Regenerative oil for glowing skin.",
+          "category": "Serum",
+          "benefits": [
+            "Hydrating",
+            "Anti-aging"
+          ]
+        },
+        {
+          "name": "Cloud Cream",
+          "description": "Lightweight daily moisturizer.",
+          "category": "Moisturizer",
+          "benefits": [
+            "Soothing",
+            "Daily Use"
+          ]
+        },
+        {
+          "name": "Midnight Oil",
+          "description": "Overnight repair treatment.",
+          "category": "Treatment",
+          "benefits": [
+            "Repair",
+            "Calming"
+          ]
+        }
+      ]
+    },
+    "Stats": {
+      "customers": "Happy Customers",
+      "natural": "Natural Ingredients",
+      "rating": "Average Rating",
+      "years": "In Business"
+    },
+    "Ingredients": {
+      "title_1": "PURE",
+      "title_2": "SOURCE.",
+      "scroll_hint": "Scroll to explore ingredients →",
+      "items": [
+        {
+          "label": "BOTANICAL",
+          "title": "Aloe Vera",
+          "description": "Sourced from volcanic soil for maximum hydration.",
+          "tags": [
+            "Soothing",
+            "Hydrating"
+          ]
+        },
+        {
+          "label": "EXTRACT",
+          "title": "Green Tea",
+          "description": "Powerful antioxidants to protect skin barrier.",
+          "tags": [
+            "Protection",
+            "Anti-oxidant"
+          ]
+        },
+        {
+          "label": "OIL",
+          "title": "Jojoba",
+          "description": "Biomimetic oil that balances natural sebum.",
+          "tags": [
+            "Balancing",
+            "Nourishing"
+          ]
+        }
+      ]
+    },
+    "Testimonials": {
+      "title": "Loved by Thousands",
+      "subtitle": "Real results from real people",
+      "items": [
+        {
+          "text": "My skin has never looked better! The Rose Hip Serum is a game-changer. I've noticed a visible reduction in fine lines.",
+          "name": "Sarah M.",
+          "role": "Verified Customer"
+        },
+        {
+          "text": "Finally found skincare that doesn't irritate my sensitive skin. The Cloud Cream is so lightweight yet incredibly moisturizing.",
+          "name": "Emily R.",
+          "role": "Verified Customer"
+        },
+        {
+          "text": "I love that everything is natural and eco-friendly. The Midnight Oil transformed my dry skin overnight.",
+          "name": "Jessica L.",
+          "role": "Verified Customer"
+        }
+      ]
+    },
+    "CTA": {
+      "title": "Ready to Transform Your Skin?",
+      "description": "Join thousands of happy customers and start your journey to radiant, healthy skin today.",
+      "btn_shop": "Shop Now",
+      "btn_quiz": "Take the Quiz"
+    },
+    "Footer": {
+      "description": "Premium plant-based skincare designed for those who demand excellence. Sustainably sourced, scientifically proven, beautifully simple.",
+      "copyright": "© 2026 AuraSkin Inc. All rights reserved.",
+      "headers": {
+        "shop": "Shop",
+        "support": "Support"
+      },
+      "links": {
+        "shop": [
+          "All Products",
+          "Bestsellers",
+          "Gift Sets",
+          "Sale"
+        ],
+        "support": [
+          "Contact Us",
+          "FAQs",
+          "Shipping",
+          "Returns"
+        ],
+        "legal": [
+          "Privacy Policy",
+          "Terms of Service",
+          "Cookie Policy"
+        ]
+      }
+    }
+  },
+  "CoffeeTemplate": {
+    "Navbar": {
+      "menu": "Menu",
+      "locations": "Locations",
+      "about": "Our Story",
+      "order": "ORDER NOW"
+    },
+    "Hero": {
+      "badge": "EST. 2024",
+      "title_1": "WAKE UP",
+      "title_2": "TO BETTER.",
+      "description": "Artisanal roasted coffee, ethically sourced from the world's best farms. Brewed with passion in the heart of the city.",
+      "btn_order": "Order Pickup",
+      "btn_locations": "Find Us"
+    },
+    "Marquee": "• ETHICAL SOURCING • SMALL BATCH ROAST • SPECIALTY GRADE •",
+    "Benefits": {
+      "title": "The Daily Grind",
+      "subtitle": "Why our coffee hits different",
+      "items": [
+        {
+          "title": "High Energy",
+          "desc": "Carefully selected beans for maximum focus"
+        },
+        {
+          "title": "Top Quality",
+          "desc": "Graded 85+ points by Q-graders"
+        },
+        {
+          "title": "Eco Friendly",
+          "desc": "100% compostable cups and packaging"
+        },
+        {
+          "title": "Always Fresh",
+          "desc": "Roasted locally every single week"
+        }
+      ]
+    },
+    "Catalog": {
+      "badge": "SIGNATURE MENU",
+      "title": "Crafted Cups",
+      "subtitle": "Explore our seasonal rotation of single-origin pours and signature lattes.",
+      "btn_full_menu": "View Full Menu",
+      "items": [
+        {
+          "name": "Draft Latte",
+          "description": "Cold brew infused with nitrogen.",
+          "category": "Signature",
+          "benefits": [
+            "Smooth",
+            "Strong"
+          ]
+        },
+        {
+          "name": "Honey Lavender",
+          "description": "Double shot espresso with floral syrup.",
+          "category": "Seasonal",
+          "benefits": [
+            "Floral",
+            "Sweet"
+          ]
+        },
+        {
+          "name": "Classic Flat White",
+          "description": "Espresso with silky micro-foam.",
+          "category": "Espresso",
+          "benefits": [
+            "Strong",
+            "Silky"
+          ]
+        },
+        {
+          "name": "Matcha Latte",
+          "description": "Ceremonial grade matcha from Uji.",
+          "category": "Tea",
+          "benefits": [
+            "Focus",
+            "Earthy"
+          ]
+        },
+        {
+          "name": "Cold Brew",
+          "description": "Steeped for 24 hours.",
+          "category": "Iced",
+          "benefits": [
+            "Bold",
+            "Cold"
+          ]
+        },
+        {
+          "name": "Croissant",
+          "description": "Butter croissant baked fresh.",
+          "category": "Bakery",
+          "benefits": [
+            "Flaky",
+            "Buttery"
+          ]
+        }
+      ]
+    },
+    "Stats": {
+      "coffees": "Coffees Served",
+      "fairtrade": "Fair Trade",
+      "roasted": "Roasted Daily",
+      "locations": "Cafe Locations"
+    },
+    "Ingredients": {
+      "title_1": "OUR",
+      "title_2": "SOURCES.",
+      "scroll_hint": "Scroll to explore origins →",
+      "items": [
+        {
+          "label": "BEAN",
+          "title": "Arabica 100%",
+          "description": "Sourced from high-altitude Ethiopian farms.",
+          "tags": [
+            "Ethiopia",
+            "Washed"
+          ]
+        },
+        {
+          "label": "MILK",
+          "title": "Oat Milk",
+          "description": "Barista edition oat milk for perfect foam.",
+          "tags": [
+            "Plant Based",
+            "Creamy"
+          ]
+        },
+        {
+          "label": "TEA",
+          "title": "Matcha",
+          "description": "Premium Japanese green tea powder.",
+          "tags": [
+            "Uji",
+            "Ceremonial"
+          ]
+        }
+      ]
+    },
+    "Testimonials": {
+      "title": "Local Favorites",
+      "subtitle": "What the neighborhood thinks",
+      "items": [
+        {
+          "text": "Best flat white in the city, hands down. The atmosphere is perfect for working too.",
+          "name": "Alex D.",
+          "role": "Local Guide"
+        },
+        {
+          "text": "Their honey lavender latte is an absolute dream. I come here every morning.",
+          "name": "Sarah J.",
+          "role": "Regular"
+        },
+        {
+          "text": "Finally a place that takes matcha seriously. No clumps, just smooth green goodness.",
+          "name": "Mike R.",
+          "role": "Tea Lover"
+        }
+      ]
+    },
+    "CTA": {
+      "title": "Need a Caffeine Fix?",
+      "description": "Skip the line by ordering ahead. We'll have your brew ready when you walk in.",
+      "btn_order": "Start Order",
+      "btn_visit": "Get Directions"
+    },
+    "Footer": {
+      "description": "More than just coffee. It's a daily ritual, a community hub, and a relentless pursuit of the perfect cup.",
+      "copyright": "© 2026 VolooCafe. All rights reserved.",
+      "headers": {
+        "menu": "Menu",
+        "locations": "Locations"
+      },
+      "links": {
+        "menu": [
+          "Coffee",
+          "Tea",
+          "Pastries",
+          "Merch"
+        ],
+        "locations": [
+          "Downtown",
+          "West End",
+          "North Shore"
+        ],
+        "social": [
+          "Instagram",
+          "Twitter",
+          "TikTok"
+        ]
+      }
+    }
+  },
+  "Landing": {
+    "Intro": {
+      "brand": "SHEMOQMEDI",
+      "subtitle": "The Creator"
+    },
+    "Hero": {
+      "title_1": "Digitalizing",
+      "title_2": "Georgian Business",
+      "subtitle": "We build premium web experiences that turn local ventures into digital brands.",
+      "cta": "Explore Templates",
+      "scroll": "Scroll to Discover"
+    },
+    "Creations": {
+      "title": "Selected Works",
+      "subtitle": "Digital <span>Craftsmanship</span>",
+      "description": "A curated selection of bespoke digital experiences we've built for forward-thinking brands.",
+      "items": {
+        "project-1": {
+          "title": "TechFlow Systems",
+          "category": "SaaS Platform",
+          "description": "A comprehensive dashboard for a logistics company, featuring real-time tracking and analytics.",
+          "highlight1": "Real-time Data Visualization",
+          "highlight2": "Complex User Roles & Permissions"
+        },
+        "project-2": {
+          "title": "Collaborate+",
+          "category": "Productivity",
+          "description": "A team collaboration tool designed for remote-first organizations.",
+          "highlight1": "Real-time Messaging",
+          "highlight2": "File Sharing Integration"
+        },
+        "project-3": {
+          "title": "Neon Agency",
+          "category": "Creative Portfolio",
+          "description": "An award-winning portfolio site for a digital design agency.",
+          "highlight1": "WebGL Animations",
+          "highlight2": "Custom CMS"
+        },
+        "project-4": {
+          "title": "Core Team",
+          "category": "Corporate",
+          "description": "Internal team management portal for a Fortune 500 company.",
+          "highlight1": "Employee Directory",
+          "highlight2": "HR Integration"
+        }
+      }
+    },
+    "Showcase": {
+      "title": "Our Collection",
+      "subtitle": "Select your Vibe.",
+      "description": "Curated high-performance templates. Designed for speed, conversion, and aesthetic excellence.",
+      "items": {
+        "coffee-4": {
+          "title": "Kohi Artisan",
+          "category": "Coffee Shop",
+          "desc": "Minimalist Japanese aesthetic with clean lines."
+        },
+        "auto-1": {
+          "title": "Apex Auto",
+          "category": "Automotive",
+          "desc": "Industrial 'Carbon & Chrome' design for premium garages."
+        },
+        "auto-shop": {
+          "title": "Titan Motors",
+          "category": "Automotive",
+          "desc": "Precision engineering blue-print style for tech-focused shops."
+        },
+        "coffee-3": {
+          "title": "Noir Café",
+          "category": "Coffee Shop",
+          "desc": "High-contrast dark mode design with parallax effects."
+        },
+        "shop": {
+          "title": "Luxe Store",
+          "category": "E-Commerce",
+          "desc": "Full-featured online shop with cart."
+        },
+        "beauty": {
+          "title": "Velvet Salon",
+          "category": "Beauty",
+          "desc": "Elegant and soft design for salons and spas."
+        },
+        "construction": {
+          "title": "Apex Build",
+          "category": "Construction",
+          "desc": "Robust utilitarian design for construction firms."
+        },
+        "coffee-2": {
+          "title": "Brew Lab",
+          "category": "Coffee Shop",
+          "desc": "Modern scientific approach to coffee brewing."
+        },
+        "coffee": {
+          "title": "Classic Roast",
+          "category": "Coffee Shop",
+          "desc": "Traditional warm aesthetic for cozy cafes."
+        },
+        "restaurant-regular": {
+          "title": "AURA Bistro",
+          "category": "Restaurant",
+          "desc": "Warm, cozy, and authentic dining experience."
+        },
+        "restaurant-modern": {
+          "title": "NEBULA",
+          "category": "Fine Dining",
+          "desc": "Futuristic molecular gastronomy experience."
+        },
+        "modern": {
+          "title": "FUTURECLOTH",
+          "category": "Fashion",
+          "desc": "Tech-wear e-commerce with cyberpunk aesthetics."
+        },
+        "shoes": {
+          "title": "SoleCity",
+          "category": "Footwear",
+          "desc": "High-energy sneaker shop with vibrant pop-art design."
+        },
+        "acoustic-shop": {
+          "title": "MelodyWoods",
+          "category": "Instruments",
+          "desc": "Warm acoustic instrument shop with category navigation."
+        }
+      }
+    },
+    "Pricing": {
+      "title": "Choose Your Package",
+      "subtitle": "Create a modern digital experience for your business",
+      "Popup": {
+        "choose_platform": "Choose Platform",
+        "whatsapp": "WhatsApp",
+        "instagram": "Instagram",
+        "email": "Email",
+        "custom": "Custom Order",
+        "custom_desc": "Build your own package"
+      },
+      "currency": "GEL",
+      "button": "Select",
+      "bg_badge": "Most Popular",
+      "guarantee": "Money Back Guarantee",
+      "starter": {
+        "title": "One-Page Site",
+        "price": "900",
+        "features": [
+          "Navigation & Brand Identity",
+          "Product Listing",
+          "Contact Section (Gmail, Insta, WA)",
+          "Working Hours & Location",
+          "Footer & Social Media Integration",
+          "Terms & Conditions"
+        ]
+      },
+      "pro": {
+        "title": "Web + VolooAI",
+        "price": "1400",
+        "features": [
+          "Everything in Site",
+          "VolooAI Integration",
+          "Artificial Intelligence Support",
+          "Automated Customer Communication",
+          "Smart Replies"
+        ]
+      },
+      "full": {
+        "title": "Full Package",
+        "price": "2600",
+        "features": [
+          "Everything in AI Package",
+          "Full CMS (Control Panel)",
+          "Admin Dashboard",
+          "Independent Product Management",
+          "Full Content Control"
+        ]
+      },
+      "custom": {
+        "title": "Custom Package",
+        "price": "Tailored",
+        "description": "For large-scale businesses with specific needs.",
+        "button": "Build Package",
+        "features": [
+          "Custom Design System",
+          "Advanced Functionality",
+          "API Integration",
+          "Scalable Architecture",
+          "Priority Support"
+        ]
+      },
+      "CustomModal": {
+        "title": "Build Your Custom Package",
+        "subtitle": "Select the features you need and tell us about your vision. We'll get back to you with a quote.",
+        "select_features": "Select Features",
+        "basic_site": "Basic Webpage (Required)",
+        "included": "Included",
+        "ai_integration": "AI Integration (Chatbot/Analysis)",
+        "cms": "Full CMS & Admin Panel",
+        "your_vision": "Tell us more",
+        "placeholder": "Describe your project requirements, specific features, or design preferences...",
+        "send_request": "Send Request via WhatsApp"
+      }
+    },
+    "About": {
+      "title": "Who We Are",
+      "story": "Started by two brothers with a shared vision: to elevate the digital presence of Georgian businesses. We don't just build websites; we build trust.",
+      "trust_title": "Trusted Creators",
+      "trust_desc": "Owners of Voloo Store - creating handcrafted local treasures.",
+      "mission": "Our mission is simple: To provide professional, high-quality digital tools that help you grow."
+    },
+    "Footer": {
+      "rights": "© 2026 Shemoqmedi. All rights reserved.",
+      "cta": "Ready to Start?",
+      "contact": "Contact Us"
+    }
+  },
+  "CoffeeTemplate2": {
+    "Navbar": {
+      "brand": "BREW & GLASS"
+    },
+    "Hero": {
+      "title_1": "WAKE",
+      "title_2": "UP.",
+      "subtitle": "The finest roast in the city.<br />Experience the clarity."
+    },
+    "Story": {
+      "badge": "About Us",
+      "title": "More Than Just<br/>A Morning Routine.",
+      "p1": "Founded in 2024, Brew & Glass began with a simple mission: to bring transparency to the coffee industry. We believe every cup tells a story, from the soil in Ethiopia to the pour in your cup.",
+      "p2": "We partner directly with farmers, ensuring they are paid above fair-trade prices. Our roasting process is data-driven, but our service is human-first.",
+      "btn": "Read Our Full Story →"
+    },
+    "Menu": {
+      "badge": "The Menu",
+      "title": "Daily Rotation",
+      "items": [
+        {
+          "icon": "☕",
+          "name": "Dark Matter",
+          "desc": "Single origin espresso with notes of dark chocolate.",
+          "price": "$4.50"
+        },
+        {
+          "icon": "🧊",
+          "name": "Cold Brew",
+          "desc": "Steeped for 24 hours. Smooth, silky, and intense.",
+          "price": "$5.00"
+        },
+        {
+          "icon": "🥐",
+          "name": "Butter Crust",
+          "desc": "Imported flour, local butter. Flaky perfection.",
+          "price": "$4.00"
+        }
+      ]
+    },
+    "Process": {
+      "step_1": {
+        "badge": "01. THE SOURCE",
+        "title": "Ethical<br/>Farming",
+        "desc": "We travel to the mountains of Ethiopia and Colombia to meet the farmers. Every bean is hand-picked and fair-trade certified."
+      },
+      "step_2": {
+        "badge": "02. THE ROAST",
+        "title": "Precision<br/>Heat",
+        "desc": "Roasted in small batches in our downtown facility. We bring out the natural fruit and chocolate notes hidden inside every bean."
+      },
+      "step_3": {
+        "badge": "03. THE POUR",
+        "title": "Liquid<br/>Gold",
+        "desc": "Served at the perfect temperature. Whether you like a V60 pour-over or a rich espresso, we craft it with obsession."
+      }
+    },
+    "Community": {
+      "title": "The Community",
+      "subtitle": "Join 10,000+ daily drinkers.",
+      "review": "Absolutely the best espresso I've had in the city. The atmosphere is unmatched.",
+      "author": "Sarah Jenkins",
+      "verified": "Verified Buyer"
+    },
+    "Newsletter": {
+      "title": "Never Run Out.",
+      "subtitle": "Subscribe to our bean delivery service and save 20% on your first order.",
+      "placeholder": "Enter your email",
+      "btn": "Join the Club"
+    },
+    "Footer": {
+      "brand": "BREW & GLASS",
+      "desc": "Crafting clarity through coffee since 2024. Designed for the modern palette.",
+      "headers": {
+        "explore": "Explore",
+        "visit": "Visit Us",
+        "follow": "Follow"
+      },
+      "links": {
+        "explore": [
+          "Our Beans",
+          "The Menu",
+          "Merchandise",
+          "Gift Cards"
+        ],
+        "visit": [
+          "123 Coffee Lane",
+          "Glass City, GC 90210",
+          "Mon-Fri: 7am - 7pm",
+          "Sat-Sun: 8am - 6pm"
+        ],
+        "follow": [
+          "Instagram",
+          "Twitter / X",
+          "TikTok"
+        ]
+      },
+      "copyright": "© 2024 Brew & Glass. All rights reserved. Made with Next.js."
+    }
+  },
+  "ShopTemplate": {
+    "Navbar": {
+      "brand": "LUMINA SHOP",
+      "categories": {
+        "all": "All",
+        "tech": "Tech",
+        "art": "Art",
+        "fashion": "Fashion"
+      },
+      "cart": "Cart"
+    },
+    "Hero": {
+      "badge": "New Arrivals",
+      "title": "Future <br /> <span class='text-blue-500'>Collection</span>",
+      "subtitle": "Discover the latest trends in digital and physical goods."
+    },
+    "Products": {
+      "add_to_cart": "Add to Cart",
+      "added": "Added"
+    },
+    "Cart": {
+      "title": "Shopping Cart",
+      "empty": "Your cart is empty.",
+      "total": "Total",
+      "checkout": "Checkout",
+      "remove": "Remove"
+    }
+  },
+  "CoffeeTemplate3": {
+    "Navbar": {
+      "brand": "NOIR CAFE",
+      "menu": "Menu",
+      "schedule": "Schedule",
+      "location": "Location"
+    },
+    "Categories": {
+      "Menu": "Menu",
+      "Visit": "Visit",
+      "Coffee": "Coffee",
+      "Coffee_Desc": "Espresso & Pour Over",
+      "Cakes": "Cakes",
+      "Cakes_Desc": "Fresh Pastries",
+      "Drinks": "Drinks",
+      "Drinks_Desc": "Teas & Refreshers",
+      "Bakery": "Bakery",
+      "Locations": "Locations",
+      "Locations_Desc": "Find nearest cafe",
+      "Hours": "Hours",
+      "Hours_Desc": "Opening times",
+      "Contact": "Contact",
+      "Contact_Desc": "Get in touch",
+      "Seasonal": "Seasonal Special",
+      "NewLocation": "New Location",
+      "Featured_Menu_Name": "Pumpkin Spice",
+      "Featured_Visit_Name": "Downtown Hub"
+    },
+    "Hero": {
+      "title_1": "PURE",
+      "title_2": "BLACK.",
+      "subtitle": "Essential coffee for the modern minimalist.",
+      "btn_menu": "View Menu",
+      "btn_visit": "Visit Us",
+      "badge": "Est. 2024",
+      "description": "Minimalist coffee experience."
+    },
+    "Marquee": "• SINGLE ORIGIN • DIRECT TRADE • MICRO ROAST •",
+    "Products": {
+      "1": {
+        "name": "Obsidian Espresso",
+        "desc": "Double shot of single-origin darkness. Notes of molasses and smoke.",
+        "category": "Coffee"
+      },
+      "2": {
+        "name": "Flat White Noise",
+        "desc": "Micro-foam velvet poured over ristretto. Smooth, silence in a cup.",
+        "category": "Coffee"
+      },
+      "3": {
+        "name": "Noir Mocha",
+        "desc": "A decadent, comforting blend. The richness of dark chocolate masks the harshness of the espresso.",
+        "category": "Coffee"
+      },
+      "4": {
+        "name": "Cold Brew Void",
+        "desc": "Steeped for 24 hours in total darkness. High caffeine, low acidity.",
+        "category": "Coffee"
+      },
+      "5": {
+        "name": "Midnight Matcha",
+        "desc": "Ceremonial grade Uji matcha whisked into charcoal-infused oat milk.",
+        "category": "Drinks"
+      },
+      "6": {
+        "name": "Charcoal Latte",
+        "desc": "Activated charcoal and vanilla bean. A detox for the modern soul.",
+        "category": "Drinks"
+      },
+      "7": {
+        "name": "Golden Tonic",
+        "desc": "Turmeric, ginger, and sparkling water. Sharp and awakening.",
+        "category": "Drinks"
+      },
+      "8": {
+        "name": "Shadow Bramble",
+        "desc": "A sophisticated, slightly savory mocktail. The herbal notes of sage cut through the sweet berry profile.",
+        "category": "Drinks"
+      },
+      "9": {
+        "name": "Eclipse Croissant",
+        "desc": "Crispy on the outside, impossibly airy and buttery on the inside.",
+        "category": "Bakery"
+      },
+      "10": {
+        "name": "Basque Burnt Cake",
+        "desc": "Intentionally scorched on top to create a slightly bitter caramel note.",
+        "category": "Cakes"
+      },
+      "11": {
+        "name": "Shadow Toast",
+        "desc": "Thick slice of sourdough toast topped with smashed avocado.",
+        "category": "Bakery"
+      },
+      "12": {
+        "name": "Noir Brownie",
+        "desc": "Extremely dense and fudgy, not cakey. The flaky sea salt cuts through.",
+        "category": "Cakes"
+      },
+      "13": {
+        "name": "Classic Macchiato",
+        "desc": "For purists who want the punch of an espresso but need just a touch of milk to soften the bite.",
+        "category": "Coffee"
+      },
+      "14": {
+        "name": "V60 Slow Drip",
+        "desc": "A manual, pour-over method that creates a clean, tea-like body. Highlights the bright, fruity notes of the bean.",
+        "category": "Coffee"
+      },
+      "15": {
+        "name": "Spiced Chai Fog",
+        "desc": "A warming, aromatic blend of Indian spices. Sweet, spicy, and deeply comforting.",
+        "category": "Drinks"
+      },
+      "16": {
+        "name": "Crimson Cooler",
+        "desc": "Vibrant, floral, and iced. The tartness of the hibiscus is perfectly balanced by the sweetness of muddled summer berries.",
+        "category": "Drinks"
+      },
+      "17": {
+        "name": "Almond Crescent",
+        "desc": "Sweeter and denser than a traditional croissant. The almond paste inside stays soft and warm.",
+        "category": "Bakery"
+      },
+      "18": {
+        "name": "Blueberry Streusel",
+        "desc": "A soft, cake-like muffin bursting with tart berries. The crunchy cinnamon sugar top adds texture.",
+        "category": "Bakery"
+      },
+      "19": {
+        "name": "Everything Bagel",
+        "desc": "Dense, chewy, and loaded with savory garlic and onion flavors. A reliable breakfast staple.",
+        "category": "Bakery"
+      },
+      "20": {
+        "name": "Vegan Cinnamon Roll",
+        "desc": "Gooey, warm, and highly spiced. You won't believe it has absolutely no dairy.",
+        "category": "Bakery"
+      },
+      "21": {
+        "name": "Midnight Fudge Cake",
+        "desc": "The ultimate indulgence. Three tall layers of rich, moist chocolate cake glued together by thick buttercream.",
+        "category": "Cakes"
+      },
+      "22": {
+        "name": "Spiced Carrot Cake",
+        "desc": "A textured, slightly savory cake featuring warm baking spices and an incredibly rich, tangy cream cheese frosting.",
+        "category": "Cakes"
+      },
+      "23": {
+        "name": "Classic Tiramisu",
+        "desc": "An elegant, airy Italian dessert. The strong coffee flavor is softened by the lightly sweetened mascarpone cheese.",
+        "category": "Cakes"
+      },
+      "24": {
+        "name": "Zesty Lemon Loaf",
+        "desc": "Bright, sour, and palate-cleansing. The cake is dense and buttery, perfectly contrasting the sharp, sugary glaze.",
+        "category": "Cakes"
+      }
+    },
+    "Chatbot": {
+      "title": "VolooAI",
+      "subtitle": "Online",
+      "welcome": "Welcome to VolooAI",
+      "welcome_desc": "I can help you navigate our menu, find the perfect coffee, or explain our brewing methods.",
+      "suggestions": [
+        "Suggest a drink",
+        "Best seller?",
+        "Dessert menu"
+      ],
+      "input_placeholder": "Ask VolooAI...",
+      "thinking": "VolooAI Thinking...",
+      "auto_collapse": "Auto-Collapse",
+      "keep_open": "Keep Open"
+    },
+    "Location": {
+      "title": "Find Us",
+      "subtitle": "Heart of the district.",
+      "address": "123 Minimalism Ave.",
+      "city": "Tbilisi, Georgia"
+    },
+    "Catalog": {
+      "title": "Our Menu",
+      "subtitle": "Carefully curated selection"
+    },
+    "Footer": {
+      "copyright": "© 2026 Noir Cafe. All rights reserved."
+    }
+  },
+  "NotFound": {
+    "title": "404 - Page Not Found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "button": "Return Home"
+  }
+}

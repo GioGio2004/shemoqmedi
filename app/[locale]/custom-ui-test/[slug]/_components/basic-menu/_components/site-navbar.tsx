@@ -15,6 +15,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export function SiteNavbar({
   organizationName,
@@ -89,6 +97,8 @@ export function SiteNavbar({
 
         {/* ── Cart & Navigation ───── */}
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          
           <button
             onClick={() =>
               window.dispatchEvent(new CustomEvent("open-voloo-basket"))
@@ -145,5 +155,39 @@ function CartBadge() {
     >
       {count > 99 ? "99+" : count}
     </span>
+  );
+}
+
+function LanguageSwitcher() {
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLocaleChange = (newLocale: string) => {
+    // pathname is always /<locale>/... — split on "/" so we can swap
+    // segments[0] = "" (leading slash), segments[1] = current locale
+    const segments = pathname.split("/");
+    segments[1] = newLocale;
+    const newPath = segments.join("/");
+    router.push(newPath);
+  };
+
+  return (
+    <div className="flex gap-1 items-center bg-black/20 rounded-full p-1 backdrop-blur-md border border-white/5">
+      {["en", "ru", "ka"].map((l) => (
+        <button
+          key={l}
+          onClick={() => handleLocaleChange(l)}
+          className={cn(
+            "text-[10px] font-bold uppercase transition-all px-2 py-1 rounded-full",
+            locale === l
+              ? "bg-white text-black shadow-md"
+              : "text-white/60 hover:text-white hover:bg-white/10"
+          )}
+        >
+          {l === "ka" ? "GE" : l.toUpperCase()}
+        </button>
+      ))}
+    </div>
   );
 }

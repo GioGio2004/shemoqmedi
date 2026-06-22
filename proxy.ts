@@ -3,14 +3,14 @@ import createMiddleware from "next-intl/middleware";
 import type { NextRequest } from "next/server";
 
 const intlMiddleware = createMiddleware({
-  locales: ["en", "ka"],
+  locales: ["en", "ka", "ru"],
   defaultLocale: "ka",
 });
 
 // These routes bypass ALL middleware — no Clerk auth, no intl locale redirect.
 const isBypassRoute = createRouteMatcher([
-  "/t/(.*)",     // NFC tap pages — fully public, page.tsx handles logic
-  "/api/(.*)",   // API routes — must never get a locale prefix
+  "/t/(.*)", // NFC tap pages — fully public, page.tsx handles logic
+  "/api/(.*)", // API routes — must never get a locale prefix
 ]);
 
 export default clerkMiddleware(async (_auth, req: NextRequest) => {

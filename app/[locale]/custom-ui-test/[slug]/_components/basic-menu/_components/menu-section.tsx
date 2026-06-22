@@ -11,6 +11,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { MenuCard, ProductPopupModal } from "./menu-card";
 import { AnimatePresence } from "framer-motion";
 import type { CardShapeProps } from "./menu-card";
@@ -87,6 +88,9 @@ export function MenuSection({
 }) {
   const pillNavRef = useRef<HTMLDivElement>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const locale = useLocale();
+
+  const allText = locale === "ka" ? "ყველა" : locale === "ru" ? "Все" : "All";
 
   const CATEGORIES = [
     "All",
@@ -238,7 +242,7 @@ export function MenuSection({
                     color: imageUrl && cat !== "All" && !isActive ? "rgba(255,255,255,0.9)" : undefined,
                     textShadow: imageUrl && cat !== "All" ? "0 2px 4px rgba(0,0,0,0.5)" : undefined,
                   }}>
-                    {cat}
+                    {cat === "All" ? allText : (categoryData?.name[locale] || categoryData?.name["en"] || cat)}
                   </span>
                 </button>
               );
@@ -261,7 +265,7 @@ export function MenuSection({
                     className="font-serif text-2xl md:text-3xl shrink-0"
                     style={{ color: "rgba(220,220,220,0.9)" }}
                   >
-                    {group.name}
+                    {categories.find(c => (c.name["en"] || Object.values(c.name)[0]) === group.name)?.name[locale] || group.name}
                   </h3>
                   {/* Minimalist separator line */}
                   <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
