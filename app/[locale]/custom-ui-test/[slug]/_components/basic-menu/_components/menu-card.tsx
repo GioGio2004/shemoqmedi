@@ -97,10 +97,7 @@ function resolveButtonRadius(
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
+// Animation variants removed to fix scroll twitching
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -163,16 +160,7 @@ export function MenuCard({
      * The cubic-bezier [0.25, 0.1, 0.25, 1] gives a buttery premium deceleration.
      */
     <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-50px" }}
       onClick={onClick}
-      transition={{
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
-        delay: animationIndex * 0.08, // Stagger cards within a group
-      }}
       className={cn(
         "group relative overflow-hidden flex flex-col h-[280px] sm:h-[320px] w-full cursor-pointer",
         "transition-all duration-500 ease-out",
@@ -193,12 +181,13 @@ export function MenuCard({
           src={product.imageUrl || "/placeholder.svg"}
           alt={productName}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          quality={85}
           className={cn(
             "object-cover",
             "transition-transform duration-700 ease-out",
             "group-hover:scale-[1.06]"
           )}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={product.sortOrder <= 3}
         />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />

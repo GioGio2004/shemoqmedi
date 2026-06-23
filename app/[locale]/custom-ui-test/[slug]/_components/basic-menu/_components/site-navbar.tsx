@@ -15,10 +15,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { Globe, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -160,34 +162,63 @@ function CartBadge() {
 
 function LanguageSwitcher() {
   const locale = useLocale();
-  const router = useRouter();
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLocaleChange = (newLocale: string) => {
-    // pathname is always /<locale>/... — split on "/" so we can swap
-    // segments[0] = "" (leading slash), segments[1] = current locale
+    setIsOpen(false);
     const segments = pathname.split("/");
     segments[1] = newLocale;
     const newPath = segments.join("/");
-    router.push(newPath);
+    // Full reload ensures all contexts, Convex subscriptions, and next-intl fully refresh
+    window.location.href = newPath;
   };
 
+  const getLabel = (l: string) => (l === "ka" ? "GE" : l.toUpperCase());
+
   return (
-    <div className="flex gap-1 items-center bg-black/20 rounded-full p-1 backdrop-blur-md border border-white/5">
-      {["en", "ru", "ka"].map((l) => (
-        <button
-          key={l}
-          onClick={() => handleLocaleChange(l)}
-          className={cn(
-            "text-[10px] font-bold uppercase transition-all px-2 py-1 rounded-full",
-            locale === l
-              ? "bg-white text-black shadow-md"
-              : "text-white/60 hover:text-white hover:bg-white/10"
-          )}
-        >
-          {l === "ka" ? "GE" : l.toUpperCase()}
-        </button>
-      ))}
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition-all rounded-full px-3 py-1.5 backdrop-blur-xl border border-white/10 shadow-sm"
+      >
+        <Globe className="w-3.5 h-3.5 text-white/80" />
+        <span className="text-xs font-bold tracking-wider text-white">
+          {getLabel(locale)}
+        </span>
+        <ChevronDown className={cn("w-3.5 h-3.5 text-white/60 transition-transform duration-300", isOpen && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: 5, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 5, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 top-full mt-2 w-28 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col p-1"
+            >
+              {["en", "ru", "ka"].map((l) => (
+                <button
+                  key={l}
+                  onClick={() => handleLocaleChange(l)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all",
+                    locale === l
+                      ? "bg-white text-black shadow-md"
+                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  {getLabel(l)}
+                  {locale === l && <span className="w-1.5 h-1.5 rounded-full bg-black/40 ml-2" />}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

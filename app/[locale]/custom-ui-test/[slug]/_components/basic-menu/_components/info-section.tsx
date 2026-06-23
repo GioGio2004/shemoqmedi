@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Clock, MapPin, ArrowUpRight } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import type { StorefrontConfig } from "./hero-section";
 
@@ -17,7 +18,14 @@ interface InfoSectionProps {
 }
 
 export function InfoSection({ operatingHours, storefrontConfig }: InfoSectionProps) {
+  const locale = useLocale();
   const displayHours = operatingHours && operatingHours.length > 0 ? operatingHours : DEFAULT_HOURS;
+
+  const getStr = (val: any) => {
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    return val[locale] || val["en"] || Object.values(val)[0] || "";
+  };
 
   return (
     <section id="visit" className="py-24 md:py-32">
@@ -67,10 +75,10 @@ export function InfoSection({ operatingHours, storefrontConfig }: InfoSectionPro
               <h3 className="text-2xl font-serif text-primary-foreground mb-1">Our Location</h3>
               <div className="mt-6">
                 <p className="text-xl font-medium text-primary-foreground">
-                  {storefrontConfig?.address || "42 Bean Street"}
+                  {getStr(storefrontConfig?.address) || "42 Bean Street"}
                 </p>
                 <p className="text-lg text-primary-foreground/70">
-                  {storefrontConfig?.cityStateZip || "Portland, OR 97201"}
+                  {getStr(storefrontConfig?.cityStateZip) || "Portland, OR 97201"}
                 </p>
               </div>
             </div>

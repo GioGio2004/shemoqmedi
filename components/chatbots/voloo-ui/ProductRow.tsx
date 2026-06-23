@@ -4,6 +4,20 @@ import { ProductCard } from "@/components/chatbots/product-card-chat";
 import { Product } from "./types";
 import { Sparkles, ChevronDown } from "lucide-react";
 
+/**
+ * ProductRow
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Displays AI-recommended products from a chat message.
+ *
+ * Layout strategy:
+ *  - Primary products (all but last):  shown immediately in a horizontal
+ *    scrollable row labelled "RECOMMENDED".
+ *  - Upsell product (last ID):         hidden behind a "See Suggested Pairing"
+ *    button that animates open on click.
+ *
+ * This replaces the old hard-coded `.slice(0, 2)` limit so 2-3 primary items
+ * can all be visible at once.
+ */
 export const ProductRow = memo(
   ({
     productIds,
@@ -41,15 +55,17 @@ export const ProductRow = memo(
       );
     }, []);
 
-    const products = productIds
-      .slice(0, 2) // We strictly handle up to 2 items: primary and upsell
+    // Resolve all product IDs to actual Product objects (skip any missing)
+    const allProducts = productIds
       .map((id) => localizedProducts.find((p) => p.id === id))
       .filter(Boolean) as Product[];
 
-    if (products.length === 0) return null;
+    if (allProducts.length === 0) return null;
 
-    const primaryProduct = products[0];
-    const upsellProduct = products.length > 1 ? products[1] : null;
+    // If only 1 item, show it all; if 2+, treat the last as the upsell
+    const hasUpsell = allProducts.length >= 2;
+    const primaryProducts = hasUpsell ? allProducts.slice(0, -1) : allProducts;
+    const upsellProduct = hasUpsell ? allProducts[allProducts.length - 1] : null;
 
     const handleRevealUpsell = () => {
       setShowUpsell(true);
@@ -66,26 +82,30 @@ export const ProductRow = memo(
 
     return (
       <div ref={rowRef} className={`product-row-${rowId} mt-3 flex flex-col gap-3`}>
-        {/* Primary Product */}
+        {/* ── Primary Products ── */}
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-2 ml-0.5">
             Recommended
           </p>
+          {/* Horizontal scrollable row — snaps to each card */}
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide pb-2">
-            <ProductCard
-              key={primaryProduct.id}
-              product={primaryProduct as any}
-              isSelected={selectedContext.some((p) => p.id === primaryProduct.id)}
-              onToggle={onToggleSelection}
-              onAddToBasket={onAddToBasket}
-              onOpenDetails={onOpenDetails}
-              primaryColor={primaryColor}
-              primaryColorLight={primaryColorLight}
-            />
+            {primaryProducts.map((product) => (
+              <div key={product.id} className="snap-start shrink-0">
+                <ProductCard
+                  product={product as any}
+                  isSelected={selectedContext.some((p) => p.id === product.id)}
+                  onToggle={onToggleSelection}
+                  onAddToBasket={onAddToBasket}
+                  onOpenDetails={onOpenDetails}
+                  primaryColor={primaryColor}
+                  primaryColorLight={primaryColorLight}
+                />
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Upsell Reveal Button */}
+        {/* ── Upsell Reveal Button ── */}
         {upsellProduct && !showUpsell && (
           <button
             onClick={handleRevealUpsell}
@@ -98,23 +118,27 @@ export const ProductRow = memo(
           </button>
         )}
 
-        {/* Upsell Product (Hidden initially) */}
+        {/* ── Upsell Product (revealed on click) ── */}
         {upsellProduct && showUpsell && (
           <div ref={upsellRef} className="overflow-hidden">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-2 ml-0.5 flex items-center gap-1.5" style={{ color: primaryColorLight }}>
+            <p
+              className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2 ml-0.5 flex items-center gap-1.5"
+              style={{ color: primaryColorLight }}
+            >
               <Sparkles className="w-3 h-3" /> Perfect Pairing
             </p>
             <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide pb-2">
-              <ProductCard
-                key={upsellProduct.id}
-                product={upsellProduct as any}
-                isSelected={selectedContext.some((p) => p.id === upsellProduct.id)}
-                onToggle={onToggleSelection}
-                onAddToBasket={onAddToBasket}
-                onOpenDetails={onOpenDetails}
-                primaryColor={primaryColor}
-                primaryColorLight={primaryColorLight}
-              />
+              <div className="snap-start shrink-0">
+                <ProductCard
+                  product={upsellProduct as any}
+                  isSelected={selectedContext.some((p) => p.id === upsellProduct.id)}
+                  onToggle={onToggleSelection}
+                  onAddToBasket={onAddToBasket}
+                  onOpenDetails={onOpenDetails}
+                  primaryColor={primaryColor}
+                  primaryColorLight={primaryColorLight}
+                />
+              </div>
             </div>
           </div>
         )}
