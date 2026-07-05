@@ -19,57 +19,42 @@ const CONVEX_URL =
 
 const LOCALES = ["en", "ka"];
 
+// Core public routes — marketing and discovery pages only.
 const STATIC_ROUTES = [
-  "", // Landing page (priority 1.0)
-  "/coffee",
-  "/coffee-2",
-  "/coffee-3",
-  "/coffee-4",
-  "/auto-1",
-  "/auto-shop",
-  "/beauty",
-  "/construction",
-  "/shop",
-  "/modern",
-  "/acoustic-shop",
-  "/regular",
-  "/modern-restaurant",
-  "/shoes",
+  "",         // Landing page (priority 1.0)
+  "/venues",  // Venue directory (priority 0.9)
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Fetches all active organization slugs using Convex's official server-side
- * `fetchQuery` helper from `convex/nextjs`.
+ * fetchPublishedVenueSlugs — fetches only venues with isPublished = true.
  *
- * Unlike a raw `fetch()`, `fetchQuery` is:
- *  - Fully typed via the `api` reference from convex-helpers-api.ts
- *  - Not treated as a "dynamic" fetch by Next.js (no revalidate: 0 footgun)
- *  - Compatible with ISR — the `export const revalidate` above controls caching
+ * Satisfies Condition 2: draft/partially-onboarded venues are NOT included
+ * in the sitemap and therefore not submitted to Google for indexing.
  *
- * The `convexUrl` option is required here because we only have the
- * NEXT_PUBLIC_ prefixed variable (there is no separate server-only CONVEX_URL).
+ * Uses the new publicVenues.listPublished query, not listOrganizations.
  */
-async function fetchVenueSlugs(): Promise<string[]> {
+async function fetchPublishedVenueSlugs(): Promise<{ slug: string; updatedAt: number }[]> {
   try {
-    const organizations = await fetchQuery(
-      api.publicMenu.listOrganizations,
+    const venues = await fetchQuery(
+      api.publicVenues.listPublished,
       {},
       { url: CONVEX_URL },
     );
 
-    if (!Array.isArray(organizations)) return [];
+    if (!Array.isArray(venues)) return [];
 
-    return organizations
-      .map((org: { slug?: string }) => org.slug)
+    return venues
       .filter(
-        (slug): slug is string => typeof slug === "string" && slug.length > 0,
-      );
+        (v): v is { slug: string; updatedAt: number } & typeof v =>
+          typeof v.slug === "string" && v.slug.length > 0,
+      )
+      .map((v) => ({ slug: v.slug, updatedAt: v.updatedAt }));
   } catch (err) {
     // Graceful degradation: if Convex is unreachable during build,
-    // we emit only the static pages. The ISR will retry after `revalidate` seconds.
-    console.warn("[sitemap] Could not fetch venue slugs from Convex:", err);
+    // emit only static pages. ISR will retry after `revalidate` seconds.
+    console.warn("[sitemap] Could not fetch published venue slugs from Convex:", err);
     return [];
   }
 }
@@ -80,26 +65,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [];
 
-  // 1. Static marketing / template pages ─────────────────────────────────────
+  // 1. Static marketing pages ─────────────────────────────────────────────────
   for (const route of STATIC_ROUTES) {
     for (const locale of LOCALES) {
       entries.push({
         url: `${BASE_URL}/${locale}${route}`,
         lastModified: now,
         changeFrequency: "weekly",
-        priority: route === "" ? 1.0 : 0.8,
+        priority: route === "" ? 1.0 : 0.9,
       });
     }
   }
 
-  // 2. Dynamic venue menu pages ───────────────────────────────────────────────
-  const venueSlugs = await fetchVenueSlugs();
+  // 2. Dynamic venue discovery pages ──────────────────────────────────────────
+  // Only isPublished = true venues appear here (Condition 2).
+  const publishedVenues = await fetchPublishedVenueSlugs();
 
-  for (const slug of venueSlugs) {
+  for (const { slug, updatedAt } of publishedVenues) {
     for (const locale of LOCALES) {
       entries.push({
-        url: `${BASE_URL}/${locale}/${slug}`,
-        lastModified: now,
+        url: `${BASE_URL}/${locale}/venues/${slug}`,
+        lastModified: new Date(updatedAt),
         changeFrequency: "daily",
         priority: 0.9,
       });

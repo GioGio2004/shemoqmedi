@@ -12,6 +12,7 @@ export default function robots(): MetadataRoute.Robots {
           // Dashboard — authenticated pages, must never be indexed
           "/en/dashboard/",
           "/ka/dashboard/",
+          // Interactive menu app merged into /venues/[slug] which is public and indexable.
           // Legacy reserved paths
           "/private/",
           "/admin/",
@@ -23,3 +24,4 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
+

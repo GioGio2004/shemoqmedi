@@ -53,7 +53,10 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
       {/* ── Backdrop ───────────────────────────────────────────────────────── */}
       <div
         aria-hidden="true"
-        onClick={() => setDismissed(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setDismissed(true);
+        }}
         style={{
           position: "fixed",
           inset: 0,
@@ -97,7 +100,10 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
         >
           {/* ── Close button ───────────────────────────────────────────────── */}
           <button
-            onClick={() => setDismissed(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDismissed(true);
+            }}
             aria-label="Dismiss announcement"
             style={{
               position: "absolute",
@@ -241,7 +247,10 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
 
           {/* ── Dismiss text button ────────────────────────────────────────── */}
           <button
-            onClick={() => setDismissed(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDismissed(true);
+            }}
             style={{
               marginTop: "22px",
               display: "block",

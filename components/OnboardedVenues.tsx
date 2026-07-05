@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { useLocale } from "next-intl";
 import { api } from "@/convex-helpers-api";
 import { ArrowUpRight } from "lucide-react";
+import { buildVenueUrl } from "@/lib/routes";
 
 /**
  * OnboardedVenues — Client Component
@@ -75,7 +76,7 @@ export default function OnboardedVenues() {
               }) => (
                 <Link
                   key={org._id}
-                  href={`/${locale}/custom-ui-test/${org.slug}`}
+                  href={buildVenueUrl(locale, org.slug)}
                   className="group relative h-[320px] rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.07] hover:border-white/20 transition-all duration-500 block"
                 >
                   {/* Cover image */}

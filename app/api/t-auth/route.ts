@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const seatParam =
       physicalTag.seatNumber != null ? `?seat=${physicalTag.seatNumber}` : "";
     targetUrl = new URL(
-      `/en/custom-ui-test/${physicalTag.orgSlug}${seatParam}`,
+      `/en/venues/${physicalTag.orgSlug}${seatParam}`,
       baseUrl,
     );
   } else {

@@ -58,8 +58,7 @@ import { MobileTrigger } from "./voloo-ui/MobileTrigger";
 import { ProductDetailPopup } from "./voloo-ui/ProductDetailPopup";
 import { useMultiplayer } from "@/components/multiplayer/MultiplayerContext";
 import { SharedCart } from "@/components/multiplayer/SharedCart";
-import { NootypeOnboardingPopup } from "@/components/storefront/NootypeOnboardingPopup";
-import { useNootypeSession } from "@/hooks/useNootypeSession";
+import { useAnonymousIdentity } from "@/hooks/useAnonymousIdentity";
 
 export interface VolooAIChatProps {
   apiEndpoint?: string;
@@ -119,20 +118,20 @@ export function VolooAI({
   // Keeping it out of the parent prevents re-renders on every keystroke.
   const [isBackgroundDark] = useState(true);
 
-  // ── Session Management + Nootype (Convex-first) ────────────────────────────────
-  //
-  // sessionId  — the guestId UUID, stored in localStorage.
-  // nootype    — fetched reactively from Convex `anonymous_guests` table.
-  //               Survives hard refresh because it comes from the DB, not memory.
-  //               NootypeOnboardingPopup writes to Convex; this query receives
-  //               the update within milliseconds — perfect sync, zero desync.
-  const {
-    sessionId,
-    nootype,
-    activeMood,
-    setMoodOverride,
-    resetSession: resetNootypeSession,
-  } = useNootypeSession();
+  // ── Session Management ─────────────────────────────────────────────────────────
+  const { guestId: sessionId } = useAnonymousIdentity();
+
+  const resetSession = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const newId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+      localStorage.setItem("shemoqmedi_guest_id", newId);
+      window.location.reload();
+    }
+  }, []);
 
   // ── Session Prioritisation ──────────────────────────────────────────────────
   // If the user is part of a multiplayer table session (scanned NFC/QR), use
@@ -229,9 +228,7 @@ export function VolooAI({
           body: JSON.stringify({
             cafeId,
             sessionId: effectiveSessionId,
-            // Use activeMood so the cycle is tagged with the correct
-            // archetype even if the guest switched mid-session
-            nootype: activeMood ?? nootype ?? undefined,
+            // Nootype tracking removed.
           }),
         }).catch((err) =>
           console.warn("[VolooAI] Harvest signal failed (non-blocking):", err),
@@ -457,10 +454,9 @@ export function VolooAI({
     // this session — corroborates AI recommendation quality for the flywheel.
     console.log(
       `[Telemetry] ADD_TO_CART — session="${effectiveSessionId?.slice(0, 8)}…" ` +
-      `productId=${product.id} name="${product.name}" ` +
-      `nootype="${nootype ?? "unknown"}" cafeId="${cafeId}"`,
+      `productId=${product.id} name="${product.name}" cafeId="${cafeId}"`,
     );
-  }, [effectiveSessionId, nootype, cafeId]);
+  }, [effectiveSessionId, cafeId]);
 
   /**
    * removeFromBasket — removes the product entirely (regardless of quantity).
@@ -713,9 +709,7 @@ export function VolooAI({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage.content,
-          // ── Nootype from Convex (reactive, always fresh after hard refresh) ──
           sessionId: effectiveSessionId,
-          nootype: activeMood ?? undefined,
           conversationHistory: messages,
           language: locale,
           focusedItems: selectedContext.map((p) => p.name),
@@ -781,12 +775,10 @@ export function VolooAI({
   // return [] for the new session, clearing the screen instantly.
   // Old messages remain intact in the DB for the cafe manager.
   const handleNewChat = useCallback(() => {
-    // resetNootypeSession generates a fresh UUID + clears nootype from localStorage
-    // so the onboarding popup will re-appear on next session start.
-    resetNootypeSession();
+    resetSession();
     setPendingMessages([]);
     setBasket([]);
-  }, [resetNootypeSession]);
+  }, [resetSession]);
 
   const suggestionKeys = ["0", "1", "2"];
   const suggestions = suggestionKeys.map((k) => t(`suggestions.${k}` as any));
@@ -796,11 +788,6 @@ export function VolooAI({
   // ── Render ──
   return (
     <>
-      {/* ── Nootype Onboarding Popup ──────────────────────────────────────────
-          Shown once per session (guarded by localStorage "voloo_nootype").
-          The popup sets the nootype via useNootypeSession, which this component
-          reads reactively — no prop drilling required. */}
-      <NootypeOnboardingPopup />
       {/* Scrollbar hide global style */}
       <style jsx global>{`
         .scrollbar-hide::-webkit-scrollbar {
@@ -920,120 +907,6 @@ export function VolooAI({
                 ))}
               </div>
 
-              {/* ── Mood Switcher dropdown ─────────────────────────────────────
-                   Live in-session tone override. Does NOT overwrite the
-                   permanent archetype stored in localStorage. */}
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
-                <button
-                  id="mood-switcher-trigger"
-                  aria-label="Change AI Mood"
-                  aria-haspopup="true"
-                  aria-expanded={isMoodMenuOpen}
-                  onClick={() => setIsMoodMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl transition-all duration-200 hover:bg-white/5"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    backgroundColor: isMoodMenuOpen
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <SlidersHorizontal
-                    className="w-3.5 h-3.5 shrink-0"
-                    style={{ color: activeMood ? "#b8860b" : "rgba(161,161,170,0.5)" }}
-                  />
-                  <span
-                    className="text-[9px] font-bold uppercase tracking-widest leading-none hidden sm:block"
-                    style={{ color: activeMood ? "#b8860b" : "rgba(161,161,170,0.45)" }}
-                  >
-                    {activeMood === "form"       ? "Elegance"
-                     : activeMood === "overcoming" ? "Bold"
-                     : activeMood === "relaxation" ? "Frictionless"
-                     : activeMood === "management" ? "Detailed"
-                     : "AI Mood"}
-                  </span>
-                </button>
-
-                {/* Dropdown panel */}
-                {isMoodMenuOpen && (
-                  <div
-                    role="menu"
-                    className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[168px] rounded-xl overflow-hidden"
-                    style={{
-                      background: "rgba(12,12,12,0.97)",
-                      border: "1px solid rgba(184,134,11,0.2)",
-                      boxShadow: "0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset",
-                      backdropFilter: "blur(20px)",
-                    }}
-                  >
-                    {/* Panel header */}
-                    <div
-                      className="px-3 py-2 border-b"
-                      style={{ borderColor: "rgba(255,255,255,0.06)" }}
-                    >
-                      <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(184,134,11,0.7)" }}>
-                        Change AI Mood
-                      </p>
-                    </div>
-
-                    {/* Options */}
-                    {([
-                      { value: "form"       as const, label: "Elegance",     sub: "Visual & aesthetic",    dot: "#b8860b" },
-                      { value: "overcoming" as const, label: "Bold",          sub: "Intense & adventurous",  dot: "#c0392b" },
-                      { value: "relaxation" as const, label: "Frictionless",  sub: "Easy & direct",          dot: "#2e7d5e" },
-                      { value: "management" as const, label: "Detailed",      sub: "Precise & analytical",   dot: "#4a6fa5" },
-                    ]).map((opt) => {
-                      const isActive = activeMood === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          id={`mood-option-${opt.value}`}
-                          role="menuitem"
-                          onClick={() => {
-                            setMoodOverride(opt.value);
-                            setIsMoodMenuOpen(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 transition-colors duration-150"
-                          style={{
-                            backgroundColor: isActive
-                              ? "rgba(255,255,255,0.06)"
-                              : "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.04)";
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.backgroundColor = isActive
-                              ? "rgba(255,255,255,0.06)"
-                              : "transparent";
-                          }}
-                        >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: opt.dot, boxShadow: isActive ? `0 0 6px ${opt.dot}` : "none" }}
-                          />
-                          <span className="flex-1 text-left">
-                            <span
-                              className="block text-[11px] font-bold leading-tight"
-                              style={{ color: isActive ? "#f4f4f5" : "#a1a1aa" }}
-                            >
-                              {opt.label}
-                            </span>
-                            <span className="block text-[9px]" style={{ color: "rgba(113,113,122,0.7)" }}>
-                              {opt.sub}
-                            </span>
-                          </span>
-                          {isActive && (
-                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="shrink-0">
-                              <path d="M1 4L3.5 6.5L9 1" stroke="#b8860b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
 
               {/* Chat Mode toggle — bigger touch targets */}
               <div
@@ -1308,12 +1181,14 @@ export function VolooAI({
                       <button
                         key={star}
                         onClick={() => {
-                          submitRating({ sessionId, cafeId, rating: star });
-                          setHasRated(true);
-                          sessionStorage.setItem(
-                            `rated_${cafeId}_${sessionId}`,
-                            "true",
-                          );
+                          if (effectiveSessionId) {
+                            submitRating({ sessionId: effectiveSessionId, cafeId, rating: star });
+                            setHasRated(true);
+                            sessionStorage.setItem(
+                              `rated_${cafeId}_${effectiveSessionId}`,
+                              "true",
+                            );
+                          }
                         }}
                         className="p-2 text-zinc-500 hover:text-yellow-400 hover:scale-110 transition-all duration-200"
                       >

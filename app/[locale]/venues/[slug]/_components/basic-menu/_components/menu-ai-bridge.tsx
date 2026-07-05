@@ -43,7 +43,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { VolooAI, type CafeConfig, type CafeTheme } from "@/components/chatbots/volooAI";
+import {
+  VolooAI,
+  type CafeConfig,
+  type CafeTheme,
+} from "@/components/chatbots/volooAI";
 import type { ConvexCategory } from "./menu-section";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -97,7 +101,9 @@ function lightenHex(hex: string): string {
  * Builds a `CafeTheme` object from the org's themeSettings.
  * All six required fields are resolved — none are hardcoded to a specific brand.
  */
-function buildCafeTheme(themeSettings: MenuAIBridgeProps["themeSettings"]): CafeTheme {
+function buildCafeTheme(
+  themeSettings: MenuAIBridgeProps["themeSettings"],
+): CafeTheme {
   const primary = themeSettings?.primaryColor || "#ea580c";
   const bg = themeSettings?.backgroundColor || "#09090b";
   const text = themeSettings?.textColor || "#e4e4e7";
@@ -107,9 +113,7 @@ function buildCafeTheme(themeSettings: MenuAIBridgeProps["themeSettings"]): Cafe
     primaryColorLight: lightenHex(primary),
     backgroundColor: bg,
     // surfaceColor: semi-transparent version of the bg for pill surfaces
-    surfaceColor: bg.startsWith("#")
-      ? `${bg}e0`
-      : "rgba(24,24,27,0.88)",
+    surfaceColor: bg.startsWith("#") ? `${bg}e0` : "rgba(24,24,27,0.88)",
     textColor: text,
     // accentGlow: very faint bloom of the primary color for inner glows
     accentGlow: primary.startsWith("#")
@@ -137,14 +141,16 @@ export function MenuAIBridge({
    */
   const localizedProducts = useMemo(() => {
     return categories.flatMap((category) => {
-      const categoryName = category.name["en"] || Object.values(category.name)[0] || "Item";
+      const categoryName =
+        category.name["en"] || Object.values(category.name)[0] || "Item";
 
       return category.items.map((item) => {
-        const name = item.name["en"] || Object.values(item.name)[0] || "Unknown";
+        const name =
+          item.name["en"] || Object.values(item.name)[0] || "Unknown";
         const description = item.description
-          ? (typeof item.description === "string"
-              ? item.description
-              : item.description["en"] || Object.values(item.description)[0] || "")
+          ? typeof item.description === "string"
+            ? item.description
+            : item.description["en"] || Object.values(item.description)[0] || ""
           : "";
 
         return {
@@ -155,7 +161,9 @@ export function MenuAIBridge({
           category: categoryName,
           // Price stored in tetri/cents → display unit (divide by 100)
           price: item.price / 100,
-          image: item.imageUrl || "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=600",
+          image:
+            item.imageUrl ||
+            "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=600",
           // Color from DB, or a neutral dark fallback
           color: item.accentColor || "bg-zinc-800",
           // Tags become allergens — the AI uses these for dietary filtering
@@ -173,11 +181,14 @@ export function MenuAIBridge({
    * message so conversations are strictly scoped per-cafe — two different
    * orgs on the same device never share history.
    */
-  const cafeConfig: CafeConfig = useMemo(() => ({
-    cafeId: slug,
-    brandName: `${organizationName} AI`,
-    theme: buildCafeTheme(themeSettings),
-  }), [slug, organizationName, themeSettings]);
+  const cafeConfig: CafeConfig = useMemo(
+    () => ({
+      cafeId: slug,
+      brandName: `${organizationName} AI`,
+      theme: buildCafeTheme(themeSettings),
+    }),
+    [slug, organizationName, themeSettings],
+  );
 
   /**
    * Context-enriched API endpoint.

@@ -2,7 +2,7 @@
  * MenuSection
  * ─────────────────────────────────────────────────────────────────────────────
  * Upgraded to:
- *  - Sticky horizontal-scrolling category pill nav
+ *  - Sticky horizontal-scrolling category pill nav OR Category Cards layout
  *  - Grouped by category with editorial section headers + separator lines
  *  - Staggered card entrance animations via MenuCard (Framer Motion)
  *  - All dynamic theme props preserved (primaryColor, textColor, buttonRadius)
@@ -15,6 +15,12 @@ import { useLocale } from "next-intl";
 import { MenuCard, ProductPopupModal } from "./menu-card";
 import { AnimatePresence } from "framer-motion";
 import type { CardShapeProps } from "./menu-card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,6 +55,7 @@ interface ThemeSettings {
   fontFamily: string;
   /** CSS value for button/card radius — e.g. "9999px", "8px", "0.5rem" */
   buttonRadius: string;
+  categoryLayout?: "pills" | "cards";
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -88,6 +95,7 @@ export function MenuSection({
 }) {
   const pillNavRef = useRef<HTMLDivElement>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedPopupCategory, setSelectedPopupCategory] = useState<string | null>(null);
   const locale = useLocale();
 
   const allText = locale === "ka" ? "ყველა" : locale === "ru" ? "Все" : "All";
@@ -96,6 +104,8 @@ export function MenuSection({
     "All",
     ...categories.map((c) => c.name["en"] || Object.values(c.name)[0]),
   ];
+
+  const categoryLayout = themeSettings?.categoryLayout || "pills";
 
   /**
    * When "All" is selected → return an array of { name, items } groups
@@ -150,6 +160,162 @@ export function MenuSection({
 
   const totalItems = groupedCategories.reduce((acc, g) => acc + g.items.length, 0);
 
+  if (categoryLayout === "cards") {
+    // ── Visual Cards Layout ─────────────────────────────────────────────
+    const displayCategories = categories.filter(c => c.items.length > 0);
+    const activePopupCategoryObj = categories.find(c => (c.name["en"] || Object.values(c.name)[0]) === selectedPopupCategory);
+    
+    return (
+      <section id="menu" className="py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Section Header */}
+          <div className="mb-10 md:mb-14">
+            <span
+              className="text-xs font-semibold tracking-[0.25em] uppercase mb-3 block"
+              style={{ color: "var(--theme-accent, var(--primary))" }}
+            >
+              Our Categories
+            </span>
+            <h2
+              className="text-4xl md:text-5xl font-serif text-balance"
+              style={{ color: "var(--theme-text, var(--foreground))" }}
+            >
+              Explore our
+              <br className="hidden md:block" />
+              <span
+                className="italic relative inline-block ml-2 md:ml-0"
+                style={{ color: "var(--theme-accent, var(--primary))" }}
+              >
+                collection
+                <span
+                  aria-hidden
+                  className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 transition-transform duration-500"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, var(--theme-accent, var(--primary)) 0%, transparent 100%)",
+                  }}
+                />
+              </span>
+            </h2>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {displayCategories.map((category) => {
+              const catNameStr = category.name["en"] || Object.values(category.name)[0];
+              const displayStr = category.name[locale] || catNameStr;
+              return (
+                <button
+                  key={category._id}
+                  onClick={() => setSelectedPopupCategory(catNameStr)}
+                  className="group relative overflow-hidden aspect-[4/5] flex items-end p-4 md:p-6 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left"
+                  style={{
+                    borderRadius: themeSettings?.buttonRadius || "1rem",
+                    background: category.imageUrl ? "var(--theme-bg, var(--background))" : "var(--theme-accent, var(--primary))",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    boxShadow: "0 4px 24px -8px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  {category.imageUrl && (
+                    <>
+                      <img 
+                        src={category.imageUrl} 
+                        alt={displayStr} 
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    </>
+                  )}
+                  
+                  <div className="relative z-10 w-full">
+                    <span 
+                      className="block text-white font-serif text-xl md:text-2xl drop-shadow-lg mb-1"
+                      style={{ color: category.imageUrl ? "#ffffff" : "var(--primary-foreground, #000000)" }}
+                    >
+                      {displayStr}
+                    </span>
+                    <span 
+                      className="block text-xs font-medium tracking-widest uppercase opacity-80"
+                      style={{ color: category.imageUrl ? "rgba(255,255,255,0.8)" : "var(--primary-foreground, #000000)" }}
+                    >
+                      {category.items.length} items
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Empty state */}
+          {displayCategories.length === 0 && (
+            <div className="text-center py-20">
+              <p
+                className="text-lg font-serif"
+                style={{
+                  color: "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 40%)",
+                }}
+              >
+                No categories available.
+              </p>
+            </div>
+          )}
+
+          {/* Category Items Sheet */}
+          <Sheet open={!!selectedPopupCategory} onOpenChange={(open) => !open && setSelectedPopupCategory(null)}>
+            <SheetContent 
+              side="bottom" 
+              className="h-[85vh] sm:h-[90vh] overflow-y-auto"
+              style={{ 
+                background: "var(--theme-bg, var(--background))",
+                borderColor: "rgba(255,255,255,0.1)",
+                borderTopLeftRadius: "1.5rem",
+                borderTopRightRadius: "1.5rem",
+              }}
+            >
+              <div className="max-w-7xl mx-auto px-2 sm:px-6 pb-24">
+                <SheetHeader className="mb-8 pt-4">
+                  <SheetTitle 
+                    className="text-3xl md:text-4xl font-serif text-left" 
+                    style={{ color: "var(--theme-text, var(--foreground))" }}
+                  >
+                    {activePopupCategoryObj?.name[locale] || activePopupCategoryObj?.name["en"] || selectedPopupCategory}
+                  </SheetTitle>
+                </SheetHeader>
+                
+                {activePopupCategoryObj && (
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                    {activePopupCategoryObj.items.map((product, itemIndex) => (
+                      <MenuCard
+                        key={product._id}
+                        product={{...product, categoryName: selectedPopupCategory!}}
+                        socialLinks={socialLinks}
+                        shapeProps={shapeProps}
+                        animationIndex={itemIndex}
+                        onClick={() => setSelectedProduct({...product, categoryName: selectedPopupCategory!})}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Product Popup Modal (layered on top of Sheet if open) */}
+          <AnimatePresence>
+            {selectedProduct && (
+              <ProductPopupModal
+                product={selectedProduct}
+                shapeProps={shapeProps}
+                onClose={() => setSelectedProduct(null)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Classic Pills Layout ────────────────────────────────────────────
   return (
     <section id="menu" className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-6">

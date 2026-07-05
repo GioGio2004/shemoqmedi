@@ -20,7 +20,6 @@ import { useState } from "react";
 import { SiteNavbar } from "./_components/site-navbar";
 import { HeroSection } from "./_components/hero-section";
 import { MenuSection } from "./_components/menu-section";
-import { InfoSection } from "./_components/info-section";
 import { SiteFooter } from "./_components/site-footer";
 import { MenuAIBridge } from "./_components/menu-ai-bridge";
 import { StorefrontAlertBanner } from "./_components/storefront-alert-banner";
@@ -127,12 +126,6 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
           style={{ background: "rgba(255,255,255,0.08)" }}
         />
       </div>
-
-      {/* Operating hours + location */}
-      <InfoSection
-        operatingHours={data.organization.operatingHours}
-        storefrontConfig={data.organization.storefrontConfig}
-      />
 
       {/*
        * VolooAI Widget — The Cafe's Personal AI Concierge

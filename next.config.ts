@@ -18,6 +18,12 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: [
+    "gentle-cars-cough.loca.lt", 
+    "*.loca.lt", 
+    "*.ngrok-free.app", 
+    "*.serveo.net"
+  ] as any,
   serverExternalPackages: [],
   experimental: {
     serverActions: {
@@ -57,6 +63,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "ik.imagekit.io",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.convex.cloud",
         port: "",
         pathname: "/**",
       },

@@ -264,6 +264,90 @@ export type PublicApiType = {
       any
     >;
   };
+  publicVenues: {
+    listPublished: FunctionReference<
+      "query",
+      "public",
+      Record<string, never>,
+      Array<{
+        _id: string;
+        slug: string;
+        name: string;
+        category: "cafe" | "restaurant" | "bar" | "hotel" | "other";
+        description: string;
+        address: string;
+        coverImage: string | null;
+        tags: string[];
+        googleRating: number | null;
+        googleReviewCount: number | null;
+        updatedAt: number;
+      }>
+    >;
+    getBySlug: FunctionReference<
+      "query",
+      "public",
+      { slug: string },
+      {
+        _id: string;
+        orgId: string;
+        slug: string;
+        name: string;
+        category: "cafe" | "restaurant" | "bar" | "hotel" | "other";
+        description: string;
+        address: string;
+        lat: number | null;
+        lng: number | null;
+        phone: string | null;
+        hours: Array<{ day: string; hours: string }>;
+        coverImage: string | null;
+        galleryImages: string[];
+        tags: string[];
+        gbpPlaceId: string | null;
+        googleRating: number | null;
+        googleReviewCount: number | null;
+        googleDataLastFetchedAt: number | null;
+      } | null
+    >;
+  };
+  venues: {
+    listAll: FunctionReference<"query", "public", Record<string, never>, any>;
+    getById: FunctionReference<"query", "public", { id: string }, any>;
+    upsertVenue: FunctionReference<
+      "mutation",
+      "public",
+      {
+        orgId: string;
+        slug: string;
+        name: string;
+        category: "cafe" | "restaurant" | "bar" | "hotel" | "other";
+        description: string;
+        address: string;
+        lat?: number;
+        lng?: number;
+        phone?: string;
+        hours?: Array<{ day: string; hours: string }>;
+        coverImage?: string;
+        galleryImages?: string[];
+        tags?: string[];
+        gbpPlaceId?: string;
+        isPublished?: boolean;
+      },
+      any
+    >;
+    setPublished: FunctionReference<
+      "mutation",
+      "public",
+      { id: string; isPublished: boolean },
+      any
+    >;
+    syncAllGoogleData: FunctionReference<
+      "action",
+      "public",
+      Record<string, never>,
+      { synced: number; errors: number }
+    >;
+  };
+
   chat: {
     getMessages: FunctionReference<
       "query",

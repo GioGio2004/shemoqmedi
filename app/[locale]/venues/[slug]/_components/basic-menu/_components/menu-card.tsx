@@ -12,6 +12,7 @@
 
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
@@ -281,6 +282,25 @@ export function MenuCard({
 }
 
 export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
+  useEffect(() => {
+    // Calculate the scrollbar width to prevent layout shift
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    
+    // Store original styles to restore them later
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    
+    // Lock body scroll and apply padding
+    document.body.style.overflow = "hidden";
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    
+    return () => {
+      // Restore original styles
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
+    };
+  }, []);
+
   const {
     borderRadius,
     borderWidth = 1,
@@ -301,30 +321,40 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
   const resolvedBorderColor = borderColor === "glass" ? "rgba(255,255,255,0.05)" : borderColor === "accent" ? "var(--theme-accent, oklch(0.922 0 0))" : borderColor;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pointer-events-auto"
+      onPointerDown={(e) => e.stopPropagation()}
+    >
       <motion.div 
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         exit={{ opacity: 0 }}
-        onClick={onClose}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
       
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-sm sm:max-w-md overflow-hidden flex flex-col h-[400px] sm:h-[450px] shadow-2xl shadow-black/80"
+        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 40, scale: 0.95 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full overflow-hidden flex flex-col h-[400px] sm:h-[450px] max-w-sm sm:max-w-md shadow-2xl shadow-black/80"
         style={{
           borderRadius: cardRadius,
           borderWidth: `${borderWidth}px`,
-          borderStyle: "solid",
           borderColor: resolvedBorderColor,
+          borderStyle: "solid",
           backgroundColor: "#000",
-        }}
+        } as React.CSSProperties}
       >
         <button 
-          onClick={onClose} 
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           className="absolute top-3 right-3 z-30 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-colors"
         >
           <X className="w-4 h-4" />
