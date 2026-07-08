@@ -99,10 +99,11 @@ export async function generateMetadata({
       apple: "/apple-touch-icon.png",
     },
     alternates: {
-      canonical: `${baseUrl}/${locale}`,
+      canonical: `https://www.shemoqmedi.space/${locale}`,
       languages: {
-        en: `${baseUrl}/en`,
-        ka: `${baseUrl}/ka`,
+        en: `https://www.shemoqmedi.space/en`,
+        ka: `https://www.shemoqmedi.space/ka`,
+        ru: `https://www.shemoqmedi.space/ru`,
       },
     },
     robots: {

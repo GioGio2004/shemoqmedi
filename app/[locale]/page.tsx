@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
+import LandingExperiment from "@/components/LandingExperiment";
 import VenueLandingSection from "@/components/venues/VenueLandingSection";
 import Link from "next/link";
-import { SmartphoneNfc, MessageCircle, LineChart, ShieldAlert } from "lucide-react";
+import {
+  SmartphoneNfc,
+  MessageCircle,
+  LineChart,
+  ShieldAlert,
+} from "lucide-react";
+import InkLanding from "@/components/LandingExperiment";
 
 const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
 
@@ -37,119 +44,50 @@ export async function generateMetadata({
 export default function Home() {
   return (
     <main className="relative w-full bg-black text-white selection:bg-gray-600 font-sans">
-
       {/* Navbar — fixed z-50 */}
       <Navbar />
 
-      {/* ── Hero — full-viewport ───────────────────────────────────────── */}
-      <section
-        id="hero"
-        aria-label="Hero section"
-        className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden"
-      >
-        {/* Deep, warm radial glow */}
-        <div
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle at 50% 30%, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0) 60%)",
-          }}
-        />
-
-        {/* Fine grid lines - made slightly more visible and deliberate */}
-        <div
-          className="absolute inset-0 z-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-            maskImage: "radial-gradient(circle at 50% 50%, black 0%, transparent 80%)",
-            WebkitMaskImage: "radial-gradient(circle at 50% 50%, black 0%, transparent 80%)"
-          }}
-        />
-
-        {/* Top-left overline */}
-        <div className="absolute top-[max(env(safe-area-inset-top),2rem)] left-8 md:left-12 z-10">
-          <p className="text-[10px] tracking-[0.5em] uppercase text-white/25 font-light">
-            The Voloo Ecosystem
-          </p>
-        </div>
-
-        {/* Centre content */}
-        <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl mx-auto">
-          {/* Tag */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.12] bg-white/[0.04] mb-8 md:mb-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] tracking-[0.3em] uppercase text-white/45 font-light">
-              Now Live in Tbilisi
-            </span>
-          </div>
-
-          {/* Wordmark */}
-          <h1 className="text-[clamp(3rem,12vw,10rem)] font-black tracking-tighter leading-none uppercase text-white mb-6 md:mb-8">
-            Shemoqmedi
-          </h1>
-
-          {/* Sub-headline */}
-          <p className="text-white/45 text-base md:text-lg font-light max-w-lg leading-relaxed mb-10 md:mb-14">
-            AI-powered digital menus for restaurants, cafés, and bars.
-            One tap from your table to the full menu — no app required.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-3 px-6 sm:px-0">
-            <a
-              href="#venues"
-              className="w-full sm:w-auto text-center px-8 py-3.5 text-sm font-bold tracking-widest uppercase bg-white text-black rounded-full hover:bg-white/90 transition-all duration-200"
-            >
-              Explore Venues
-            </a>
-            <a
-              href="mailto:hello@shemoqmedi.space"
-              className="w-full sm:w-auto text-center px-8 py-3.5 text-sm font-light tracking-wider text-white/60 border border-white/[0.15] rounded-full hover:text-white hover:border-white/30 transition-all duration-200"
-            >
-              Get in Touch
-            </a>
-          </div>
-        </div>
-
-        {/* Scroll cue */}
-        <div className="absolute bottom-[max(env(safe-area-inset-bottom),2.5rem)] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10">
-          <p className="text-[9px] tracking-[0.4em] uppercase text-white/15 font-light">Scroll</p>
-          <div className="w-px h-10 bg-gradient-to-b from-white/15 to-transparent animate-pulse" />
-        </div>
-      </section>
-
+      {/* ── Hero — LandingExperiment as full-viewport background ───────── */}
+      <InkLanding />
       {/* ── Value props strip ─────────────────────────────────────────── */}
       <div className="relative z-10 w-full border-t border-white/[0.05] bg-black">
         <div className="max-w-7xl mx-auto px-6 py-12 md:py-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-8">
           {[
             {
               label: "NFC Tap Menus",
-              detail: "One tap from the table to the full interactive menu. No app, no download.",
-              icon: SmartphoneNfc
+              detail:
+                "One tap from the table to the full interactive menu. No app, no download.",
+              icon: SmartphoneNfc,
             },
             {
               label: "AI Chat Layer",
-              detail: "Guests ask questions, get recommendations, and reorder — all in natural language.",
-              icon: MessageCircle
+              detail:
+                "Guests ask questions, get recommendations, and reorder — all in natural language.",
+              icon: MessageCircle,
             },
             {
               label: "Live Insights",
-              detail: "Real-time analytics, order patterns, and guest signals — all in your dashboard.",
-              icon: LineChart
+              detail:
+                "Real-time analytics, order patterns, and guest signals — all in your dashboard.",
+              icon: LineChart,
             },
             {
               label: "Dietary Personalization",
-              detail: "Smart filtering for allergies and dietary preferences so guests order with confidence.",
-              icon: ShieldAlert
+              detail:
+                "Smart filtering for allergies and dietary preferences so guests order with confidence.",
+              icon: ShieldAlert,
             },
           ].map(({ label, detail, icon: Icon }) => (
             <div key={label} className="flex flex-col gap-3 group">
               <div className="w-10 h-10 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center mb-2 group-hover:border-white/20 group-hover:bg-white/[0.05] transition-colors">
                 <Icon className="w-4 h-4 text-white/70" />
               </div>
-              <p className="text-white text-base font-semibold tracking-tight">{label}</p>
-              <p className="text-white/60 text-sm font-light leading-relaxed">{detail}</p>
+              <p className="text-white text-base font-semibold tracking-tight">
+                {label}
+              </p>
+              <p className="text-white/60 text-sm font-light leading-relaxed">
+                {detail}
+              </p>
             </div>
           ))}
         </div>
@@ -191,8 +129,18 @@ export default function Home() {
               © {new Date().getFullYear()} Voloo Ecosystem — Shemoqmedi.space
             </p>
             <div className="flex items-center gap-4 text-[9px] tracking-[0.2em] uppercase text-white/20 font-light">
-              <Link href="/privacy" className="hover:text-white/40 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-white/40 transition-colors">Terms & Conditions</Link>
+              <Link
+                href="/privacy"
+                className="hover:text-white/40 transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="hover:text-white/40 transition-colors"
+              >
+                Terms & Conditions
+              </Link>
             </div>
           </div>
         </footer>

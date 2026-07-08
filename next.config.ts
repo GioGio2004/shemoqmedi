@@ -4,6 +4,11 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withNextIntl = createNextIntlPlugin("./i18n.ts");
 
+// Keep the require for the analyzer, it works fine here
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
 const withPWA = withPWAInit({
   dest: "public",
   cacheOnFrontEndNav: true,
@@ -19,10 +24,10 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: [
-    "gentle-cars-cough.loca.lt", 
-    "*.loca.lt", 
-    "*.ngrok-free.app", 
-    "*.serveo.net"
+    "gentle-cars-cough.loca.lt",
+    "*.loca.lt",
+    "*.ngrok-free.app",
+    "*.serveo.net",
   ] as any,
   serverExternalPackages: [],
   experimental: {
@@ -76,4 +81,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA(withNextIntl(nextConfig));
+// Compose them all together into a single export!
+export default withBundleAnalyzer(withPWA(withNextIntl(nextConfig)));
