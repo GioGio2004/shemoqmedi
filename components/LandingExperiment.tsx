@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
 // ─── Fluid ink blob ──────────────────────────────────────────────────────────
@@ -20,7 +20,8 @@ interface InkBlob {
   spin: number;
 }
 
-const LETTERS = "SHEMOQMEDI".split("");
+const DESKTOP_LINES = ["SHEMOQMEDI"];
+const MOBILE_LINES = ["SHE", "MOQ", "ME", "DI"];
 
 export default function InkLanding() {
   const curtainRef = useRef<HTMLDivElement>(null);
@@ -29,35 +30,63 @@ export default function InkLanding() {
   const blobsRef = useRef<InkBlob[]>([]);
   const rafRef = useRef<number | null>(null);
   const lastMouse = useRef<{ x: number; y: number; t: number } | null>(null);
+  const isMobileRef = useRef(false);
+
+  // null until we know the viewport — the curtain hides everything meanwhile
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+
+  // ── Detect breakpoint ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => {
+      setIsMobile(mq.matches);
+      isMobileRef.current = mq.matches;
+    };
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // ── GSAP reveal sequence ───────────────────────────────────────────────────
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.2 });
+    if (isMobile === null) return;
 
-      gsap.set(lettersRef.current, { y: 140, opacity: 0 });
+    const letters = lettersRef.current.filter(Boolean);
+    if (!letters.length) return;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ delay: 0.15 });
+
+      gsap.set(letters, {
+        yPercent: 110,
+        opacity: 0,
+        force3D: true,
+      });
 
       tl.to(curtainRef.current, {
-        y: "-100%",
-        duration: 1.3,
+        yPercent: -100,
+        duration: 1.2,
         ease: "power4.inOut",
+        force3D: true,
       });
 
       tl.to(
-        lettersRef.current,
+        letters,
         {
-          y: 0,
+          yPercent: 0,
           opacity: 1,
-          duration: 1,
-          stagger: 0.045,
+          duration: 0.9,
+          stagger: 0.05,
           ease: "power4.out",
+          force3D: true,
+          clearProps: "willChange",
         },
-        "-=0.8",
+        "-=0.75",
       );
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [isMobile]);
 
   // ── Viscous ink simulation ─────────────────────────────────────────────────
   useEffect(() => {
@@ -66,11 +95,24 @@ export default function InkLanding() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reducedMotion) return;
+
+    // Mobile GPUs choke on high-DPI canvases + SVG filters — keep DPR at 1
+    const dpr = isMobileRef.current
+      ? 1
+      : Math.min(window.devicePixelRatio || 1, 1.5);
+
+    let vw = window.innerWidth;
+    let vh = window.innerHeight;
 
     const resize = () => {
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      vw = window.innerWidth;
+      vh = window.innerHeight;
+      canvas.width = vw * dpr;
+      canvas.height = vh * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
@@ -79,30 +121,34 @@ export default function InkLanding() {
     const rand = (min: number, max: number) =>
       min + Math.random() * (max - min);
 
+    // Smaller budget + smaller blobs on mobile keeps 60fps
+    const MAX_BLOBS = isMobileRef.current ? 130 : 420;
+    const SCALE = isMobileRef.current ? 0.65 : 1;
+
     const spawn = (x: number, y: number, speed: number) => {
-      // Faster mouse = bigger, wilder ink deposits
       const energy = Math.min(speed, 60) / 60;
 
-      const blob: InkBlob = {
+      blobsRef.current.push({
         x,
         y,
-        // Ink shoots off with its own momentum — you can't control it
         vx: rand(-1, 1) * (0.3 + energy * 1.4),
         vy: rand(-1, 1) * (0.3 + energy * 1.4),
-        baseR: rand(14, 26) + energy * rand(16, 36),
+        baseR: (rand(14, 26) + energy * rand(16, 36)) * SCALE,
         life: 0,
-        maxLife: 150, // ~2.5s at 60fps — consistent dissolve speed
+        maxLife: 150,
         seed: Math.random() * Math.PI * 2,
         wobble: rand(0.18, 0.42),
         freq1: Math.floor(rand(2, 4)),
         freq2: Math.floor(rand(4, 7)),
         spin: rand(-0.02, 0.02),
-      };
-      blobsRef.current.push(blob);
+      });
 
-      // Occasionally fling satellite droplets away from the cursor
-      if (Math.random() < 0.35 + energy * 0.4) {
-        const count = 1 + Math.floor(Math.random() * 2);
+      // Satellite droplets — fewer on mobile
+      const satChance = isMobileRef.current ? 0.2 : 0.35 + energy * 0.4;
+      if (Math.random() < satChance) {
+        const count = isMobileRef.current
+          ? 1
+          : 1 + Math.floor(Math.random() * 2);
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
           const dist = rand(18, 60) * (0.5 + energy);
@@ -111,7 +157,7 @@ export default function InkLanding() {
             y: y + Math.sin(angle) * 6,
             vx: Math.cos(angle) * (dist / 55),
             vy: Math.sin(angle) * (dist / 55),
-            baseR: rand(4, 10),
+            baseR: rand(4, 10) * SCALE,
             life: 0,
             maxLife: 150,
             seed: Math.random() * Math.PI * 2,
@@ -123,27 +169,29 @@ export default function InkLanding() {
         }
       }
 
-      // Keep the simulation bounded
-      if (blobsRef.current.length > 420) {
-        blobsRef.current.splice(0, blobsRef.current.length - 420);
+      if (blobsRef.current.length > MAX_BLOBS) {
+        blobsRef.current.splice(0, blobsRef.current.length - MAX_BLOBS);
       }
     };
 
-    const onMove = (e: MouseEvent | TouchEvent) => {
-      const point = "touches" in e ? e.touches[0] : e;
+    // Pointer events cover mouse, touch, and pen in one listener
+    const onMove = (e: PointerEvent) => {
       const now = performance.now();
       const prev = lastMouse.current;
+      const cx = e.clientX;
+      const cy = e.clientY;
 
       let speed = 8;
       if (prev) {
         const dt = Math.max(now - prev.t, 1);
-        const dx = point.clientX - prev.x;
-        const dy = point.clientY - prev.y;
+        const dx = cx - prev.x;
+        const dy = cy - prev.y;
         speed = (Math.sqrt(dx * dx + dy * dy) / dt) * 16;
 
         // Interpolate along fast strokes so the trail is continuous
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const steps = Math.min(Math.floor(dist / 24), 4);
+        const maxSteps = isMobileRef.current ? 2 : 4;
+        const steps = Math.min(Math.floor(dist / 24), maxSteps);
         for (let i = 1; i <= steps; i++) {
           spawn(
             prev.x + (dx * i) / (steps + 1),
@@ -153,26 +201,30 @@ export default function InkLanding() {
         }
       }
 
-      spawn(point.clientX, point.clientY, speed);
-      lastMouse.current = { x: point.clientX, y: point.clientY, t: now };
+      spawn(cx, cy, speed);
+      lastMouse.current = { x: cx, y: cy, t: now };
     };
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("touchmove", onMove, { passive: true });
+    const onPointerEnd = () => {
+      lastMouse.current = null;
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onPointerEnd, { passive: true });
+    window.addEventListener("pointercancel", onPointerEnd, { passive: true });
 
     let time = 0;
-    const SEGMENTS = 14;
+    const SEGMENTS = isMobileRef.current ? 10 : 14;
 
     const drawBlob = (b: InkBlob, t: number) => {
       const progress = b.life / b.maxLife;
 
-      // Fast swell, long viscous shrink
       let envelope: number;
       if (progress < 0.12) {
         envelope = progress / 0.12;
       } else {
         const p = (progress - 0.12) / 0.88;
-        envelope = 1 - p * p; // eases into the dissolve
+        envelope = 1 - p * p;
       }
 
       const r = b.baseR * envelope;
@@ -181,7 +233,6 @@ export default function InkLanding() {
       ctx.beginPath();
       for (let i = 0; i <= SEGMENTS; i++) {
         const angle = (i / SEGMENTS) * Math.PI * 2 + b.seed + t * b.spin * 60;
-        // Two layered sine waves = organic, asymmetric ink edge
         const n =
           1 +
           b.wobble * Math.sin(angle * b.freq1 + b.seed + t * 1.4) +
@@ -195,50 +246,69 @@ export default function InkLanding() {
       ctx.fill();
     };
 
-    const render = () => {
-      time += 0.016;
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    let lastFrame = performance.now();
+
+    const render = (now: number) => {
+      // Delta-time based stepping so speed is consistent across refresh rates
+      const delta = Math.min((now - lastFrame) / 16.67, 3);
+      lastFrame = now;
+      time += 0.016 * delta;
+
+      ctx.clearRect(0, 0, vw, vh);
       ctx.fillStyle = "#FFFFFF";
 
       const blobs = blobsRef.current;
+      let writeIdx = 0;
       for (let i = 0; i < blobs.length; i++) {
         const b = blobs[i];
 
-        // Viscous drift — momentum decays but never fully dies
-        b.x += b.vx;
-        b.y += b.vy;
-        b.vx *= 0.965;
-        b.vy *= 0.965;
-        // Tiny meander so pooled ink keeps creeping
-        b.vx += Math.sin(time * 1.7 + b.seed * 3) * 0.008;
-        b.vy += Math.cos(time * 1.3 + b.seed * 5) * 0.008;
+        b.x += b.vx * delta;
+        b.y += b.vy * delta;
+        b.vx *= Math.pow(0.965, delta);
+        b.vy *= Math.pow(0.965, delta);
+        b.vx += Math.sin(time * 1.7 + b.seed * 3) * 0.008 * delta;
+        b.vy += Math.cos(time * 1.3 + b.seed * 5) * 0.008 * delta;
 
-        b.life++;
+        b.life += delta;
         drawBlob(b, time);
-      }
 
-      blobsRef.current = blobs.filter((b) => b.life < b.maxLife);
+        // In-place compaction — no per-frame array allocation
+        if (b.life < b.maxLife) {
+          blobs[writeIdx++] = b;
+        }
+      }
+      blobs.length = writeIdx;
+
       rafRef.current = requestAnimationFrame(render);
     };
 
-    render();
+    rafRef.current = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onPointerEnd);
+      window.removeEventListener("pointercancel", onPointerEnd);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      blobsRef.current = [];
     };
-  }, []);
+  }, [isMobile]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  const lines = isMobile ? MOBILE_LINES : DESKTOP_LINES;
+  let letterIndex = -1;
+
   return (
-    <div className="relative h-svh w-full overflow-hidden bg-background text-foreground">
+    <div className="relative h-svh w-full touch-none overflow-hidden bg-background text-foreground">
       {/* SVG goo/threshold filter — melts blobs into one fluid ink mass */}
       <svg className="absolute h-0 w-0" aria-hidden="true">
         <defs>
           <filter id="ink-goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+            <feGaussianBlur
+              in="SourceGraphic"
+              stdDeviation={isMobile ? 4 : 6}
+              result="blur"
+            />
             <feColorMatrix
               in="blur"
               mode="matrix"
@@ -252,19 +322,33 @@ export default function InkLanding() {
       {/* ── Giant brand type ── */}
       <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
         <h1
-          className="m-0 select-none whitespace-nowrap font-black uppercase leading-none tracking-tighter"
-          style={{ fontSize: "12.5vw", letterSpacing: "-0.055em" }}
+          key={isMobile === null ? "loading" : isMobile ? "mobile" : "desktop"}
+          className="m-0 flex select-none flex-col items-center font-black uppercase leading-[0.82] tracking-tighter"
+          style={{ letterSpacing: "-0.055em" }}
         >
-          {LETTERS.map((letter, i) => (
+          <span className="sr-only">SHEMOQMEDI</span>
+          {lines.map((line, lineIdx) => (
             <span
-              key={i}
-              ref={(el) => {
-                lettersRef.current[i] = el;
-              }}
-              className="inline-block origin-bottom"
-              style={{ willChange: "transform, opacity" }}
+              key={lineIdx}
+              aria-hidden="true"
+              className="block overflow-hidden whitespace-nowrap text-[27vw] md:text-[12.5vw]"
             >
-              {letter}
+              {line.split("").map((letter) => {
+                letterIndex++;
+                const idx = letterIndex;
+                return (
+                  <span
+                    key={idx}
+                    ref={(el) => {
+                      lettersRef.current[idx] = el;
+                    }}
+                    className="inline-block origin-bottom opacity-0"
+                    style={{ willChange: "transform, opacity" }}
+                  >
+                    {letter}
+                  </span>
+                );
+              })}
             </span>
           ))}
         </h1>
