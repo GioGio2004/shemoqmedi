@@ -761,6 +761,7 @@ export type PublicApiType = {
       "mutation",
       "public",
       {
+        secret: string;
         cafeId: string;
         contents: Array<{
           parts: Array<{ text: string }>;
@@ -778,6 +779,7 @@ export type PublicApiType = {
       "mutation",
       "public",
       {
+        secret: string;
         cafeId: string;
         nootype?: string;
         positiveSignal: boolean;

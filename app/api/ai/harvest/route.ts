@@ -117,7 +117,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Write to Convex ai_training_logs
+    // 🔒 The Convex mutation now verifies this secret server-side, so a direct
+    // client call to the deployment (bypassing this route) can no longer poison
+    // the training set. HARVEST_SECRET must also be set on the Convex deployment.
     const result = await convex.mutation(api.aiTrainingLogs.ingestTurn, {
+      secret: HARVEST_SECRET ?? "",
       cafeId,
       sessionId,
       systemInstruction,
@@ -171,6 +175,7 @@ export async function PATCH(request: NextRequest) {
     const { cafeId, sessionId, positiveSignal, nootype } = parsed.data;
 
     const result = await convex.mutation(api.aiTrainingLogs.updateSignal, {
+      secret: HARVEST_SECRET ?? "",
       cafeId,
       sessionId,
       positiveSignal,

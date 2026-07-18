@@ -27,6 +27,10 @@ import { z } from "zod";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+// 🔒 Server-only secret — held here, never sent to the browser. Forwarded to the
+// Convex mutation so a direct client call to the deployment can't forge signals.
+const HARVEST_SECRET = process.env.HARVEST_SECRET;
+
 // ── Nootype enum (mirrors harvest route) ─────────────────────────────────────
 const nootypeSchema = z
   .enum(["form", "overcoming", "relaxation", "management"])
@@ -61,6 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Call Convex directly from the server — secret never touches the client
     const result = await convex.mutation(api.aiTrainingLogs.updateSignal, {
+      secret: HARVEST_SECRET ?? "",
       cafeId,
       sessionId,
       positiveSignal: true,

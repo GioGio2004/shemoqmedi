@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { Menu, X } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,6 +17,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const desktopNavRef = useRef<HTMLElement>(null);
   const showAnim = useRef<gsap.core.Tween | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useGSAP(() => {
     if (!desktopNavRef.current) return;
@@ -103,53 +105,71 @@ export default function Navbar() {
         </a>
       </nav>
 
-      {/* ── Mobile: always-visible bottom bar ────────────────────────── */}
-      {/* Fixed to the bottom so it's always within thumb reach on phones.
-          pb-safe-area-inset ensures it clears the PWA home indicator. */}
+      {/* ── Mobile: Top Navbar & Sidebar Menu ────────────────────────── */}
       <nav
-        id="mobile-navbar"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50
-                   flex items-center justify-between px-5
-                   backdrop-blur-xl bg-black/70 border-t border-white/[0.08]"
-        style={{
-          paddingBottom: "max(env(safe-area-inset-bottom), 0.875rem)",
-          paddingTop: "0.875rem",
-        }}
+        className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-md bg-black/60 border-b border-white/[0.05]"
+        style={{ paddingTop: "max(env(safe-area-inset-top), 1rem)" }}
       >
-        {/* Logo */}
-        <a
-          href="#"
-          className="text-white font-light text-base tracking-[0.15em] uppercase"
-        >
+        <a href="#" className="text-white font-light text-lg tracking-[0.15em] uppercase">
           Voloo
         </a>
-
-        {/* Quick links — icon-sized tap targets */}
-        <div className="flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center
-                         text-white/50 text-xs font-light tracking-wide
-                         hover:text-white transition-colors duration-200"
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <a
-          href="#contact"
-          className="px-4 py-2.5 text-xs font-light min-h-[44px] flex items-center
-                     bg-white/10 border border-white/15 rounded-full
-                     text-white/80 transition-all duration-300
-                     hover:bg-white/20 hover:text-white"
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="text-white/80 hover:text-white p-2 -mr-2"
+          aria-label="Open menu"
         >
-          Get Started
-        </a>
+          <Menu className="w-6 h-6" />
+        </button>
       </nav>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[60] flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Sidebar */}
+          <div className="relative w-64 h-full bg-[#0a0a0a] border-l border-white/10 flex flex-col p-6 animate-in slide-in-from-right-full duration-300">
+            <div className="flex items-center justify-between mb-12">
+              <span className="text-white font-light text-lg tracking-[0.15em] uppercase">
+                Menu
+              </span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-white/80 hover:text-white p-2 -mr-2"
+                aria-label="Close menu"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <ul className="flex flex-col gap-8 flex-1">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-white/70 text-xl font-light tracking-wide transition-colors hover:text-white block"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href="#contact"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="mt-auto px-6 py-3 text-center text-sm font-light bg-white text-black rounded-full transition-transform hover:scale-105"
+            >
+              Get Started
+            </a>
+          </div>
+        </div>
+      )}
     </>
   );
 }
