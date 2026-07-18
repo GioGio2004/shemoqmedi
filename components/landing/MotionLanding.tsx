@@ -16,7 +16,7 @@
 // never executes, everything stays in its natural, visible state.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useQuery } from "convex/react";
@@ -70,6 +70,9 @@ const FALLBACKS = [
 ];
 const img = (v: LandingVenue, i: number) => v.imageUrl || FALLBACKS[i % FALLBACKS.length];
 
+// Varied aspect ratios → the Pinterest masonry look
+const RATIOS = ["4/5", "3/4", "1/1", "4/6", "3/5", "5/4", "4/5", "2/3"];
+
 function tField(field: string | Record<string, string> | undefined): string {
   if (!field) return "";
   if (typeof field === "string") return field;
@@ -77,14 +80,28 @@ function tField(field: string | Record<string, string> | undefined): string {
 }
 
 // ── Portfolio sheet ───────────────────────────────────────────────────────────
-function Portfolio({ venue, onClose }: { venue: LandingVenue; onClose: () => void }) {
+function Portfolio({ venue, origin, onClose }: { venue: LandingVenue; origin: DOMRect; onClose: () => void }) {
   const locale = useLocale();
   const detail = useQuery(api.publicMenu.get, { slug: venue.slug }) as OrgDetail | null | undefined;
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const bdRef = useRef<HTMLDivElement>(null);
+  const closingRef = useRef(false);
+
+  // Animated close — reverse the expand back into the tapped card, then unmount.
+  const close = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    const sheet = sheetRef.current, bd = bdRef.current;
+    if (!sheet || !bd) return onClose();
+    sheet.style.overflowY = "hidden";
+    sheet.scrollTop = 0;
+    gsap.timeline({ onComplete: onClose })
+      .to(sheet, { top: origin.top, left: origin.left, width: origin.width, height: origin.height, borderRadius: 20, duration: 0.42, ease: "power3.inOut" }, 0)
+      .to(bd, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 0);
+  }, [origin, onClose]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -92,9 +109,27 @@ function Portfolio({ venue, onClose }: { venue: LandingVenue; onClose: () => voi
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  }, [close]);
 
-  if (!mounted) return null;
+  // iOS app-open: grow from the tapped card's exact rect to full screen.
+  useLayoutEffect(() => {
+    const sheet = sheetRef.current, bd = bdRef.current;
+    if (!sheet || !bd) return;
+    gsap.set(bd, { opacity: 0 });
+    gsap.set(sheet, {
+      position: "fixed", top: origin.top, left: origin.left, width: origin.width, height: origin.height,
+      borderRadius: 20, margin: 0, maxWidth: "none", maxHeight: "none", overflow: "hidden", zIndex: 10000, opacity: 1,
+    });
+    const tl = gsap.timeline();
+    tl.to(bd, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0)
+      .to(sheet, {
+        top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, borderRadius: 0,
+        duration: 0.55, ease: "power3.inOut",
+        onComplete() { sheet.style.overflowY = "auto"; sheet.style.width = "100%"; sheet.style.height = "100svh"; },
+      }, 0);
+    return () => { tl.kill(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const org = detail?.organization;
   const cover = org?.storefrontConfig?.coverImageUrl ?? org?.storefrontConfig?.heroImageUrls?.[0] ?? venue.imageUrl ?? FALLBACKS[0];
@@ -108,14 +143,14 @@ function Portfolio({ venue, onClose }: { venue: LandingVenue; onClose: () => voi
   const lat = detail?.venue?.lat, lng = detail?.venue?.lng;
 
   return createPortal(
-    <div className="ml-bd" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="ml-sheet" role="dialog" aria-modal="true" aria-label={venue.name}>
+    <div className="ml-bd" ref={bdRef} onClick={(e) => e.target === e.currentTarget && close()}>
+      <div className="ml-sheet" ref={sheetRef} role="dialog" aria-modal="true" aria-label={venue.name}>
         <div className="ml-ph">
           <span className="ml-handle" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cover} alt={venue.name} />
           <div className="ml-ph-grad" />
-          <button className="ml-x" onClick={onClose} aria-label="Close"><X className="w-4 h-4" /></button>
+          <button className="ml-x" onClick={close} aria-label="Close"><X className="w-4 h-4" /></button>
           <div className="ml-cap">
             <span className="ml-vcat ml-mono">Venue · Tbilisi</span>
             <h2>{venue.name}</h2>
@@ -206,7 +241,7 @@ function Portfolio({ venue, onClose }: { venue: LandingVenue; onClose: () => voi
 
         <div className="ml-pcta">
           <Link href={menuUrl} className="ml-view">View Full Menu <ArrowUpRight className="w-4 h-4" /></Link>
-          <button className="ml-close2" onClick={onClose}>Close</button>
+          <button className="ml-close2" onClick={close}>Close</button>
         </div>
       </div>
     </div>,
@@ -217,8 +252,11 @@ function Portfolio({ venue, onClose }: { venue: LandingVenue; onClose: () => voi
 // ── Landing ─────────────────────────────────────────────────────────────────
 export default function MotionLanding({ venues, locale }: { venues: LandingVenue[]; locale: string }) {
   const root = useRef<HTMLElement>(null);
-  const [active, setActive] = useState<LandingVenue | null>(null);
-  const open = useCallback((v: LandingVenue) => setActive(v), []);
+  const [active, setActive] = useState<{ venue: LandingVenue; origin: DOMRect } | null>(null);
+  const open = useCallback(
+    (v: LandingVenue, el: HTMLElement) => setActive({ venue: v, origin: el.getBoundingClientRect() }),
+    [],
+  );
 
   useEffect(() => {
     if (!root.current) return;
@@ -254,27 +292,14 @@ export default function MotionLanding({ venues, locale }: { venues: LandingVenue
         gsap.from(h, { opacity: 0, y: 40, duration: 1, ease: "power3.out", scrollTrigger: { trigger: h, start: "top 82%" } });
       });
 
-      // Horizontal pinned catalogue
-      const track = root.current!.querySelector<HTMLElement>(".ml-cat-track");
-      const cat = root.current!.querySelector<HTMLElement>(".ml-cat");
-      if (track && cat && window.innerWidth > 640) {
-        const dist = () => track.scrollWidth - window.innerWidth + 48;
-        gsap.to(track, {
-          x: () => -dist(), ease: "none",
-          scrollTrigger: { trigger: cat, start: "top top", end: () => "+=" + dist(), pin: true, scrub: 1, invalidateOnRefresh: true },
-        });
-      }
-
-      // Grid cover-wipe + blur-to-sharp
+      // Masonry cover-wipe + blur-to-sharp reveal
       gsap.utils.toArray<HTMLElement>(".ml-reveal").forEach((item) => {
         const cover = item.querySelector(".ml-cover");
         const image = item.querySelector("img");
-        const cap = item.querySelector(".ml-rcap");
-        const tl = gsap.timeline({ scrollTrigger: { trigger: item, start: "top 88%" } });
+        const tl = gsap.timeline({ scrollTrigger: { trigger: item, start: "top 90%" } });
         if (image) tl.set(image, { filter: "blur(16px)", scale: 1.3 });
-        if (cover) tl.to(cover, { yPercent: -101, duration: 1.05, ease: "power4.inOut" });
+        if (cover) tl.to(cover, { yPercent: -101, duration: 1, ease: "power4.inOut" });
         if (image) tl.to(image, { scale: 1, filter: "blur(0px)", duration: 1.2, ease: "power3.out" }, 0.1);
-        if (cap) tl.to(cap, { opacity: 0.8, duration: 0.5 }, "-=0.5");
       });
 
       setTimeout(() => ScrollTrigger.refresh(), 400);
@@ -292,7 +317,7 @@ export default function MotionLanding({ venues, locale }: { venues: LandingVenue
         <div className="ml-navbar">
           <span className="ml-brand">VOL<span style={{ opacity: 0.5 }}>OO</span></span>
           <div className="ml-nlinks">
-            <a href="#cat">Catalogue</a><a href="#venues">Venues</a><a href="#cta">Contact</a>
+            <a href="#venues">Venues</a><a href="#cta">Contact</a>
           </div>
           <a href="#cta" className="ml-btn">Get Started</a>
         </div>
@@ -309,8 +334,8 @@ export default function MotionLanding({ venues, locale }: { venues: LandingVenue
           </h1>
           <p className="ml-lead"><span data-lead>One tap on the table. No app, no wait — just your café, in motion, on every phone.</span></p>
           <div className="ml-hbtns">
-            <a href="#cat" className="ml-btn-l">See the catalogue →</a>
-            <a href="#venues" className="ml-btn-o">Our venues</a>
+            <a href="#venues" className="ml-btn-l">Explore venues →</a>
+            <a href="#cta" className="ml-btn-o">Onboard your venue</a>
           </div>
         </div>
       </section>
@@ -328,43 +353,20 @@ export default function MotionLanding({ venues, locale }: { venues: LandingVenue
         </div>
       </div>
 
-      {/* CATALOGUE INTRO */}
-      <section className="ml-sec" style={{ paddingBottom: 40 }}>
-        <div className="ml-wrap">
-          <div className="ml-lbl ml-mono">The Catalogue</div>
-          <h2 data-h2>Every venue,<br /><span className="ml-m">a moving portrait.</span></h2>
-        </div>
-      </section>
-
-      {/* HORIZONTAL CATALOGUE */}
-      <section className="ml-cat" id="cat">
-        <div className="ml-cat-track">
-          {(venues.length ? venues : []).map((v, i) => (
-            <button key={v._id} className="ml-panel" onClick={() => open(v)} aria-label={`Open ${v.name}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img(v, i)} alt={v.name} />
-              <div className="ml-scrim" />
-              <span className="ml-num ml-mono">{String(i + 1).padStart(2, "0")} / {String(venues.length).padStart(2, "0")}</span>
-              <div className="ml-pcap"><h3>{v.name}</h3><p className="ml-mono">View portfolio ↗</p></div>
-            </button>
-          ))}
-        </div>
-        <div className="ml-hint ml-mono">scroll →</div>
-      </section>
-
-      {/* VENUES GRID (crawlable links) */}
+      {/* VENUES — Pinterest masonry (crawlable links) */}
       <section className="ml-sec" id="venues">
         <div className="ml-wrap">
           <div className="ml-lbl ml-mono">Powered by Voloo</div>
           <h2 data-h2>Our Venues<br /><span className="ml-m">unveiled on scroll.</span></h2>
           <div className="ml-grid">
             {(venues.length ? venues : []).map((v, i) => (
-              <div key={v._id} className={"ml-reveal" + (i % 4 === 0 ? " ml-tall" : "")}>
-                <button className="ml-reveal-btn" onClick={() => open(v)} aria-label={`Open ${v.name}`}>
+              <div key={v._id} className="ml-reveal" style={{ aspectRatio: RATIOS[i % RATIOS.length] }}>
+                <button className="ml-reveal-btn" onClick={(e) => open(v, e.currentTarget)} aria-label={`Open ${v.name}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img(v, i)} alt={v.name} />
-                  <div className="ml-cover" />
+                  <div className="ml-rgrad" />
                   <span className="ml-rcap">{v.name}</span>
+                  <div className="ml-cover" />
                 </button>
                 {/* Real crawlable link for SEO */}
                 <Link href={buildMenuUrl(locale, v.slug)} className="ml-seo-link">{v.name} menu</Link>
@@ -395,7 +397,7 @@ export default function MotionLanding({ venues, locale }: { venues: LandingVenue
         </div>
       </footer>
 
-      {active && <Portfolio venue={active} onClose={() => setActive(null)} />}
+      {active && <Portfolio venue={active.venue} origin={active.origin} onClose={() => setActive(null)} />}
     </main>
   );
 }
@@ -409,7 +411,7 @@ const ML_CSS = `
 .ml-wrap{max-width:1160px;margin:0 auto;padding:0 24px}
 .ml-root ::selection{background:#fff;color:#000}
 
-.ml-nav{position:fixed;top:16px;left:0;right:0;z-index:50;display:flex;justify-content:center;padding:0 16px}
+.ml-nav{position:fixed;top:max(14px,env(safe-area-inset-top));left:0;right:0;z-index:50;display:flex;justify-content:center;padding:0 16px}
 .ml-navbar{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:720px;padding:10px 10px 10px 20px;border-radius:999px;background:rgba(255,255,255,.05);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line)}
 .ml-brand{font-weight:800;letter-spacing:.18em;font-size:14px}
 .ml-nlinks{display:none;gap:24px}.ml-nlinks a{font-size:13px;color:var(--mut)}.ml-nlinks a:hover{color:#fff}
@@ -442,27 +444,15 @@ const ML_CSS = `
 .ml-sec h2,.ml-cta h2{font-size:clamp(30px,6vw,58px);font-weight:820;letter-spacing:-.03em;line-height:1.02}
 .ml-m{color:var(--faint)}
 
-.ml-cat{position:relative;height:100svh;overflow:hidden}
-.ml-cat-track{display:flex;gap:26px;height:100%;align-items:center;padding:0 24px;width:max-content}
-.ml-panel{position:relative;width:74vw;max-width:440px;height:74vh;max-height:600px;border-radius:24px;overflow:hidden;flex-shrink:0;border:1px solid var(--line);padding:0;background:none;cursor:pointer;text-align:left}
-.ml-panel img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
-.ml-panel:hover img{transform:scale(1.04)}
-.ml-scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent 55%)}
-.ml-num{position:absolute;top:18px;left:20px;font-size:12px;color:rgba(255,255,255,.8)}
-.ml-pcap{position:absolute;left:20px;bottom:20px;right:20px;z-index:2}
-.ml-pcap h3{font-size:26px;font-weight:800;letter-spacing:-.02em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.6)}
-.ml-pcap p{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
-.ml-hint{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint)}
-@media(max-width:640px){.ml-cat{height:auto}.ml-cat-track{width:auto;flex-direction:column;padding:0 24px}.ml-panel{width:100%;height:60vh}.ml-hint{display:none}}
-
-.ml-grid{margin-top:52px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(min-width:800px){.ml-grid{grid-template-columns:repeat(3,1fr)}}
-.ml-reveal{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:4/5}
-.ml-reveal.ml-tall{grid-row:span 2;aspect-ratio:4/7}
+.ml-grid{margin-top:52px;column-count:2;column-gap:14px}
+@media(min-width:700px){.ml-grid{column-count:3}}
+@media(min-width:1040px){.ml-grid{column-count:4}}
+.ml-reveal{position:relative;border-radius:18px;overflow:hidden;margin-bottom:14px;break-inside:avoid;width:100%}
 .ml-reveal-btn{position:absolute;inset:0;padding:0;border:0;background:none;cursor:pointer;width:100%;height:100%}
-.ml-reveal img{width:100%;height:100%;object-fit:cover;will-change:transform}
-.ml-cover{position:absolute;inset:0;background:var(--bg);z-index:2}
-.ml-rcap{position:absolute;left:14px;bottom:12px;z-index:3;font-size:12px;font-weight:600;opacity:0;color:#fff}
+.ml-reveal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;will-change:transform}
+.ml-rgrad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.62),transparent 45%);z-index:1;pointer-events:none}
+.ml-rcap{position:absolute;left:15px;bottom:13px;right:15px;z-index:2;font-size:16px;font-weight:700;letter-spacing:-.01em;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.55)}
+.ml-cover{position:absolute;inset:0;background:var(--bg);z-index:3}
 .ml-seo-link{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ml-empty{color:var(--faint);text-align:center;padding:60px 0;letter-spacing:.2em;text-transform:uppercase;font-size:12px}
 
