@@ -9,10 +9,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          // Dashboard — authenticated pages, must never be indexed
-          "/en/dashboard/",
-          "/ka/dashboard/",
-          // Interactive menu app merged into /venues/[slug] which is public and indexable.
+          // Ephemeral per-NFC-tag tap URLs — thin/duplicate, redirect to the menu.
+          "/t/",
           // Legacy reserved paths
           "/private/",
           "/admin/",

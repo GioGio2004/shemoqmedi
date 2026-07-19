@@ -7,6 +7,7 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import CustomScrollIndicator from "@/components/layout/CustomScrollIndicator";
 
 const geistSans = Geist({
@@ -33,31 +34,36 @@ export async function generateMetadata({
   // Fallbacks in case messages are missing
   const title = messages?.Landing?.Hero?.title_1
     ? `${messages.Landing.Hero.title_1} - Shemoqmedi`
-    : "Shemoqmedi - Digital Business Solutions";
+    : "Shemoqmedi — AI-Powered Digital Menus for Hospitality";
 
   const description = messages?.Landing?.Hero?.subtitle
     ? messages.Landing.Hero.subtitle.substring(0, 160)
-    : "Create a modern digital experience for your business with Shemoqmedi.";
+    : "NFC digital menus with an AI concierge for cafés and restaurants in Georgia. One tap on the table — no app, no wait.";
 
   const keywords =
     locale === "ka"
       ? [
           "შემოქმედი",
-          "ვებგვერდი",
-          "როგორ შევქმნათ ვებგვერდი",
-          "ვებ დიზაინი",
-          "საიტის დამზადება",
+          "ციფრული მენიუ",
+          "NFC მენიუ",
+          "QR მენიუ",
+          "რესტორნის მენიუ",
+          "კაფე მენიუ",
+          "ხელოვნური ინტელექტი",
           "shemoqmedi",
-          "website builder georgia",
+          "digital menu georgia",
         ]
       : [
-          "website builder",
-          "web design",
-          "digital transformation",
-          "business website",
-          "ecommerce",
+          "digital menu",
+          "NFC menu",
+          "QR menu",
+          "restaurant menu",
+          "cafe menu",
+          "AI menu concierge",
+          "hospitality technology",
+          "Tbilisi",
+          "Georgia",
           "shemoqmedi",
-          "create website",
         ];
 
   return {
@@ -99,11 +105,12 @@ export async function generateMetadata({
       apple: "/apple-touch-icon.png",
     },
     alternates: {
-      canonical: `https://www.shemoqmedi.space/${locale}`,
+      canonical: `${baseUrl}/${locale}`,
       languages: {
-        en: `https://www.shemoqmedi.space/en`,
-        ka: `https://www.shemoqmedi.space/ka`,
-        ru: `https://www.shemoqmedi.space/ru`,
+        en: `${baseUrl}/en`,
+        ka: `${baseUrl}/ka`,
+        ru: `${baseUrl}/ru`,
+        "x-default": `${baseUrl}/en`,
       },
     },
     robots: {
@@ -178,6 +185,12 @@ export default async function RootLayout({
           </NextIntlClientProvider>
         </ClerkProvider>
         <Analytics />
+        {/* Ahrefs Web Analytics — cookieless, no personal data */}
+        <Script
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="RO+0sybyEvM/+UpADUCBDA"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

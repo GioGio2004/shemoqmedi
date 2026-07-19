@@ -28,6 +28,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import MenuRouterClient from "./_components/MenuRouterClient";
+import { buildMenuUrl } from "@/lib/routes";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, locale } = await params;
   const venueName = slugToVenueName(slug);
-  const canonicalUrl = `${BASE_URL}/${locale}/${slug}`;
+  // Canonical MUST match the real route (/{locale}/custom-ui-test/{slug}) — the
+  // previous value dropped the route segment and pointed Google at a 404.
+  const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
 
   // Prefer a per-venue OG image if one has been placed in /public.
   // Falls back to the platform default so sharing always has an image.
@@ -68,8 +71,10 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        en: `${BASE_URL}/en/${slug}`,
-        ka: `${BASE_URL}/ka/${slug}`,
+        en: `${BASE_URL}${buildMenuUrl("en", slug)}`,
+        ka: `${BASE_URL}${buildMenuUrl("ka", slug)}`,
+        ru: `${BASE_URL}${buildMenuUrl("ru", slug)}`,
+        "x-default": `${BASE_URL}${buildMenuUrl("en", slug)}`,
       },
     },
     openGraph: {
@@ -147,7 +152,7 @@ export default async function Page({
   }
 
   const venueName = slugToVenueName(slug);
-  const canonicalUrl = `${BASE_URL}/${locale}/${slug}`;
+  const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
 
   // ── JSON-LD: LocalBusiness + Restaurant ─────────────────────────────────────
   //

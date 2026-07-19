@@ -1,10 +1,10 @@
 {
-  "name": "Shemoqmedi",
+  "name": "Shemoqmedi — AI-Powered Digital Menus",
   "short_name": "Shemoqmedi",
-  "description": "Digital Business Solutions — Create a modern digital experience for your business.",
+  "description": "NFC digital menus with an AI concierge for cafés and restaurants. One tap on the table — no app, no wait.",
   "start_url": "/",
   "scope": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0a0a0a",
   "background_color": "#0a0a0a",
