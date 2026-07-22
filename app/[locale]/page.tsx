@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
-import MotionLanding, { type LandingVenue } from "@/components/landing/MotionLanding";
+import LandingPanels from "@/components/landing/LandingPanels";
+import { type LandingVenue } from "@/components/landing/MotionLanding";
 import { buildMenuUrl } from "@/lib/routes";
 
 const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
@@ -13,9 +14,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return {
-    title: "Shemoqmedi — AI-Powered Digital Menus for Hospitality",
+    title: "VOLOO by Shemoqmedi — Good Food Deserves a Better Menu",
     description:
-      "Voloo turns your café or restaurant into an AI-powered venue. NFC menus, smart ordering, and live customer insights — built for hospitality businesses in Georgia.",
+      "AI menus for Tbilisi's best rooms — tap the table, ask the concierge anything, rescue a Surprise Bag before close. No app, no wait. Put your venue on VOLOO.",
     alternates: {
       canonical: `${BASE_URL}/${locale}`,
       languages: {
@@ -26,15 +27,15 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title: "Shemoqmedi — AI-Powered Digital Menus",
+      title: "VOLOO — Good Food Deserves a Better Menu",
       description:
-        "NFC menus, smart ordering, and live AI insights for hospitality businesses in Tbilisi.",
+        "One tap on the table. No app, no wait — a living menu with an AI concierge who actually knows it, and Surprise Bags of rescued food every night.",
       url: `${BASE_URL}/${locale}`,
       type: "website",
       siteName: "Shemoqmedi",
       images: [{ url: `${BASE_URL}/og-default.jpg`, width: 1200, height: 630 }],
     },
-    twitter: { card: "summary_large_image", title: "Shemoqmedi — AI-Powered Digital Menus" },
+    twitter: { card: "summary_large_image", title: "VOLOO — Good Food Deserves a Better Menu" },
   };
 }
 
@@ -101,7 +102,7 @@ export default async function Home({
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <MotionLanding venues={venues} locale={locale} />
+      <LandingPanels venues={venues} locale={locale} />
     </>
   );
 }

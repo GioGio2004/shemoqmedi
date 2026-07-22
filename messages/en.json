@@ -1,4 +1,31 @@
 {
+  "Auth": {
+    "titleSignIn": "SIGN IN",
+    "titleSignUp": "SIGN UP",
+    "subtitle": "Continue with Google, or get a one-time code by email. No passwords.",
+    "continueGoogle": "CONTINUE WITH GOOGLE",
+    "or": "OR",
+    "emailLabel": "EMAIL",
+    "emailPh": "YOU@EMAIL.COM",
+    "sendCode": "SEND CODE",
+    "codeLabel": "CODE",
+    "codeSentTo": "We sent a 6-digit code to {email}.",
+    "newAccountNote": "New here — this code also creates your account.",
+    "verify": "VERIFY",
+    "resend": "RESEND CODE",
+    "codeResent": "CODE SENT",
+    "changeEmail": "CHANGE EMAIL",
+    "working": "WORKING…",
+    "errorEmail": "Enter a valid email address.",
+    "errorCode": "That code didn't match. Try again.",
+    "errorExpired": "That code expired — resend a new one.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "alreadySignedIn": "YOU'RE SIGNED IN",
+    "close": "Close",
+    "legal": "BY CONTINUING YOU AGREE TO OUR TERMS & PRIVACY POLICY.",
+    "backHome": "BACK TO HOME",
+    "completing": "SIGNING YOU IN…"
+  },
   "Navbar": {
     "brand": "FUTURECLOTH",
     "home": "Home",
@@ -753,6 +780,19 @@
       "rights": "© 2026 Shemoqmedi. All rights reserved.",
       "cta": "Ready to Start?",
       "contact": "Contact Us"
+    },
+    "HeroRuled": {
+      "line1": "GOOD FOOD",
+      "line2": "DESERVES A",
+      "line3": "BETTER",
+      "word1": "MENU.",
+      "word2": "ENDING.",
+      "word3": "TABLE.",
+      "word4": "PRICE.",
+      "lead": "AI menus for Tbilisi's best rooms. Surplus food, rescued nightly.",
+      "scroll": "SCROLL",
+      "cta_venues": "EXPLORE VENUES",
+      "cta_bags": "TODAY'S BAGS"
     }
   },
   "CoffeeTemplate2": {
@@ -1076,5 +1116,96 @@
     "title": "404 - Page Not Found",
     "description": "The page you are looking for does not exist or has been moved.",
     "button": "Return Home"
+  },
+  "LandingTabs": {
+    "home": "Home",
+    "menus": "Menus",
+    "offers": "Offers"
+  },
+  "Offers": {
+    "title": "Surprise Bags",
+    "subtitle": "Rescue delicious food at a fraction of the price.",
+    "empty": "No offers right now — check back tonight 🌙",
+    "left": "{count} left",
+    "sectionLabel": "Surprise Bags",
+    "live": "{count} live",
+    "pickup": "Pickup",
+    "reserve": "Reserve",
+    "tickerRescue": "Rescue tonight",
+    "tickerLive": "{count, plural, one {# bag live} other {# bags live}}"
+  },
+  "LandingRuled": {
+    "nav": {
+      "home": "HOME",
+      "how": "HOW",
+      "concierge": "CONCIERGE",
+      "venues": "VENUES",
+      "offers": "OFFERS",
+      "menus": "MENUS",
+      "by": "BY SHEMOQMEDI"
+    },
+    "mcta": {
+      "label": "VENUES",
+      "soon": "SOON",
+      "cta": "See Menus",
+      "sub": "Every venue, every live menu",
+      "count": "VENUES",
+      "cursor": "Open"
+    },
+    "marquee": {
+      "m1": "TAP THE TABLE",
+      "m2": "SEE THE MENU",
+      "m3": "ASK THE AI",
+      "m4": "RESCUE A BAG"
+    },
+    "how": {
+      "label": "HOW IT WORKS",
+      "meta": "3 STEPS",
+      "heading": "From tap to table, in seconds.",
+      "s1t": "SCAN",
+      "s1d": "NFC or QR. The menu is already yours.",
+      "s2t": "ASK",
+      "s2d": "VOLOO AI reads the room, the diet, the mood.",
+      "s3t": "EAT",
+      "s3d_pre": "Or rescue a ",
+      "s3d_link": "Surprise Bag",
+      "s3d_post": " before close."
+    },
+    "concierge": {
+      "label": "CONCIERGE",
+      "heading": "Ask the menu anything.",
+      "sub": "Three languages, zero judgement. VOLOO knows every ingredient on the page.",
+      "try": "TRY VOLOO",
+      "bubble_a": "Tonight: the mushroom khinkali and the grilled eggplant — both fully plant-based."
+    },
+    "venues": {
+      "label": "VENUES",
+      "meta_soon": "SOON",
+      "card_meta": "TBILISI · LIVE MENU",
+      "open_menu": "MENU",
+      "empty": "THE FIRST ROOMS GO LIVE SOON"
+    },
+    "waitlist": {
+      "label": "FOR VENUES",
+      "meta": "JOIN",
+      "h_pre": "Put your menu on ",
+      "h_accent": "VOLOO.",
+      "lead": "We're onboarding Tbilisi's cafés and restaurants now. Leave your email — we'll bring the tags.",
+      "email_ph": "YOU@EMAIL.COM",
+      "hood_ph": "NEIGHBORHOOD (OPTIONAL)",
+      "submit": "REQUEST ACCESS",
+      "success": "YOU'RE ON THE LIST",
+      "note": "NO SPAM — ONE EMAIL WHEN WE LAUNCH.",
+      "error_generic": "Something went wrong. Please try again."
+    },
+    "footer": {
+      "label": "CONTACT",
+      "explore": "EXPLORE",
+      "legal": "LEGAL",
+      "contact": "CONTACT",
+      "privacy": "PRIVACY",
+      "terms": "TERMS",
+      "made": "MADE WITH ❤ IN TBILISI"
+    }
   }
 }

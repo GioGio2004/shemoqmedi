@@ -68,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 2. Dynamic venue menu pages (real route — matches buildMenuUrl / MENU_ROUTE_BASE)
   const publishedVenues = await fetchPublishedVenueSlugs();
   for (const { slug, updatedAt } of publishedVenues) {
-    const path = `${MENU_ROUTE_BASE}/${slug}`;
+    const path = `/${MENU_ROUTE_BASE}/${slug}`;
     for (const locale of LOCALES) {
       entries.push({
         url: `${BASE_URL}/${locale}${path}`,

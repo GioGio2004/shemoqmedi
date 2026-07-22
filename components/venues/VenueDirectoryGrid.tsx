@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Star, MapPin, ArrowUpRight, UtensilsCrossed } from "lucide-react";
-import { buildMenuUrl, buildVenueUrl } from "@/lib/routes";
+import { buildMenuUrl } from "@/lib/routes";
 
 type Venue = {
   _id: string;
@@ -114,7 +114,7 @@ export default function VenueDirectoryGrid({ venues, locale }: VenueDirectoryGri
                 {/* CTAs */}
                 <div className="flex items-center gap-2">
                   <Link
-                    href={buildVenueUrl(locale, venue.slug)}
+                    href={buildMenuUrl(locale, venue.slug)}
                     className="flex-1 text-center py-2 px-3 text-[10px] font-semibold tracking-[0.15em] uppercase text-white/70 bg-white/[0.06] border border-white/[0.12] rounded-full hover:bg-white/10 hover:text-white transition-all duration-200"
                   >
                     View Venue

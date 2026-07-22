@@ -30,6 +30,21 @@ const nextConfig: NextConfig = {
     "*.serveo.net",
   ] as any,
   serverExternalPackages: [],
+  async redirects() {
+    return [
+      // Legacy public menu route → new /menu path (301).
+      {
+        source: "/:locale/custom-ui-test/:slug",
+        destination: "/:locale/menu/:slug",
+        permanent: true,
+      },
+      {
+        source: "/custom-ui-test/:slug",
+        destination: "/menu/:slug",
+        permanent: true,
+      },
+    ];
+  },
   experimental: {
     serverActions: {
       allowedOrigins: [

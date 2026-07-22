@@ -91,14 +91,15 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
         {/* ── Foreground Content ───────────────────────────────────────────── */}
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-20 text-center">
 
-          {/* Badge — staggered in first */}
+          {/* Badge — mono eyebrow, hairline box, 2px radius (RULED) */}
           <div style={fadeSlideUp(100)}>
             <div
-              className="inline-block px-5 py-1.5 mb-8 text-xs font-medium tracking-[0.25em] uppercase"
+              className="inline-block px-4 py-1.5 mb-8 v-t-mono"
               style={{
-                borderRadius: "9999px",
+                borderRadius: "2px",
                 border: "1px solid",
-                borderColor: "color-mix(in oklch, var(--theme-accent, var(--primary)), transparent 50%)",
+                borderColor:
+                  "color-mix(in oklch, var(--theme-accent, var(--primary)), transparent 50%)",
                 color: "var(--theme-accent, var(--primary))",
               }}
             >
@@ -145,13 +146,13 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
           {/* ── CTA Buttons ───────────────────────────────────────────────── */}
           <div style={fadeSlideUp(460)}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
-              {/* Primary — filled accent */}
+              {/* Primary — filled accent, venue radius (2px RULED fallback) */}
               <a
                 href="#menu"
                 id="hero-explore-menu-btn"
-                className="group flex items-center gap-3 px-8 py-4 font-medium tracking-wide transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5"
+                className="group flex items-center gap-3 px-8 py-4 text-sm font-medium uppercase tracking-[0.08em] transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
                 style={{
-                  borderRadius: "var(--radius, 9999px)",
+                  borderRadius: "var(--radius, 2px)",
                   background: "var(--theme-accent, var(--primary))",
                   color: "var(--primary-foreground, #000)",
                 }}
@@ -160,13 +161,13 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
                 <ArrowDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
               </a>
 
-              {/* Secondary — outline with accent border */}
+              {/* Secondary — 1px hairline outline */}
               <a
                 href="#visit"
                 id="hero-visit-us-btn"
-                className="px-8 py-4 font-medium tracking-wide transition-all duration-300 hover:opacity-80 hover:-translate-y-0.5"
+                className="px-8 py-4 text-sm font-medium uppercase tracking-[0.08em] transition-all duration-300 hover:opacity-80 active:scale-[0.97]"
                 style={{
-                  borderRadius: "var(--radius, 9999px)",
+                  borderRadius: "var(--radius, 2px)",
                   border: "1px solid",
                   borderColor:
                     "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 60%)",
@@ -178,71 +179,76 @@ export function HeroSection({ config }: { config: StorefrontConfig | null }) {
             </div>
           </div>
 
-          {/* ── Hero Image Trio ────────────────────────────────────────────── */}
+          {/* ── Hero Image Trio — crosshair-framed, 2px radius (RULED) ────── */}
           <div style={fadeSlideUp(560)}>
             <div className="grid grid-cols-3 gap-3 md:gap-5 max-w-3xl mx-auto">
-              {/* Image 1 */}
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden group shadow-xl">
-                <Image
-                  src={
+              {[
+                {
+                  src:
                     (config?.heroImageUrls?.[0]?.trim() || false) ||
-                    "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1000"
-                  }
-                  alt="Hero image 1"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 768px) 33vw, 250px"
-                />
-                {/* Subtle vignette */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              </div>
-
-              {/* Image 2 — offset upward */}
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden -mt-8 group shadow-xl">
-                <Image
-                  src={
+                    "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1000",
+                  offset: "",
+                },
+                {
+                  src:
                     (config?.heroImageUrls?.[1]?.trim() || false) ||
-                    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1000"
-                  }
-                  alt="Hero image 2"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 768px) 33vw, 250px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              </div>
-
-              {/* Image 3 */}
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden group shadow-xl">
-                <Image
-                  src={
+                    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1000",
+                  offset: "-mt-8",
+                },
+                {
+                  src:
                     (config?.heroImageUrls?.[2]?.trim() || false) ||
-                    "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600"
-                  }
-                  alt="Hero image 3"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 768px) 33vw, 250px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              </div>
+                    "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600",
+                  offset: "",
+                },
+              ].map((img, i) => (
+                <div key={i} className={`v-xframe group ${img.offset}`}>
+                  <div className="v-xframe-in relative aspect-[3/4]">
+                    <Image
+                      src={img.src}
+                      alt={`Hero image ${i + 1}`}
+                      fill
+                      className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                      sizes="(max-width: 768px) 33vw, 250px"
+                    />
+                    {/* Subtle vignette */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                    {/* Mono index — top-left */}
+                    <span
+                      aria-hidden="true"
+                      className="v-t-micro absolute top-2 left-2"
+                      style={{
+                        color: "rgba(244,243,240,0.7)",
+                        textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                      }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  {/* Crosshair corner ticks */}
+                  <i className="v-xframe-tick" data-corner="tl" />
+                  <i className="v-xframe-tick" data-corner="tr" />
+                  <i className="v-xframe-tick" data-corner="bl" />
+                  <i className="v-xframe-tick" data-corner="br" />
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* ── Scroll Indicator ──────────────────────────────────────────────── */}
+        {/* ── Scroll Indicator — mono micro + hairline (RULED) ──────────────── */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
           <span
-            className="text-xs tracking-[0.2em] uppercase"
+            className="v-t-micro"
             style={{
               color:
                 "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 50%)",
             }}
           >
-            Scroll
+            Scroll — ▼
           </span>
           <div
-            className="w-px h-8 animate-pulse"
+            className="w-px h-6 animate-pulse"
             style={{
               background:
                 "linear-gradient(to bottom, var(--theme-accent, var(--primary)), transparent)",

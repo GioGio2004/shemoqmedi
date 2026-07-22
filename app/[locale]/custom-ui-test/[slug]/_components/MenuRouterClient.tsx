@@ -30,13 +30,18 @@ export default function MenuRouterClient({
     return <MenuSkeleton />;
   }
 
-  // ── 404 state ───────────────────────────────────────────────────────────────
+  // ── 404 state — RULED mono lockup ───────────────────────────────────────────
   if (data === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground px-6 text-center">
-        <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-6">
-          <span className="text-3xl">☕</span>
-        </div>
+        <p className="v-t-mono mb-4" style={{ color: "var(--v-faint)" }}>
+          404 — Not found
+        </p>
+        <span
+          aria-hidden="true"
+          className="v-line-x max-w-xs mb-8"
+          style={{ background: "var(--v-line)" }}
+        />
         <h1 className="font-serif text-4xl mb-4 text-balance">
           Cafe Not Found
         </h1>

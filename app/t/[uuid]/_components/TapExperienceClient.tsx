@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { DotLottieReact, type DotLottie } from "@lottiefiles/dotlottie-react";
+import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import AssembleIntro from "./AssembleIntro";
 import DarkTheme from "./theme-components/DarkTheme";
 import LightTheme from "./theme-components/LightTheme";
 import OrangeTheme from "./theme-components/OrangeTheme";
@@ -144,37 +144,6 @@ function CafeHubUI({ tag, visible }: { tag: TagSnapshot; visible: boolean }) {
   }
 }
 
-// ─── LOTTIE INTRO ANIMATION ──────────────────────────────────────────────────
-function LottieIntro({
-  animation,
-  onComplete,
-  collapsed,
-}: {
-  animation: string;
-  onComplete: () => void;
-  collapsed: boolean;
-}) {
-  const lottieRef = useRef<DotLottie | null>(null);
-
-  return (
-    <div
-      className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-30
-        ${collapsed ? "scale-75 opacity-0 pointer-events-none -translate-y-10" : "scale-100 opacity-100"}`}
-    >
-      <DotLottieReact
-        src={`/animations/${animation}`}
-        autoplay
-        loop={false}
-        dotLottieRefCallback={(lottie) => {
-          lottieRef.current = lottie;
-          lottie?.addEventListener("complete", onComplete);
-        }}
-        style={{ width: "min(100vw, 100vh)", maxWidth: 560 }}
-      />
-    </div>
-  );
-}
-
 // ─── INACTIVE CARD ───────────────────────────────────────────────────────────
 function InactiveCard() {
   return (
@@ -198,7 +167,6 @@ export default function TapExperienceClient({ tag, tagUuid: _tagUuid }: Props) {
   const [hubVisible, setHubVisible] = useState(false);
   const [vcardDone, setVcardDone] = useState(false);
 
-  const selectedAnim = tag.selectedAnimation || "Be-Bold.lottie";
   const skipAnim = tag.showAnimation === false;
 
   // Skip animation immediately if disabled
@@ -224,8 +192,7 @@ export default function TapExperienceClient({ tag, tagUuid: _tagUuid }: Props) {
     return (
       <div className={`relative h-[100dvh] w-full overflow-hidden ${themeBg}`}>
         {!skipAnim && !animDone && (
-          <LottieIntro
-            animation={selectedAnim}
+          <AssembleIntro
             onComplete={() => setAnimDone(true)}
             collapsed={animDone}
           />
@@ -246,11 +213,7 @@ export default function TapExperienceClient({ tag, tagUuid: _tagUuid }: Props) {
     return (
       <div className="flex flex-col h-[100dvh] w-full bg-black overflow-hidden relative">
         {!skipAnim && !animDone && (
-          <LottieIntro
-            animation={selectedAnim}
-            onComplete={handleAnimDone}
-            collapsed={animDone}
-          />
+          <AssembleIntro onComplete={handleAnimDone} collapsed={animDone} />
         )}
         <div
           className={`absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-700 delay-100
@@ -288,11 +251,7 @@ export default function TapExperienceClient({ tag, tagUuid: _tagUuid }: Props) {
 
     return (
       <div className="flex h-[100dvh] w-full bg-black overflow-hidden relative">
-        <LottieIntro
-          animation={selectedAnim}
-          onComplete={handleAnimDone}
-          collapsed={animDone}
-        />
+        <AssembleIntro onComplete={handleAnimDone} collapsed={animDone} />
       </div>
     );
   }

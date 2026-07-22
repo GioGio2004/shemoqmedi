@@ -132,25 +132,13 @@ export function MenuCard({
   const cardRadius = resolveBorderRadius(borderRadius);
   const btnRadius = resolveButtonRadius(buttonShape);
 
-  // Border color resolution: "glass" → rgba white, "accent" → CSS var
+  // Border color resolution: "glass" → contextual hairline, "accent" → CSS var
   const resolvedBorderColor =
     borderColor === "glass"
-      ? "rgba(255,255,255,0.05)"
+      ? "var(--v-c-line, rgba(244,243,240,0.14))"
       : borderColor === "accent"
       ? "var(--theme-accent, oklch(0.922 0 0))"
       : borderColor;
-
-  // Accent for the price badge — always theme-accent
-  const accentColor =
-    product.accentColor || "var(--theme-accent, oklch(0.922 0 0))";
-
-  // Ghost button color: 10% opacity of the primary/buttonColor
-  const ghostButtonBg = buttonColor
-    ? `color-mix(in srgb, ${buttonColor} 10%, transparent)`
-    : "rgba(255,255,255,0.07)";
-  const ghostButtonBorder = buttonColor
-    ? `color-mix(in srgb, ${buttonColor} 25%, transparent)`
-    : "rgba(255,255,255,0.1)";
 
   return (
     /**
@@ -165,15 +153,14 @@ export function MenuCard({
       className={cn(
         "group relative overflow-hidden flex flex-col h-[280px] sm:h-[320px] w-full cursor-pointer",
         "transition-all duration-500 ease-out",
-        "translate-y-0 hover:-translate-y-2",
-        "shadow-lg hover:shadow-2xl hover:shadow-black/50"
+        "translate-y-0 hover:-translate-y-1 active:scale-[0.97]"
       )}
       style={{
         borderRadius: cardRadius,
         borderWidth: `${borderWidth}px`,
         borderStyle: "solid",
         borderColor: resolvedBorderColor,
-        backgroundColor: "#000",
+        backgroundColor: "#0A0A0A",
       }}
     >
       {/* ── Full Card Background Image ── */}
@@ -187,19 +174,34 @@ export function MenuCard({
           className={cn(
             "object-cover",
             "transition-transform duration-700 ease-out",
-            "group-hover:scale-[1.06]"
+            "group-hover:scale-[1.04]"
           )}
           priority={product.sortOrder <= 3}
         />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
       </div>
 
-      {/* ── Top Header (Title + Price) ── */}
+      {/* ── Top Header (Index + Title + Price) ── */}
       <div className="relative z-10 p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-start gap-1">
-        <h3 className="font-sans text-[11px] sm:text-xs font-bold text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
-          {productName}
-        </h3>
-        <span className="text-[11px] sm:text-xs font-bold text-white tabular-nums shrink-0 drop-shadow-md">
+        <div className="min-w-0">
+          <span
+            aria-hidden="true"
+            className="v-t-micro block mb-0.5"
+            style={{
+              color: "rgba(244,243,240,0.6)",
+              textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+            }}
+          >
+            {String(animationIndex + 1).padStart(2, "0")}
+          </span>
+          <h3 className="font-sans text-[11px] sm:text-xs font-medium text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
+            {productName}
+          </h3>
+        </div>
+        <span
+          className="text-[11px] sm:text-xs text-white tabular-nums shrink-0 drop-shadow-md"
+          style={{ fontFamily: "var(--v-font-mono, ui-monospace, monospace)" }}
+        >
           {displayPrice} ₾
         </span>
       </div>
@@ -207,17 +209,17 @@ export function MenuCard({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* ── Bottom Glassmorphic Panel ── */}
+      {/* ── Bottom Panel — dark scrim + top hairline (RULED) ── */}
       <div
         className="relative z-20 p-2 sm:p-4 pt-3 pb-3 sm:pt-5 sm:pb-5 flex flex-col justify-end"
         style={{
-          background: "linear-gradient(180deg, color-mix(in srgb, var(--theme-accent, #D9D9D9) 45%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #FFFFFF) 15%, transparent) 100%)",
+          background: "rgba(10,10,10,0.58)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.4)",
+          borderTop: "1px solid rgba(244,243,240,0.18)",
         }}
       >
-        <p className="text-white font-medium text-[10px] sm:text-[11px] leading-snug mb-2 sm:mb-3 line-clamp-2 drop-shadow">
+        <p className="text-white/85 text-[10px] sm:text-[11px] leading-snug mb-2 sm:mb-3 line-clamp-2">
           {description || "A delicious treat made with the finest ingredients."}
         </p>
 
@@ -244,9 +246,9 @@ export function MenuCard({
                 })
               );
             }}
-            className="text-white text-[10px] sm:text-[11px] font-bold border-b-2 border-white/70 pb-0.5 hover:text-white/80 transition-colors drop-shadow"
+            className="v-t-micro text-white border-b border-white/60 pb-0.5 hover:text-white/80 transition-colors drop-shadow"
           >
-            ask AI
+            Ask AI
           </button>
 
           <button
@@ -267,13 +269,14 @@ export function MenuCard({
                 })
               );
             }}
-            className="text-white text-[10px] sm:text-xs font-bold px-3 py-1 sm:px-4 sm:py-1.5 transition-transform hover:scale-105"
+            className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.06em] px-3 py-1 sm:px-4 sm:py-1.5 transition-transform hover:scale-105 active:scale-[0.97]"
             style={{
               backgroundColor: "var(--theme-accent, #B91C1C)",
-              borderRadius: "9999px",
+              color: "var(--primary-foreground, #000)",
+              borderRadius: btnRadius,
             }}
           >
-            ADD+
+            ADD +
           </button>
         </div>
       </div>
@@ -318,7 +321,7 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
     : "";
 
   const cardRadius = resolveBorderRadius(borderRadius);
-  const resolvedBorderColor = borderColor === "glass" ? "rgba(255,255,255,0.05)" : borderColor === "accent" ? "var(--theme-accent, oklch(0.922 0 0))" : borderColor;
+  const resolvedBorderColor = borderColor === "glass" ? "var(--v-c-line, rgba(244,243,240,0.14))" : borderColor === "accent" ? "var(--theme-accent, oklch(0.922 0 0))" : borderColor;
 
   return (
     <div 
@@ -341,21 +344,22 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 40, scale: 0.95 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-full overflow-hidden flex flex-col h-[400px] sm:h-[450px] max-w-sm sm:max-w-md shadow-2xl shadow-black/80"
+        className="relative w-full overflow-hidden flex flex-col h-[400px] sm:h-[450px] max-w-sm sm:max-w-md"
         style={{
           borderRadius: cardRadius,
           borderWidth: `${borderWidth}px`,
           borderColor: resolvedBorderColor,
           borderStyle: "solid",
-          backgroundColor: "#000",
+          backgroundColor: "#0A0A0A",
         } as React.CSSProperties}
       >
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-3 right-3 z-30 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-colors"
+          className="absolute top-3 right-3 z-30 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+          style={{ border: "1px solid rgba(244,243,240,0.18)" }}
         >
           <X className="w-4 h-4" />
         </button>
@@ -373,10 +377,13 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
         </div>
 
         <div className="relative z-10 p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start gap-2">
-          <h3 className="font-sans text-sm sm:text-base font-bold text-white tracking-wide leading-tight drop-shadow-md">
+          <h3 className="font-sans text-sm sm:text-base font-medium text-white tracking-wide leading-tight drop-shadow-md">
             {productName}
           </h3>
-          <span className="text-sm sm:text-base font-bold text-white tabular-nums shrink-0 drop-shadow-md">
+          <span
+            className="text-sm sm:text-base text-white tabular-nums shrink-0 drop-shadow-md"
+            style={{ fontFamily: "var(--v-font-mono, ui-monospace, monospace)" }}
+          >
             {displayPrice} ₾
           </span>
         </div>
@@ -386,13 +393,13 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
         <div
           className="relative z-20 p-4 sm:p-5 pt-4 pb-4 sm:pt-6 sm:pb-6 flex flex-col justify-end"
           style={{
-            background: "linear-gradient(180deg, color-mix(in srgb, var(--theme-accent, #D9D9D9) 45%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #FFFFFF) 15%, transparent) 100%)",
+            background: "rgba(10,10,10,0.58)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            borderTop: "1px solid rgba(255, 255, 255, 0.4)",
+            borderTop: "1px solid rgba(244,243,240,0.18)",
           }}
         >
-          <p className="text-white font-medium text-xs sm:text-sm leading-snug mb-3 sm:mb-4 drop-shadow">
+          <p className="text-white/85 text-xs sm:text-sm leading-snug mb-3 sm:mb-4">
             {description || "A delicious treat made with the finest ingredients."}
           </p>
 
@@ -418,9 +425,9 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
                   })
                 );
               }}
-              className="text-white text-xs sm:text-sm font-bold border-b-2 border-white/70 pb-0.5 hover:text-white/80 transition-colors drop-shadow"
+              className="v-t-mono text-white border-b border-white/60 pb-0.5 hover:text-white/80 transition-colors drop-shadow"
             >
-              ask AI
+              Ask AI
             </button>
 
             <button
@@ -440,13 +447,14 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
                   })
                 );
               }}
-              className="text-white text-xs sm:text-sm font-bold px-5 py-2 sm:px-6 sm:py-2.5 transition-transform hover:scale-105"
+              className="text-xs sm:text-sm font-bold uppercase tracking-[0.06em] px-5 py-2 sm:px-6 sm:py-2.5 transition-transform hover:scale-105 active:scale-[0.97]"
               style={{
                 backgroundColor: "var(--theme-accent, #B91C1C)",
-                borderRadius: "9999px",
+                color: "var(--primary-foreground, #000)",
+                borderRadius: resolveButtonRadius(shapeProps.buttonShape),
               }}
             >
-              ADD+
+              ADD +
             </button>
           </div>
         </div>

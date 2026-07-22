@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
 import crypto from "crypto";
+import { buildMenuUrl } from "@/lib/routes";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     const seatParam =
       physicalTag.seatNumber != null ? `?seat=${physicalTag.seatNumber}` : "";
     targetUrl = new URL(
-      `/en/custom-ui-test/${physicalTag.orgSlug}${seatParam}`,
+      `${buildMenuUrl("en", physicalTag.orgSlug)}${seatParam}`,
       baseUrl,
     );
   } else {

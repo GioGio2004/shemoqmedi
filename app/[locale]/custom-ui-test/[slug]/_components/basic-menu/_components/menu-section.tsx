@@ -168,74 +168,88 @@ export function MenuSection({
     return (
       <section id="menu" className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          {/* Section Header */}
+          {/* ── Section Header — RULED lockup: index row → rule → heading ── */}
           <div className="mb-10 md:mb-14">
-            <span
-              className="text-xs font-semibold tracking-[0.25em] uppercase mb-3 block"
-              style={{ color: "var(--theme-accent, var(--primary))" }}
-            >
-              Our Categories
-            </span>
+            <div className="v-shead-row">
+              <span className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+                01 — Categories
+              </span>
+              <span className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+                ( {String(displayCategories.length).padStart(2, "0")} )
+              </span>
+            </div>
+            <div className="v-shead-rule" aria-hidden="true">
+              <span className="v-line-x" />
+              <i className="v-plus" data-end="left" />
+              <i className="v-plus" data-end="right" />
+            </div>
             <h2
-              className="text-4xl md:text-5xl font-serif text-balance"
+              className="v-shead-heading text-4xl md:text-5xl font-serif text-balance"
               style={{ color: "var(--theme-text, var(--foreground))" }}
             >
               Explore our
               <br className="hidden md:block" />
               <span
-                className="italic relative inline-block ml-2 md:ml-0"
+                className="italic inline-block ml-2 md:ml-0"
                 style={{ color: "var(--theme-accent, var(--primary))" }}
               >
                 collection
-                <span
-                  aria-hidden
-                  className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 transition-transform duration-500"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, var(--theme-accent, var(--primary)) 0%, transparent 100%)",
-                  }}
-                />
               </span>
             </h2>
           </div>
 
           {/* Cards Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {displayCategories.map((category) => {
+            {displayCategories.map((category, catIndex) => {
               const catNameStr = category.name["en"] || Object.values(category.name)[0];
               const displayStr = category.name[locale] || catNameStr;
               return (
                 <button
                   key={category._id}
                   onClick={() => setSelectedPopupCategory(catNameStr)}
-                  className="group relative overflow-hidden aspect-[4/5] flex items-end p-4 md:p-6 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left"
+                  className="group relative overflow-hidden aspect-[4/5] flex items-end p-4 md:p-6 transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] text-left"
                   style={{
-                    borderRadius: themeSettings?.buttonRadius || "1rem",
+                    borderRadius: themeSettings?.buttonRadius || "2px",
                     background: category.imageUrl ? "var(--theme-bg, var(--background))" : "var(--theme-accent, var(--primary))",
-                    border: "1px solid rgba(255,255,255,0.05)",
-                    boxShadow: "0 4px 24px -8px rgba(0,0,0,0.5)",
+                    border: "1px solid var(--v-c-line)",
                   }}
                 >
                   {category.imageUrl && (
                     <>
-                      <img 
-                        src={category.imageUrl} 
-                        alt={displayStr} 
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      <img
+                        src={category.imageUrl}
+                        alt={displayStr}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     </>
                   )}
-                  
+
+                  {/* Mono index — top-left (RULED §2.2) */}
+                  <span
+                    aria-hidden="true"
+                    className="v-t-micro absolute top-3 left-3 z-10"
+                    style={{
+                      color: category.imageUrl
+                        ? "rgba(244,243,240,0.7)"
+                        : "var(--primary-foreground, #000000)",
+                      textShadow: category.imageUrl
+                        ? "0 1px 4px rgba(0,0,0,0.6)"
+                        : undefined,
+                    }}
+                  >
+                    {String(catIndex + 1).padStart(2, "0")}
+                  </span>
+
                   <div className="relative z-10 w-full">
-                    <span 
+                    <span
                       className="block text-white font-serif text-xl md:text-2xl drop-shadow-lg mb-1"
                       style={{ color: category.imageUrl ? "#ffffff" : "var(--primary-foreground, #000000)" }}
                     >
                       {displayStr}
                     </span>
-                    <span 
-                      className="block text-xs font-medium tracking-widest uppercase opacity-80"
+                    <span
+                      className="v-t-micro block opacity-80"
                       style={{ color: category.imageUrl ? "rgba(255,255,255,0.8)" : "var(--primary-foreground, #000000)" }}
                     >
                       {category.items.length} items
@@ -246,36 +260,47 @@ export function MenuSection({
             })}
           </div>
 
-          {/* Empty state */}
+          {/* Empty state — mono between hairlines (RULED) */}
           {displayCategories.length === 0 && (
-            <div className="text-center py-20">
-              <p
-                className="text-lg font-serif"
-                style={{
-                  color: "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 40%)",
-                }}
-              >
-                No categories available.
+            <div className="flex items-center gap-6 py-20">
+              <span aria-hidden="true" className="flex-1 h-px" style={{ background: "var(--v-c-line)" }} />
+              <p className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+                ( No categories available )
               </p>
+              <span aria-hidden="true" className="flex-1 h-px" style={{ background: "var(--v-c-line)" }} />
             </div>
           )}
 
           {/* Category Items Sheet */}
           <Sheet open={!!selectedPopupCategory} onOpenChange={(open) => !open && setSelectedPopupCategory(null)}>
-            <SheetContent 
-              side="bottom" 
-              className="h-[85vh] sm:h-[90vh] overflow-y-auto"
-              style={{ 
+            <SheetContent
+              side="bottom"
+              className="h-[85vh] sm:h-[90vh] overflow-y-auto v-scroll"
+              style={{
                 background: "var(--theme-bg, var(--background))",
-                borderColor: "rgba(255,255,255,0.1)",
-                borderTopLeftRadius: "1.5rem",
-                borderTopRightRadius: "1.5rem",
+                borderColor: "var(--v-c-line)",
+                borderTopLeftRadius: "2px",
+                borderTopRightRadius: "2px",
               }}
             >
               <div className="max-w-7xl mx-auto px-2 sm:px-6 pb-24">
                 <SheetHeader className="mb-8 pt-4">
-                  <SheetTitle 
-                    className="text-3xl md:text-4xl font-serif text-left" 
+                  <div className="v-shead-row">
+                    <span className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+                      {String(
+                        displayCategories.findIndex(
+                          (c) => (c.name["en"] || Object.values(c.name)[0]) === selectedPopupCategory
+                        ) + 1
+                      ).padStart(2, "0")}{" "}
+                      — Category
+                    </span>
+                    <span className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+                      ( {activePopupCategoryObj?.items.length ?? 0} )
+                    </span>
+                  </div>
+                  <span aria-hidden="true" className="v-line-x" />
+                  <SheetTitle
+                    className="text-3xl md:text-4xl font-serif text-left pt-4"
                     style={{ color: "var(--theme-text, var(--foreground))" }}
                   >
                     {activePopupCategoryObj?.name[locale] || activePopupCategoryObj?.name["en"] || selectedPopupCategory}
@@ -319,45 +344,42 @@ export function MenuSection({
   return (
     <section id="menu" className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-6">
-        {/* ── Section Header ─────────────────────────────────────────────── */}
+        {/* ── Section Header — RULED lockup: index row → rule → heading ── */}
         <div className="mb-10 md:mb-14">
-          <span
-            className="text-xs font-semibold tracking-[0.25em] uppercase mb-3 block"
-            style={{ color: "var(--theme-accent, var(--primary))" }}
-          >
-            Our Selection
-          </span>
+          <div className="v-shead-row">
+            <span className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+              01 — Menu
+            </span>
+            <span className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+              ( {String(totalItems).padStart(2, "0")} items )
+            </span>
+          </div>
+          <div className="v-shead-rule" aria-hidden="true">
+            <span className="v-line-x" />
+            <i className="v-plus" data-end="left" />
+            <i className="v-plus" data-end="right" />
+          </div>
           <h2
-            className="text-4xl md:text-5xl font-serif text-balance"
+            className="v-shead-heading text-4xl md:text-5xl font-serif text-balance"
             style={{ color: "var(--theme-text, var(--foreground))" }}
           >
             Curated essentials for the
             <br className="hidden md:block" />
             <span
-              className="italic relative inline-block"
+              className="italic inline-block"
               style={{ color: "var(--theme-accent, var(--primary))" }}
             >
               modern palette
-              <span
-                aria-hidden
-                className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 transition-transform duration-500"
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--theme-accent, var(--primary)) 0%, transparent 100%)",
-                }}
-              />
             </span>
           </h2>
         </div>
 
-        {/* ── Sticky Horizontal Category Pill Nav ─────────────────────── */}
+        {/* ── Sticky Horizontal Category Pill Nav — hairline separation ── */}
         <div
           className="sticky top-0 z-20 -mx-6 px-6 py-3 mb-12"
           style={{
             background: "var(--theme-bg, var(--background))",
-            // Subtle bottom shadow to separate from content below
-            boxShadow: "0 1px 0 0 rgba(255,255,255,0.05), 0 4px 24px -4px rgba(0,0,0,0.5)",
-            backdropFilter: "blur(16px)",
+            borderBottom: "1px solid var(--v-c-line)",
           }}
         >
           <div
@@ -377,20 +399,19 @@ export function MenuSection({
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
                   aria-pressed={isActive}
-                  className="group relative overflow-hidden shrink-0 flex items-center justify-center px-6 py-2.5 text-sm font-medium tracking-wide transition-all duration-300 whitespace-nowrap"
+                  className="group relative overflow-hidden shrink-0 flex items-center justify-center px-6 py-2.5 text-xs font-medium uppercase tracking-[0.08em] transition-all duration-300 whitespace-nowrap active:scale-[0.97]"
                   style={{
-                    borderRadius: themeSettings?.buttonRadius || "9999px",
+                    borderRadius: themeSettings?.buttonRadius || "2px",
                     background: isActive && !imageUrl
                       ? "var(--theme-accent, var(--primary))"
-                      : "rgba(255,255,255,0.05)",
+                      : "transparent",
                     border: "1px solid",
                     borderColor: isActive
                       ? "var(--theme-accent, var(--primary))"
-                      : "rgba(255,255,255,0.12)",
+                      : "var(--v-c-line)",
                     color: isActive
                       ? (imageUrl ? "var(--theme-accent, var(--primary))" : "var(--primary-foreground, #000)")
-                      : "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 30%)",
-                    backdropFilter: "blur(8px)",
+                      : "var(--v-c-mut)",
                   }}
                 >
                   {imageUrl && cat !== "All" && (
@@ -424,22 +445,33 @@ export function MenuSection({
               id={`category-section-${group.name}`}
               className="scroll-mt-24"
             >
-              {/* Category Section Header — only show when "All" is active */}
+              {/* Category Section Header — indexed rule (RULED §2.2) */}
               {activeCategory === "All" && (
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-baseline gap-4 mb-8">
+                  <span
+                    aria-hidden="true"
+                    className="v-t-mono shrink-0"
+                    style={{ color: "var(--v-c-faint)" }}
+                  >
+                    {String(groupIndex + 1).padStart(2, "0")}
+                  </span>
                   <h3
                     className="font-serif text-2xl md:text-3xl shrink-0"
-                    style={{ color: "rgba(220,220,220,0.9)" }}
+                    style={{ color: "var(--theme-text, var(--foreground))" }}
                   >
                     {categories.find(c => (c.name["en"] || Object.values(c.name)[0]) === group.name)?.name[locale] || group.name}
                   </h3>
-                  {/* Minimalist separator line */}
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
+                  {/* Hairline separator */}
                   <span
-                    className="text-xs font-medium tracking-widest uppercase shrink-0"
-                    style={{ color: "rgba(255,255,255,0.25)" }}
+                    aria-hidden="true"
+                    className="flex-1 h-px self-center"
+                    style={{ background: "var(--v-c-line)" }}
+                  />
+                  <span
+                    className="v-t-mono shrink-0"
+                    style={{ color: "var(--v-c-faint)" }}
                   >
-                    {group.items.length} items
+                    ( {group.items.length} )
                   </span>
                 </div>
               )}
@@ -461,17 +493,14 @@ export function MenuSection({
           ))}
         </div>
 
-        {/* Empty state */}
+        {/* Empty state — mono between hairlines (RULED) */}
         {totalItems === 0 && (
-          <div className="text-center py-20">
-            <p
-              className="text-lg font-serif"
-              style={{
-                color: "color-mix(in oklch, var(--theme-text, var(--foreground)), transparent 40%)",
-              }}
-            >
-              No items found in this category.
+          <div className="flex items-center gap-6 py-20">
+            <span aria-hidden="true" className="flex-1 h-px" style={{ background: "var(--v-c-line)" }} />
+            <p className="v-t-mono" style={{ color: "var(--v-c-faint)" }}>
+              ( No items found )
             </p>
+            <span aria-hidden="true" className="flex-1 h-px" style={{ background: "var(--v-c-line)" }} />
           </div>
         )}
 

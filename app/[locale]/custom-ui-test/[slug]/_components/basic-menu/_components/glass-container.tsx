@@ -29,7 +29,7 @@ export const GlassContainer = <T extends ElementType = "div">({
   className = "",
   ...props
 }: GlassContainerProps<T>) => {
-  const Component = as || "div";
+  const Component = (as || "div") as "div";
 
   // Base classes implementing the requested specifications
   const baseClasses = 
@@ -48,7 +48,7 @@ export const GlassContainer = <T extends ElementType = "div">({
   return (
     <Component
       className={`${baseClasses} ${className}`.trim()}
-      {...props}
+      {...(props as object)}
     >
       {children}
     </Component>

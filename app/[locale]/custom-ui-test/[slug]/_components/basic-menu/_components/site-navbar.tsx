@@ -1,14 +1,14 @@
 /**
- * SiteNavbar — Glassmorphic, Scroll-Aware Navigation
+ * SiteNavbar — RULED scroll-aware navigation
  * ─────────────────────────────────────────────────────────────────────────────
- * Upgrade notes vs. the original:
- *  - On scroll: applies `backdrop-blur-xl` + `bg-theme-bg/70` + fine white
- *    border — a premium frosted-glass sticky header effect.
+ *  - Transparent at top; once scrolled: near-opaque theme background + a
+ *    single 1px bottom hairline. No blur, no shadow — hairlines do the
+ *    separation (RULED design language).
+ *  - Center: mono micro breadcrumb `VOLOO — {VENUE}` (desktop only).
  *  - Logo accent character uses `--theme-accent` so every cafe's brand color
  *    shows in the nav automatically.
- *  - Accepts `logoUrl` (optional) so an image logo can be shown instead of
- *    text when the org has one.
- *  - All color values resolve to CSS custom properties injected by page.tsx,
+ *  - All color values resolve to CSS custom properties injected by
+ *    VenueClientView (`--theme-*` + contextual `--v-c-*` frame tokens),
  *    so changing the DB theme instantly updates the navbar too.
  */
 
@@ -45,17 +45,13 @@ export function SiteNavbar({
 
   return (
     <nav
-      className="fixed top-0 w-full z-50 transition-all duration-500"
+      className="fixed top-0 w-full z-50 transition-colors duration-500"
       style={
         scrolled
           ? {
-              /* Glassmorphism: semi-transparent theme background + blur */
+              /* Near-opaque theme background — hairline does the separation */
               background:
-                "color-mix(in oklch, var(--theme-bg, var(--background)), transparent 30%)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              borderBottom: "1px solid rgba(255,255,255,0.10)",
-              boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+                "color-mix(in srgb, var(--theme-bg, var(--background)) 88%, transparent)",
               /* Push content below Dynamic Island / notch */
               paddingTop: "max(env(safe-area-inset-top), 0px)",
             }
@@ -67,7 +63,7 @@ export function SiteNavbar({
       }
     >
       {/* py-4 split: top padding is handled by safe-area on the <nav> */}
-      <div className="max-w-7xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center">
+      <div className="relative max-w-7xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center">
         {/* ── Logo ──────────────────────────────────────────────────────── */}
         <a
           href="#"
@@ -97,15 +93,25 @@ export function SiteNavbar({
           )}
         </a>
 
+        {/* ── Mono micro breadcrumb — centered, desktop only (RULED §5.4) ── */}
+        <span
+          aria-hidden="true"
+          className="v-t-micro hidden md:block absolute left-1/2 -translate-x-1/2 pointer-events-none select-none whitespace-nowrap"
+          style={{ color: "var(--v-c-faint)" }}
+        >
+          VOLOO — {organizationName}
+        </span>
+
         {/* ── Cart & Navigation ───── */}
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          
+
           <button
             onClick={() =>
               window.dispatchEvent(new CustomEvent("open-voloo-basket"))
             }
-            className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="relative p-2 rounded-full transition-colors"
+            style={{ border: "1px solid var(--v-c-line)" }}
             aria-label="Open Cart"
           >
             <ShoppingBag
@@ -116,6 +122,13 @@ export function SiteNavbar({
           </button>
         </div>
       </div>
+
+      {/* ── 1px bottom hairline — appears once scrolled ─────────────────── */}
+      <span
+        aria-hidden="true"
+        className="v-line-x absolute bottom-0 left-0 transition-opacity duration-500"
+        style={{ opacity: scrolled ? 1 : 0 }}
+      />
     </nav>
   );
 }
@@ -180,13 +193,21 @@ function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition-all rounded-full px-3 py-1.5 backdrop-blur-xl border border-white/10 shadow-sm"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] transition-colors duration-300"
+        style={{
+          border: "1px solid var(--v-c-line)",
+          color: "var(--theme-text, var(--foreground))",
+        }}
       >
-        <Globe className="w-3.5 h-3.5 text-white/80" />
-        <span className="text-xs font-bold tracking-wider text-white">
-          {getLabel(locale)}
-        </span>
-        <ChevronDown className={cn("w-3.5 h-3.5 text-white/60 transition-transform duration-300", isOpen && "rotate-180")} />
+        <Globe className="w-3.5 h-3.5" style={{ color: "var(--v-c-mut)" }} />
+        <span className="v-t-mono">{getLabel(locale)}</span>
+        <ChevronDown
+          className={cn(
+            "w-3.5 h-3.5 transition-transform duration-300",
+            isOpen && "rotate-180"
+          )}
+          style={{ color: "var(--v-c-faint)" }}
+        />
       </button>
 
       <AnimatePresence>
@@ -194,25 +215,36 @@ function LanguageSwitcher() {
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
             <motion.div
-              initial={{ opacity: 0, y: 5, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 5, scale: 0.95 }}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-2 w-28 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col p-1"
+              className="absolute right-0 top-full mt-2 w-28 rounded-[2px] overflow-hidden z-50 flex flex-col"
+              style={{
+                background: "var(--v-c-bg)",
+                border: "1px solid var(--v-c-line)",
+              }}
             >
-              {["en", "ru", "ka"].map((l) => (
+              {["en", "ru", "ka"].map((l, i) => (
                 <button
                   key={l}
                   onClick={() => handleLocaleChange(l)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all",
-                    locale === l
-                      ? "bg-white text-black shadow-md"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
-                  )}
+                  className="v-t-mono flex items-center justify-between w-full px-3 py-2.5 transition-colors"
+                  style={{
+                    color:
+                      locale === l
+                        ? "var(--theme-accent, var(--primary))"
+                        : "var(--v-c-mut)",
+                    borderTop: i > 0 ? "1px solid var(--v-c-line)" : "none",
+                  }}
                 >
                   {getLabel(l)}
-                  {locale === l && <span className="w-1.5 h-1.5 rounded-full bg-black/40 ml-2" />}
+                  {locale === l && (
+                    <span
+                      className="w-1 h-1 rounded-full ml-2"
+                      style={{ background: "var(--theme-accent, var(--primary))" }}
+                    />
+                  )}
                 </button>
               ))}
             </motion.div>

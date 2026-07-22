@@ -42,6 +42,24 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
    */
   const themeSettings = data.organization.themeSettings;
 
+  /**
+   * RULED frame tokens — re-point the contextual `--v-c-*` variables
+   * (defined in globals.css) at the venue's own theme colors so every
+   * hairline, plus-mark, crosshair tick and mono label in the "frame"
+   * (navbar, section rules, footer) automatically reads correctly on
+   * light AND dark venue themes. Venue theming stays the source of truth;
+   * RULED only derives its line/label opacities from it.
+   */
+  const frameTokens = {
+    "--v-c-bg": "var(--theme-bg, #0A0A0A)",
+    "--v-c-raise":
+      "color-mix(in srgb, var(--theme-text, #F4F3F0) 4%, var(--theme-bg, #0A0A0A))",
+    "--v-c-ink": "var(--theme-text, #F4F3F0)",
+    "--v-c-mut": "color-mix(in srgb, var(--theme-text, #F4F3F0) 62%, transparent)",
+    "--v-c-faint": "color-mix(in srgb, var(--theme-text, #F4F3F0) 34%, transparent)",
+    "--v-c-line": "color-mix(in srgb, var(--theme-text, #F4F3F0) 14%, transparent)",
+  } as React.CSSProperties;
+
   const themeStyleObj: React.CSSProperties = themeSettings
     ? ({
         // ── Dynamic theme tokens (the "new" variables) ──────────────────
@@ -81,6 +99,7 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
       className="min-h-screen overflow-x-hidden force-theme-text"
       style={{
         ...themeStyleObj,
+        ...frameTokens,
         // Apply the dynamic background directly on the root element so there's
         // no flash of the default dark background before the style mounts.
         background: themeSettings?.backgroundColor || "oklch(0.145 0 0)",
@@ -102,15 +121,16 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
       {/* Full-bleed hero with staggered animations */}
       <HeroSection config={data.organization.storefrontConfig} />
 
-      {/* Section divider */}
+      {/* Section divider — hairline with plus-marks (RULED) */}
       <div className="max-w-7xl mx-auto px-6">
-        <div
-          className="h-px"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        />
+        <div className="v-shead-rule" aria-hidden="true">
+          <span className="v-line-x" />
+          <i className="v-plus" data-end="left" />
+          <i className="v-plus" data-end="right" />
+        </div>
       </div>
 
-      {/* Glassmorphic product card grid with category filters */}
+      {/* Product card grid with category filters */}
       <MenuSection
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
@@ -119,12 +139,9 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
         themeSettings={themeSettings ?? null}
       />
 
-      {/* Section divider */}
+      {/* Section divider — hairline (RULED) */}
       <div className="max-w-7xl mx-auto px-6">
-        <div
-          className="h-px"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        />
+        <span className="v-line-x" aria-hidden="true" />
       </div>
 
       {/*

@@ -19,32 +19,73 @@
  *
  * Metadata Strategy:
  * ─────────────────
- * For the title and description we format the slug into a human-readable
- * venue name. The canonical URL and OG image are fully dynamic per-slug.
- * If a venue-specific OG image (`/og-{slug}.jpg`) doesn't exist in /public,
- * the fallback is the platform default `/og-default.jpg`.
+ * We fetch the real venue record from Convex (publicVenues.getBySlug) and use
+ * its name/description for the title, meta description, and JSON-LD. If the
+ * record is missing or Convex is unreachable, we fall back to slug-derived
+ * text so the page still renders sensible metadata.
  */
 
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex-helpers-api";
 import MenuRouterClient from "./_components/MenuRouterClient";
 import { buildMenuUrl } from "@/lib/routes";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
+const CONVEX_URL =
+  process.env.NEXT_PUBLIC_CONVEX_URL ?? "https://proficient-crow-922.convex.cloud";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type PublicVenue = {
+  _id: string;
+  orgId: string;
+  slug: string;
+  name: string;
+  category: "cafe" | "restaurant" | "bar" | "hotel" | "other";
+  description: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  phone: string | null;
+  hours: Array<{ day: string; hours: string }>;
+  coverImage: string | null;
+  galleryImages: string[];
+  tags: string[];
+  gbpPlaceId: string | null;
+  googleRating: number | null;
+  googleReviewCount: number | null;
+  googleDataLastFetchedAt: number | null;
+} | null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
  * Converts a URL slug ("noir-cafe", "spectrum-bar") into a presentable
- * venue name ("Noir Cafe", "Spectrum Bar") for use in titles and descriptions.
+ * venue name ("Noir Cafe", "Spectrum Bar") — the fallback when the venue
+ * record is missing from the DB.
  */
 function slugToVenueName(slug: string): string {
   return slug
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+/** Server-side venue fetch; never throws — returns null on any failure. */
+async function fetchVenue(slug: string): Promise<PublicVenue> {
+  try {
+    return await fetchQuery(
+      api.publicVenues.getBySlug,
+      { slug },
+      { url: CONVEX_URL },
+    );
+  } catch {
+    return null;
+  }
 }
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
@@ -55,19 +96,22 @@ export async function generateMetadata({
   params: Promise<{ slug: string; locale: string }>;
 }): Promise<Metadata> {
   const { slug, locale } = await params;
-  const venueName = slugToVenueName(slug);
-  // Canonical MUST match the real route (/{locale}/custom-ui-test/{slug}) — the
-  // previous value dropped the route segment and pointed Google at a 404.
+  const venue = await fetchVenue(slug);
+
+  const venueName = venue?.name || slugToVenueName(slug);
+  const description =
+    venue?.description?.trim() ||
+    `Explore the full digital menu of ${venueName} — crafted with care and powered by Voloo. Browse our categories, discover seasonal specials, and order with ease.`;
+
+  // Canonical MUST match the real route (/{locale}/menu/{slug}).
   const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
 
-  // Prefer a per-venue OG image if one has been placed in /public.
-  // Falls back to the platform default so sharing always has an image.
-  const ogImageUrl = `${BASE_URL}/og-${slug}.jpg`;
-  const ogFallbackUrl = `${BASE_URL}/og-default.jpg`;
+  // Prefer the venue's real cover image; fall back to the platform default.
+  const ogImageUrl = venue?.coverImage || `${BASE_URL}/og-default.jpg`;
 
   return {
     title: `${venueName} | Menu`,
-    description: `Explore the full digital menu of ${venueName} — crafted with care and powered by Voloo. Browse our categories, discover seasonal specials, and order with ease.`,
+    description,
     alternates: {
       canonical: canonicalUrl,
       languages: {
@@ -79,32 +123,24 @@ export async function generateMetadata({
     },
     openGraph: {
       title: `${venueName} | Menu`,
-      description: `Discover the menu at ${venueName}. A premium digital dining experience powered by Shemoqmedi.`,
+      description,
       url: canonicalUrl,
       type: "website",
       locale: locale,
       siteName: "Shemoqmedi",
       images: [
-        // Venue-specific image first — if it exists, social platforms use it.
         {
           url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: `${venueName} — Digital Menu`,
         },
-        // Platform default as a reliable fallback.
-        {
-          url: ogFallbackUrl,
-          width: 1200,
-          height: 630,
-          alt: "Shemoqmedi — Digital Menus",
-        },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${venueName} | Menu`,
-      description: `Explore the menu at ${venueName}.`,
+      description,
       images: [ogImageUrl],
     },
     robots: {
@@ -151,29 +187,64 @@ export default async function Page({
     }
   }
 
-  const venueName = slugToVenueName(slug);
+  const venue = await fetchVenue(slug);
+  const venueName = venue?.name || slugToVenueName(slug);
   const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
 
   // ── JSON-LD: LocalBusiness + Restaurant ─────────────────────────────────────
   //
   // Injected as a server-rendered <script> tag so Google can read structured
-  // data without executing any JavaScript. Both @types are included so the
-  // schema satisfies both the generic LocalBusiness and the more specific
-  // Restaurant rich-result requirements.
-  //
-  // Fields that require live DB data (address, telephone, openingHours) are
-  // intentionally omitted here — they will be added in a future iteration
-  // once a server-side Convex fetch is configured. The presence of this
-  // schema block alone is sufficient for Google to begin processing rich results.
-  const jsonLd = {
+  // data without executing any JavaScript. Enriched with real venue data
+  // (address, geo, phone, hours, cuisine, rating) when present; fields with
+  // no data are omitted entirely rather than sent as empty strings.
+  const cuisines = venue
+    ? [venue.category, ...(venue.tags ?? [])].filter(Boolean)
+    : [];
+
+  const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "Restaurant"],
     "@id": canonicalUrl,
     name: venueName,
     url: canonicalUrl,
-    image: `${BASE_URL}/og-${slug}.jpg`,
-    // servesCuisine, priceRange, and address are enriched by VenueClientView
-    // once DB data is available. For static crawls, the name + url is sufficient.
+    image: venue?.coverImage || `${BASE_URL}/og-default.jpg`,
+    ...(venue?.description?.trim()
+      ? { description: venue.description.trim() }
+      : {}),
+    ...(venue?.address?.trim()
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: venue.address.trim(),
+            addressCountry: "GE",
+          },
+        }
+      : {}),
+    ...(venue?.lat != null && venue?.lng != null
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: venue.lat,
+            longitude: venue.lng,
+          },
+        }
+      : {}),
+    ...(venue?.phone?.trim() ? { telephone: venue.phone.trim() } : {}),
+    ...(venue?.hours?.length
+      ? { openingHours: venue.hours.map((h) => `${h.day} ${h.hours}`) }
+      : {}),
+    ...(cuisines.length > 0 ? { servesCuisine: cuisines } : {}),
+    ...(venue?.googleRating != null &&
+    venue?.googleReviewCount != null &&
+    venue.googleReviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: venue.googleRating,
+            reviewCount: venue.googleReviewCount,
+          },
+        }
+      : {}),
     hasMenu: {
       "@type": "Menu",
       "@id": `${canonicalUrl}#menu`,
@@ -192,11 +263,13 @@ export default async function Page({
        * Structured data — rendered synchronously into the HTML stream so
        * Googlebot reads it on first crawl without JavaScript execution.
        * dangerouslySetInnerHTML is the correct pattern for JSON-LD in React;
-       * the content is produced server-side from a known-safe object.
+       * `<` is escaped to prevent any </script> breakout from DB strings.
        */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
 
       {/*

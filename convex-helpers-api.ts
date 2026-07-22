@@ -309,6 +309,62 @@ export type PublicApiType = {
       } | null
     >;
   };
+  surpriseBags: {
+    listActiveBags: FunctionReference<
+      "query",
+      "public",
+      Record<string, never>,
+      Array<{
+        _id: string;
+        title: Record<string, string>;
+        description?: Record<string, string>;
+        imageUrl?: string;
+        originalValue: number;
+        price: number;
+        quantityLeft: number;
+        pickupStart: number;
+        pickupEnd: number;
+        venue: {
+          slug: string;
+          name: string;
+          category?: string;
+          address?: string;
+          lat?: number;
+          lng?: number;
+          coverImage?: string;
+          googleRating?: number;
+          googleReviewCount?: number;
+        };
+      }>
+    >;
+    getBag: FunctionReference<
+      "query",
+      "public",
+      { bagId: string },
+      {
+        _id: string;
+        title: Record<string, string>;
+        description?: Record<string, string>;
+        imageUrl?: string;
+        originalValue: number;
+        price: number;
+        quantityLeft: number;
+        pickupStart: number;
+        pickupEnd: number;
+        venue: {
+          slug: string;
+          name: string;
+          category?: string;
+          address?: string;
+          lat?: number;
+          lng?: number;
+          coverImage?: string;
+          googleRating?: number;
+          googleReviewCount?: number;
+        };
+      } | null
+    >;
+  };
   venues: {
     listAll: FunctionReference<"query", "public", Record<string, never>, any>;
     getById: FunctionReference<"query", "public", { id: string }, any>;

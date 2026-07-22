@@ -1,7 +1,8 @@
 {
-  "name": "Shemoqmedi — AI-Powered Digital Menus",
-  "short_name": "Shemoqmedi",
-  "description": "NFC digital menus with an AI concierge for cafés and restaurants. One tap on the table — no app, no wait.",
+  "id": "/",
+  "name": "VOLOO by Shemoqmedi — AI Menus & Surprise Bags",
+  "short_name": "VOLOO",
+  "description": "AI menus for Tbilisi's best rooms. Surplus food, rescued nightly. One tap on the table — no app, no wait.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -45,7 +46,7 @@
       "sizes": "1200x630",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Shemoqmedi — Digital Business Solutions"
+      "label": "VOLOO by Shemoqmedi — AI Menus & Surprise Bags"
     }
   ]
 }

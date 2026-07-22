@@ -84,18 +84,15 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
           animation: "alertScaleIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
       >
-        {/* Glass card surface */}
+        {/* RULED card surface — raised dark, 1px hairline, 2px radius */}
         <div
           style={{
             position: "relative",
-            borderRadius: "20px",
+            borderRadius: "2px",
             padding: "32px 32px 28px",
-            background: "rgba(28, 25, 23, 0.92)",
-            border: "1px solid rgba(255, 255, 255, 0.10)",
-            boxShadow:
-              "0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
+            background: "rgba(17, 17, 16, 0.97)",
+            border: "1px solid rgba(244, 243, 240, 0.14)",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
           }}
         >
           {/* ── Close button ───────────────────────────────────────────────── */}
@@ -115,8 +112,8 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
               width: "32px",
               height: "32px",
               borderRadius: "50%",
-              border: "none",
-              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(244,243,240,0.14)",
+              background: "transparent",
               color: "rgba(255,255,255,0.45)",
               cursor: "pointer",
               transition: "background 0.2s, color 0.2s",
@@ -165,8 +162,8 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
                 flexShrink: 0,
                 width: "40px",
                 height: "40px",
-                borderRadius: "12px",
-                background: "rgba(255,255,255,0.07)",
+                borderRadius: "2px",
+                border: "1px solid rgba(244,243,240,0.14)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -191,44 +188,45 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
               <p
                 style={{
                   margin: 0,
-                  fontSize: "11px",
-                  fontWeight: 600,
+                  fontFamily: "var(--v-font-mono, ui-monospace, monospace)",
+                  fontSize: "10px",
+                  fontWeight: 400,
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.35)",
+                  color: "rgba(244,243,240,0.34)",
                 }}
               >
-                Announcement
+                Announcement — Live
               </p>
             </div>
           </div>
 
-          {/* ── Divider ────────────────────────────────────────────────────── */}
+          {/* ── Divider — flat 1px hairline ────────────────────────────────── */}
           <div
             style={{
               height: "1px",
-              background:
-                "linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%)",
+              background: "rgba(244,243,240,0.14)",
               marginBottom: "18px",
             }}
           />
 
-          {/* ── Messages ───────────────────────────────────────────────────── */}
+          {/* ── Messages — mono-indexed rows with hairline separators ──────── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {activeMessages.map((msg, idx) => (
               <div key={idx} style={{
                 display: "flex",
-                gap: "10px",
+                gap: "12px",
                 alignItems: "flex-start",
                 paddingBottom: idx !== activeMessages.length - 1 ? "12px" : "0",
-                borderBottom: idx !== activeMessages.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                borderBottom: idx !== activeMessages.length - 1 ? "1px solid rgba(244,243,240,0.14)" : "none",
               }}>
                 <span style={{
-                  color: "rgba(255,255,255,0.4)",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  marginTop: "3px"
-                }}>•</span>
+                  fontFamily: "var(--v-font-mono, ui-monospace, monospace)",
+                  color: "rgba(244,243,240,0.34)",
+                  fontSize: "10px",
+                  letterSpacing: "0.08em",
+                  marginTop: "5px"
+                }}>{String(idx + 1).padStart(2, "0")}</span>
                 <p
                   style={{
                     margin: 0,
@@ -256,14 +254,16 @@ export function StorefrontAlertBanner({ announcements, legacyMessage }: Props) {
               display: "block",
               width: "100%",
               padding: "11px",
-              borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.06)",
+              borderRadius: "2px",
+              border: "1px solid rgba(244,243,240,0.14)",
+              background: "transparent",
               color: "rgba(255,255,255,0.55)",
-              fontSize: "13px",
-              fontWeight: 500,
+              fontFamily: "var(--v-font-mono, ui-monospace, monospace)",
+              fontSize: "11px",
+              fontWeight: 400,
               cursor: "pointer",
-              letterSpacing: "0.02em",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
               transition: "background 0.2s, color 0.2s",
             }}
             onMouseEnter={(e) => {
