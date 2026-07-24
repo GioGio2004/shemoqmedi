@@ -34,7 +34,9 @@ import { buildMenuUrl } from "@/lib/routes";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
+// CANONICAL HOST: www serves the 200s (apex redirects) — fallback must be www.
+// See the canonical-host note in app/[locale]/layout.tsx.
+const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
 const CONVEX_URL =
   process.env.NEXT_PUBLIC_CONVEX_URL ?? "https://proficient-crow-922.convex.cloud";
 
@@ -216,6 +218,7 @@ export default async function Page({
           address: {
             "@type": "PostalAddress",
             streetAddress: venue.address.trim(),
+            addressLocality: "Tbilisi",
             addressCountry: "GE",
           },
         }
@@ -251,10 +254,41 @@ export default async function Page({
       name: `${venueName} Digital Menu`,
       url: canonicalUrl,
     },
+    // Site-wide Organization node rendered by the [locale] layout
+    // (components/seo/JsonLd.tsx) — referenced by @id, never re-declared.
+    parentOrganization: { "@id": `${BASE_URL}/#org` },
     potentialAction: {
       "@type": "ViewAction",
       target: canonicalUrl,
     },
+  };
+
+  // ── JSON-LD: BreadcrumbList (Home → Venues → {venue}) ───────────────────────
+  // "Venues" points at the home page's venues section (#venues anchor on
+  // MenusCTA) — there is no standalone /menu directory route to link to.
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${BASE_URL}/${locale}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Venues",
+        item: `${BASE_URL}/${locale}#venues`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: venueName,
+        item: canonicalUrl,
+      },
+    ],
   };
 
   return (
@@ -269,6 +303,12 @@ export default async function Page({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
         }}
       />
 

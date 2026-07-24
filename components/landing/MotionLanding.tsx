@@ -37,6 +37,7 @@ import HowItWorks from "./sections/HowItWorks";
 import Concierge from "./sections/Concierge";
 import MenusCTA from "./sections/MenusCTA";
 import Waitlist from "./sections/Waitlist";
+import FAQ from "./sections/FAQ";
 import LandingFooter from "./sections/LandingFooter";
 
 // HeroScene is retired from the hero (spec §4.2 — bundle win on mobile) but
@@ -191,6 +192,8 @@ export default function MotionLanding({
       <MenusCTA count={venues.length} onShowMenus={onShowMenus} />
 
       <Waitlist />
+
+      <FAQ />
 
       <LandingFooter
         locale={locale}

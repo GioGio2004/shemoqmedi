@@ -17,6 +17,7 @@ import CustomScrollIndicator from "@/components/layout/CustomScrollIndicator";
 import GoogleOneTapMount from "@/components/auth/GoogleOneTapMount";
 import CustomCursor from "@/components/CustomCursor";
 import SmoothScroll from "@/components/motion/SmoothScroll";
+import { OrgWebsiteJsonLd } from "@/components/seo/JsonLd";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,82 @@ const georgian = Noto_Sans_Georgian({
   display: "swap",
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_URL || "https://shemoqmedi.space";
+// CANONICAL HOST: must match the host that actually serves 200s. Vercel
+// redirects apex → www, so www IS the canonical origin. A mismatch here
+// (canonical/sitemap pointing at the redirecting apex) suppressed indexing
+// for months — keep NEXT_PUBLIC_URL=https://www.shemoqmedi.space in Vercel.
+const baseUrl = process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space";
+
+// Per-locale default metadata. Deliberately hardcoded (NOT sourced from
+// messages/*.json): the old Landing.Hero-derived title/description served
+// stale agency-era copy ("Digitalizing Georgian Business…") on every route.
+// Tuned for the queries we actually want: digital menus + surprise bags /
+// discounted food in Tbilisi.
+const META_BY_LOCALE: Record<
+  string,
+  { title: string; description: string; keywords: string[] }
+> = {
+  en: {
+    title: "VOLOO by Shemoqmedi — Digital Menus & Surprise Bags in Tbilisi",
+    description:
+      "AI-powered digital menus and surprise bags in Tbilisi — tap the table for a living menu, or grab discounted food from the city's best cafés before close.",
+    keywords: [
+      "digital menu",
+      "NFC menu",
+      "QR menu",
+      "restaurant menu",
+      "cafe menu",
+      "AI menu concierge",
+      "surprise bags Tbilisi",
+      "surprise bag",
+      "discounted food Tbilisi",
+      "food waste Georgia",
+      "hospitality technology",
+      "Tbilisi",
+      "Georgia",
+      "shemoqmedi",
+      "voloo",
+    ],
+  },
+  ka: {
+    title: "VOLOO — ციფრული მენიუ და სიურპრიზ ბოქსი თბილისში",
+    description:
+      "ციფრული მენიუ AI კონსიერჟით და სიურპრიზ ბოქსები — ფასდაკლებული საკვები თბილისის საუკეთესო კაფეებიდან. ერთი შეხება მაგიდაზე — აპლიკაციის გარეშე.",
+    keywords: [
+      "შემოქმედი",
+      "ციფრული მენიუ",
+      "NFC მენიუ",
+      "QR მენიუ",
+      "რესტორნის მენიუ",
+      "კაფე მენიუ",
+      "სიურპრიზ ბოქსი",
+      "ფასდაკლებული საკვები თბილისი",
+      "ხელოვნური ინტელექტი",
+      "shemoqmedi",
+      "digital menu georgia",
+    ],
+  },
+  ru: {
+    title: "VOLOO — цифровое меню и сюрприз-боксы в Тбилиси",
+    description:
+      "Цифровые меню с AI-консьержем и сюрприз-боксы — еда со скидкой из лучших кафе и ресторанов Тбилиси. Одно касание стола — без приложения и ожидания.",
+    keywords: [
+      "цифровое меню",
+      "NFC меню",
+      "QR меню",
+      "меню ресторана",
+      "меню кафе",
+      "сюрприз-бокс",
+      "еда со скидкой Тбилиси",
+      "Тбилиси",
+      "Грузия",
+      "shemoqmedi",
+      "voloo",
+    ],
+  },
+};
+
+const LOCALES = ["en", "ka", "ru"] as const;
 
 export async function generateMetadata({
   params,
@@ -53,43 +129,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getMessages({ locale });
-  const messages = t as any; // Type assertion for easier access
-
-  // Fallbacks in case messages are missing
-  const title = messages?.Landing?.Hero?.title_1
-    ? `${messages.Landing.Hero.title_1} - Shemoqmedi`
-    : "Shemoqmedi — AI-Powered Digital Menus for Hospitality";
-
-  const description = messages?.Landing?.Hero?.subtitle
-    ? messages.Landing.Hero.subtitle.substring(0, 160)
-    : "NFC digital menus with an AI concierge for cafés and restaurants in Georgia. One tap on the table — no app, no wait.";
-
-  const keywords =
-    locale === "ka"
-      ? [
-          "შემოქმედი",
-          "ციფრული მენიუ",
-          "NFC მენიუ",
-          "QR მენიუ",
-          "რესტორნის მენიუ",
-          "კაფე მენიუ",
-          "ხელოვნური ინტელექტი",
-          "shemoqmedi",
-          "digital menu georgia",
-        ]
-      : [
-          "digital menu",
-          "NFC menu",
-          "QR menu",
-          "restaurant menu",
-          "cafe menu",
-          "AI menu concierge",
-          "hospitality technology",
-          "Tbilisi",
-          "Georgia",
-          "shemoqmedi",
-        ];
+  const { title, description, keywords } =
+    META_BY_LOCALE[locale] ?? META_BY_LOCALE.en;
 
   return {
     metadataBase: new URL(baseUrl),
@@ -104,7 +145,7 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       locale: locale,
-      alternateLocale: locale === "ka" ? "en" : "ka",
+      alternateLocale: LOCALES.filter((l) => l !== locale),
       url: `${baseUrl}/${locale}`,
       title: title,
       description: description,
@@ -198,6 +239,9 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${georgian.variable} antialiased bg-[#0a0a0a] text-zinc-100`}
       >
+        {/* Site-wide Organization + WebSite JSON-LD (see components/seo/JsonLd.tsx).
+            Page-level graphs reference these nodes by @id (#org / #site). */}
+        <OrgWebsiteJsonLd locale={locale} />
         {/* 4. Wrap everything in NextIntlClientProvider first */}
         <ClerkProvider>
           {/* Google One Tap for returning consumers — [locale] tree only

@@ -283,6 +283,27 @@ export type PublicApiType = {
         updatedAt: number;
       }>
     >;
+    listStorefront: FunctionReference<
+      "query",
+      "public",
+      Record<string, never>,
+      Array<{
+        _id: string;
+        slug: string;
+        name: string;
+        category: "cafe" | "restaurant" | "bar" | "hotel" | "other";
+        coverImage: string | null;
+        googleRating: number | null;
+        googleReviewCount: number | null;
+        claimStatus: "claimed" | "unclaimed";
+        menuMode?: "native" | "external";
+        externalMenuUrl: string | null;
+        address: string;
+        lat: number | null;
+        lng: number | null;
+        orgId: string | null;
+      }>
+    >;
     getBySlug: FunctionReference<
       "query",
       "public",

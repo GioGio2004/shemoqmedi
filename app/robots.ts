@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
+  // Must match the serving host (www) — see canonical-host note in [locale]/layout.tsx.
+  const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
 
   return {
     rules: [

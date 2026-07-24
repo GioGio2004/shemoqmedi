@@ -19,14 +19,18 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Venues from "./sections/Venues";
 import PortfolioSheet from "./sections/PortfolioSheet";
+import CityDirectory, { type DirectoryVenue } from "./sections/CityDirectory";
 import type { LandingVenue } from "./MotionLanding";
 
 export default function VenuesSpace({
   venues,
   locale,
+  directoryVenues = [],
 }: {
   venues: LandingVenue[];
   locale: string;
+  /** Seeded directory venues (dedupe'd server-side — partners win). */
+  directoryVenues?: DirectoryVenue[];
 }) {
   const root = useRef<HTMLElement>(null);
   const [active, setActive] = useState<{ venue: LandingVenue; origin: DOMRect } | null>(null);
@@ -83,6 +87,10 @@ export default function VenuesSpace({
   return (
     <main ref={root} className="ml-root ml-vspace">
       <Venues venues={venues} locale={locale} onOpenVenue={openVenue} />
+
+      {/* 04 — AROUND TBILISI: the seeded city directory, its own section
+          BELOW the partner catalogue (separate surface by design). */}
+      <CityDirectory venues={directoryVenues} locale={locale} />
 
       {active && (
         <PortfolioSheet

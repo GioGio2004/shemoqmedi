@@ -1,0 +1,30 @@
+# VOLOO by Shemoqmedi
+
+> VOLOO is a digital menu platform and Surprise Bag (surplus food) marketplace for cafés and restaurants in Tbilisi, Georgia, built by Shemoqmedi. Diners tap an NFC tag or scan a QR code at the table to open the venue's live menu in the browser — no app required — ask a multilingual AI concierge about dishes, ingredients, and allergens (English, Georgian, Russian), and reserve Surprise Bags: good unsold food packed at the end of the day and sold at up to 50% off, paid by card online and picked up before closing.
+
+## Key URLs
+
+- Home (English): https://www.shemoqmedi.space/en
+- Home (Georgian): https://www.shemoqmedi.space/ka
+- Home (Russian): https://www.shemoqmedi.space/ru
+- Venue catalogue on the landing page: https://www.shemoqmedi.space/en#venues
+- Venue menus: https://www.shemoqmedi.space/en/menu/{venue-slug}
+- Sitemap: https://www.shemoqmedi.space/sitemap.xml
+
+## For consumers
+
+- Browsing menus is free; no account or app installation is required.
+- Tap the NFC tag or scan the QR code on the table to open the venue's live digital menu.
+- Ask the AI concierge about ingredients, allergens, and dietary fit in English, Georgian, or Russian.
+- Reserve a Surprise Bag of discounted surplus food, pay by card online (processed securely by Flitt, TBC Bank's payment platform), and pick it up at the venue before closing time.
+
+## For venues
+
+- Cafés and restaurants in Tbilisi join by invitation; joining is free at launch.
+- Venues receive a hosted digital menu, NFC table tags, the AI concierge on their menu, and a listing in the Surprise Bag marketplace.
+- Contact: hello@shemoqmedi.space
+
+## Company
+
+- Shemoqmedi — Tbilisi, Georgia
+- Contact: hello@shemoqmedi.space

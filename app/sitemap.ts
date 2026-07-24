@@ -11,7 +11,8 @@ export const dynamic = "force-static";
 export const revalidate = 3600;
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
+// Must match the serving host (www) — see canonical-host note in [locale]/layout.tsx.
+const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
 const CONVEX_URL =
   process.env.NEXT_PUBLIC_CONVEX_URL ?? "https://proficient-crow-922.convex.cloud";
 

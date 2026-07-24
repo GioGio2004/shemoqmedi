@@ -29,6 +29,7 @@ import {
 import { useTranslations } from "next-intl";
 import MotionLanding, { type LandingVenue } from "@/components/landing/MotionLanding";
 import VenuesSpace from "@/components/landing/VenuesSpace";
+import type { DirectoryVenue } from "@/components/landing/sections/CityDirectory";
 import OffersFeed from "@/components/offers/OffersFeed";
 import { SideRails } from "@/components/motion/DecorLines";
 import LiquidBottomNav, {
@@ -42,9 +43,13 @@ const ORDER: LandingPanel[] = ["home", "menus", "offers"];
 export default function LandingPanels({
   venues,
   locale,
+  directoryVenues = [],
 }: {
   venues: LandingVenue[];
   locale: string;
+  /** Seeded city-directory venues — rendered on the MENUS panel below the
+      partner catalogue (dedupe'd server-side; partners win). */
+  directoryVenues?: DirectoryVenue[];
 }) {
   const t = useTranslations("LandingTabs");
   const tr = useTranslations("LandingRuled.nav");
@@ -61,7 +66,9 @@ export default function LandingPanels({
     });
   }, []);
 
-  const hasVenues = venues.length > 0;
+  // The MENUS panel exists when there is anything to list — partner venues
+  // or seeded directory venues.
+  const hasVenues = venues.length > 0 || directoryVenues.length > 0;
 
   // Returning to a scroll-restored panel (home/menus) — nudge ScrollTrigger to
   // re-measure (the panel was display:none while hidden).
@@ -189,7 +196,11 @@ export default function LandingPanels({
       {/* MENUS — always mounted (SEO anchors + pinned scroll state). */}
       {hasVenues && (
         <div className={active === "menus" ? "block" : "hidden"}>
-          <VenuesSpace venues={venues} locale={locale} />
+          <VenuesSpace
+            venues={venues}
+            locale={locale}
+            directoryVenues={directoryVenues}
+          />
         </div>
       )}
 

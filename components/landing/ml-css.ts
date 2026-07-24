@@ -486,4 +486,127 @@ button.ml-brand{background:none;border:0;padding:0;cursor:pointer;font:inherit;t
   .ml-nav,.ml-nav-line,.ml-how-row,.ml-how-idx,.ml-chip,.ml-btn,.ml-cta,.ml-cta-o{transition:none}
   .v-press:active{transform:none}
 }
+
+/* ═══ 14. FAQ (06 — FAQ, dark) ═══════════════════════════════════════════ */
+.ml-faq-tag{
+  margin:var(--v-s5) 0 0;
+  font-family:var(--v-font-mono);font-size:var(--v-t-micro);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+}
+.ml-faq-list{margin-top:var(--v-s7)}
+.ml-faq-item{position:relative}
+.ml-faq-qh{margin:0;font-weight:inherit}
+.ml-faq-q{
+  display:grid;grid-template-columns:48px 1fr 28px;column-gap:var(--v-s4);
+  align-items:baseline;width:100%;text-align:left;
+  background:none;border:0;padding:0;cursor:pointer;color:var(--ink);
+  padding-block:var(--v-s5);
+  transition:background .3s ease;
+}
+.ml-faq-q:focus-visible{outline:1px solid var(--v-accent);outline-offset:4px}
+@media(min-width:1024px){
+  .ml-faq-q{grid-template-columns:96px 1fr 28px;column-gap:var(--v-s6)}
+}
+.ml-faq-idx{
+  font-family:var(--v-font-mono);font-size:var(--v-t-mono);letter-spacing:.06em;
+  color:var(--faint);transition:transform .3s cubic-bezier(.16,1,.3,1);
+}
+.ml-faq-qt{
+  font-family:var(--v-font-display);font-weight:500;
+  font-size:clamp(1.1rem,2vw,1.5rem);letter-spacing:-.02em;line-height:1.2;
+  transition:color .3s ease;
+}
+.ml-faq-chev{
+  justify-self:end;align-self:center;display:inline-flex;color:var(--faint);
+  transition:transform .4s cubic-bezier(.16,1,.3,1),color .3s ease;
+}
+.ml-faq-chev[data-open="true"]{transform:rotate(180deg);color:var(--v-accent)}
+.ml-faq-panel{
+  display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows .5s cubic-bezier(.16,1,.3,1);
+}
+.ml-faq-panel[data-open="true"]{grid-template-rows:1fr}
+.ml-faq-panel-in{overflow:hidden;min-height:0}
+.ml-faq-a{
+  margin:0;padding-bottom:var(--v-s5);
+  font-size:var(--v-t-body);line-height:1.6;color:var(--mut);max-width:64ch;
+}
+@media(min-width:1024px){.ml-faq-a{margin-left:calc(96px + var(--v-s6))}}
+@media(max-width:1023px){.ml-faq-a{margin-left:calc(48px + var(--v-s4))}}
+.ml-faq-line{
+  position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line);
+  transform-origin:left center;
+}
+@media(hover:hover) and (pointer:fine){
+  .ml-faq-q:hover{background:var(--raise)}
+  .ml-faq-q:hover .ml-faq-qt{color:var(--v-accent)}
+  .ml-faq-q:hover .ml-faq-idx{transform:translateX(8px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .ml-faq-q,.ml-faq-idx,.ml-faq-qt,.ml-faq-chev,.ml-faq-panel{transition:none}
+}
+
+/* ═══ 15. City directory (04 — AROUND TBILISI, MENUS panel) ══════════════ */
+.ml-dir-sub{
+  margin:var(--v-s4) 0 0;
+  font-size:var(--v-t-body);line-height:1.6;color:var(--mut);max-width:60ch;
+}
+.ml-dir-grid{
+  margin-top:var(--v-s6);
+  display:grid;grid-template-columns:1fr;column-gap:var(--v-s6);
+}
+@media(min-width:768px){.ml-dir-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.ml-dir-grid{grid-template-columns:repeat(3,1fr)}}
+.ml-dir-row{position:relative;display:flex;flex-direction:column}
+.ml-dir-hit{
+  display:grid;grid-template-columns:40px minmax(0,1fr) auto;column-gap:var(--v-s3);
+  align-items:baseline;width:100%;
+  padding-block:var(--v-s4);
+  color:var(--ink);
+  transition:background .3s ease;
+}
+.ml-dir-idx{
+  font-family:var(--v-font-mono);font-size:var(--v-t-mono);letter-spacing:.06em;
+  color:var(--faint);transition:transform .3s cubic-bezier(.16,1,.3,1);
+}
+.ml-dir-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ml-dir-name{
+  font-family:var(--v-font-display);font-weight:500;
+  font-size:clamp(1.05rem,1.6vw,1.3rem);letter-spacing:-.02em;line-height:1.2;
+  transition:color .3s ease;
+}
+.ml-dir-meta{
+  font-family:var(--v-font-mono);font-size:var(--v-t-micro);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+}
+.ml-dir-addr{
+  font-size:var(--v-t-small);color:var(--mut);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ml-dir-act{
+  align-self:center;white-space:nowrap;
+  font-family:var(--v-font-mono);font-size:var(--v-t-micro);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  transition:color .3s ease;
+}
+.ml-dir-claim{
+  margin-left:calc(40px + var(--v-s3));padding-bottom:var(--v-s4);
+  font-family:var(--v-font-mono);font-size:var(--v-t-micro);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  transition:color .3s ease;width:fit-content;
+}
+.ml-dir-claim:hover{color:var(--v-accent)}
+.ml-dir-line{
+  position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line);
+  transform-origin:left center;
+}
+@media(hover:hover) and (pointer:fine){
+  a.ml-dir-hit:hover{background:var(--raise)}
+  a.ml-dir-hit:hover .ml-dir-name{color:var(--v-accent)}
+  a.ml-dir-hit:hover .ml-dir-idx{transform:translateX(6px)}
+  a.ml-dir-hit:hover .ml-dir-act{color:var(--v-accent)}
+}
+@media(prefers-reduced-motion:reduce){
+  .ml-dir-hit,.ml-dir-idx,.ml-dir-name,.ml-dir-act,.ml-dir-claim{transition:none}
+}
 `;

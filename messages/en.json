@@ -1185,6 +1185,18 @@
       "open_menu": "MENU",
       "empty": "THE FIRST ROOMS GO LIVE SOON"
     },
+    "directory": {
+      "label": "AROUND TBILISI",
+      "meta": "CITY DIRECTORY",
+      "sub": "Every menu in town — partners and beyond.",
+      "view_menu": "VIEW MENU",
+      "claim": "UNCLAIMED — YOURS?",
+      "cat_cafe": "CAFE",
+      "cat_restaurant": "RESTAURANT",
+      "cat_bar": "BAR",
+      "cat_hotel": "HOTEL",
+      "cat_other": "OTHER"
+    },
     "waitlist": {
       "label": "FOR VENUES",
       "meta": "JOIN",
@@ -1197,6 +1209,24 @@
       "success": "YOU'RE ON THE LIST",
       "note": "NO SPAM — ONE EMAIL WHEN WE LAUNCH.",
       "error_generic": "Something went wrong. Please try again."
+    },
+    "faq": {
+      "label": "FAQ",
+      "meta": "6 QUESTIONS",
+      "heading": "Questions, answered.",
+      "tagline": "TBILISI · DIGITAL MENUS · AI CONCIERGE · SURPRISE BAGS",
+      "q1": "What is VOLOO?",
+      "a1": "VOLOO is a digital menu platform for cafés and restaurants in Tbilisi, Georgia. Tap the NFC tag or scan the QR code on the table and the venue's live menu opens in your browser — no app to install. An AI concierge reads the same menu, so you can ask about ingredients, allergens, or what fits your diet in English, Georgian, or Russian.",
+      "q2": "What are Surprise Bags?",
+      "a2": "Surprise Bags are bags of good, unsold food that local cafés and restaurants pack at the end of the day and sell for up to 50% off — discounted food that would otherwise go to waste. You reserve a bag on VOLOO, pay online, and pick it up at the venue before closing time.",
+      "q3": "How do I pay?",
+      "a3": "By card, online. Payments are processed securely by Flitt, TBC Bank's payment platform. VOLOO never stores your card details.",
+      "q4": "Where does VOLOO work?",
+      "a4": "VOLOO is live in Tbilisi, Georgia, with a growing list of cafés and restaurants. New venues are added regularly — the venue catalogue above shows every room currently on the platform.",
+      "q5": "How can my venue join?",
+      "a5": "VOLOO is invitation-based while we onboard Tbilisi venue by venue. Leave your email in the form above or write to hello@shemoqmedi.space — we'll set up your digital menu and bring the NFC tags.",
+      "q6": "Is VOLOO free for venues?",
+      "a6": "Yes — at launch, joining VOLOO is free for venues. You get a digital menu, NFC table tags, the AI concierge, and a place in the Surprise Bag marketplace."
     },
     "footer": {
       "label": "CONTACT",
