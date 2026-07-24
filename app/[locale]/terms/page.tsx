@@ -6,7 +6,8 @@ const OPERATOR = "Saba Khvichia — Individual Entrepreneur (ინდ. მე�
 const CONTACT_EMAIL = "hello@shemoqmedi.space";
 const UPDATED = "19 July 2026";
 
-const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://shemoqmedi.space";
+// Must match the serving host (www) — see canonical-host note in [locale]/layout.tsx.
+const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
 
 export async function generateMetadata({
   params,
@@ -18,7 +19,15 @@ export async function generateMetadata({
     title: "Terms & Conditions",
     description:
       "The terms governing use of Shemoqmedi's NFC digital menus, AI features, and partner subscriptions. Governed by Georgian law.",
-    alternates: { canonical: `${BASE_URL}/${locale}/terms` },
+    alternates: {
+      canonical: `${BASE_URL}/${locale}/terms`,
+      languages: {
+        en: `${BASE_URL}/en/terms`,
+        ka: `${BASE_URL}/ka/terms`,
+        ru: `${BASE_URL}/ru/terms`,
+        "x-default": `${BASE_URL}/en/terms`,
+      },
+    },
     robots: { index: true, follow: true },
   };
 }

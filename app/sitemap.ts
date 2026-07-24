@@ -21,13 +21,10 @@ const LOCALES = ["en", "ka", "ru"] as const;
 // Core public marketing routes (path AFTER the locale prefix).
 const STATIC_ROUTES = ["", "/privacy", "/terms"];
 
-// hreflang alternates map for a locale-less path.
-function languagesFor(path: string): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const l of LOCALES) map[l] = `${BASE_URL}/${l}${path}`;
-  map["x-default"] = `${BASE_URL}/en${path}`;
-  return map;
-}
+// NOTE: no per-URL `alternates` here on purpose. hreflang lives in each page's
+// HTML <head> (Metadata API `alternates.languages`), which is sufficient for
+// search engines. Adding them here too would emit <xhtml:link> elements, which
+// makes Chrome render the sitemap as flat text instead of the XML tree.
 
 /**
  * fetchPublishedVenueSlugs — only venues with isPublished = true.
@@ -61,7 +58,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: "weekly",
         priority: route === "" ? 1.0 : 0.4,
-        alternates: { languages: languagesFor(route) },
       });
     }
   }
@@ -76,7 +72,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(updatedAt),
         changeFrequency: "daily",
         priority: 0.9,
-        alternates: { languages: languagesFor(path) },
       });
     }
   }
