@@ -1255,5 +1255,27 @@
       "terms": "წესები",
       "made": "MADE WITH ❤ IN TBILISI"
     }
+  },
+  "MenuRuled": {
+    "kicker": "ციფრული მენიუ",
+    "menuLabel": "მენიუ",
+    "itemsCount": "{count, plural, one {# პოზიცია} other {# პოზიცია}}",
+    "cityFallback": "თბილისი, საქართველო",
+    "featuredLabel": "რჩეული",
+    "featuredHeading": "სახლის ფავორიტები",
+    "drag": "ათრიე",
+    "storyLabel": "ისტორია",
+    "galleryLabel": "გალერეა",
+    "infoLabel": "ვიზიტი",
+    "infoHeading": "გვესტუმრეთ",
+    "hours": "სამუშაო საათები",
+    "contact": "კონტაქტი",
+    "directions": "მარშრუტი",
+    "backToTop": "თავში დაბრუნება",
+    "poweredBy": "შექმნილია",
+    "close": "დახურვა",
+    "tunnelLabel": "დერეფანი",
+    "tunnelHeading": "შემოდი {name}-ში",
+    "tunnelCta": "მენიუში შესვლა"
   }
 }

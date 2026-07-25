@@ -240,10 +240,7 @@ html, body {
   --v-accent:    #D8FF3A;  /* the ONE accent — see accent discipline in spec §1.1 */
   --v-accent-ink:#1A2000;  /* text on accent fills */
 
-  /* ── 1.2 Font stacks (next/font vars are set on <body>) ──────────────── */
-  --v-font-display: var(--font-display), var(--font-ka), var(--font-geist-sans), sans-serif;
-  --v-font-body:    var(--font-geist-sans), var(--font-ka), system-ui, sans-serif;
-  --v-font-mono:    var(--font-geist-mono), var(--font-ka), ui-monospace, monospace;
+  /* ── 1.2 Font stacks — see the body-scoped block below ───────────────── */
 
   /* ── 1.3 Type scale (sizes; weight/tracking/leading via .v-t-* classes) ─ */
   --v-t-giga:  clamp(3.2rem, 11.5vw, 9rem);
@@ -271,6 +268,20 @@ html, body {
   --v-c-mut:   var(--v-mut);
   --v-c-faint: var(--v-faint);
   --v-c-line:  var(--v-line);
+}
+
+/* ── 1.2 Font stacks ──────────────────────────────────────────────────────
+ * MUST be body-scoped, not :root. next/font sets --font-display / --font-ka /
+ * --font-geist-* on <body> (layout.tsx puts the font classes there), so a
+ * :root declaration referencing them resolves to the guaranteed-invalid value
+ * and every var(--v-font-display) consumer silently falls back to the system
+ * sans. Declaring here — inside the element that owns the next/font vars —
+ * makes the stacks resolve for the whole tree.
+ * ────────────────────────────────────────────────────────────────────────── */
+body {
+  --v-font-display: var(--font-display), var(--font-ka), var(--font-geist-sans), sans-serif;
+  --v-font-body:    var(--font-geist-sans), var(--font-ka), system-ui, sans-serif;
+  --v-font-mono:    var(--font-geist-mono), var(--font-ka), ui-monospace, monospace;
 }
 
 /* Sections declare data-theme="bone" — every .v-* contextual consumer flips. */

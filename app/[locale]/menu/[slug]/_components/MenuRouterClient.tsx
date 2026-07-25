@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex-helpers-api";
 import VenueClientView from "./basic-menu/VenueClientView";
 import SpatialSnapGrid from "./dragable-menu/_components/SpatialSnapGrid";
+import RuledMenuView from "./ruled-menu/RuledMenuView";
 import { MenuSkeleton } from "./basic-menu/_components/menu-skeleton";
 import { MultiplayerProvider } from "@/components/multiplayer/MultiplayerContext";
 import { TableSuggestionToast } from "@/components/multiplayer/TableSuggestionToast";
@@ -66,7 +67,9 @@ export default function MenuRouterClient({
         catalog={data.categories || []}
         themeSettings={data.organization.themeSettings ?? null}
       />
-      {menuType === "dragable" ? (
+      {menuType === "ruled" ? (
+        <RuledMenuView data={data} slug={slug} />
+      ) : menuType === "dragable" ? (
         <SpatialSnapGrid data={data} slug={slug} />
       ) : (
         <VenueClientView data={data} slug={slug} />

@@ -1237,5 +1237,27 @@
       "terms": "УСЛОВИЯ",
       "made": "MADE WITH ❤ IN TBILISI"
     }
+  },
+  "MenuRuled": {
+    "kicker": "ЦИФРОВОЕ МЕНЮ",
+    "menuLabel": "МЕНЮ",
+    "itemsCount": "{count, plural, one {# позиция} few {# позиции} many {# позиций} other {# позиции}}",
+    "cityFallback": "ТБИЛИСИ, ГРУЗИЯ",
+    "featuredLabel": "ИЗБРАННОЕ",
+    "featuredHeading": "Фавориты дома",
+    "drag": "ТЯНИ",
+    "storyLabel": "ИСТОРИЯ",
+    "galleryLabel": "ГАЛЕРЕЯ",
+    "infoLabel": "ВИЗИТ",
+    "infoHeading": "Приходите к нам",
+    "hours": "ЧАСЫ РАБОТЫ",
+    "contact": "КОНТАКТЫ",
+    "directions": "МАРШРУТ",
+    "backToTop": "НАВЕРХ",
+    "poweredBy": "СДЕЛАНО НА",
+    "close": "ЗАКРЫТЬ",
+    "tunnelLabel": "КОРИДОР",
+    "tunnelHeading": "Зайдите в {name}",
+    "tunnelCta": "ВОЙТИ В МЕНЮ"
   }
 }

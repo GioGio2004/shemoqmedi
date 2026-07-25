@@ -1237,5 +1237,27 @@
       "terms": "TERMS",
       "made": "MADE WITH ❤ IN TBILISI"
     }
+  },
+  "MenuRuled": {
+    "kicker": "DIGITAL MENU",
+    "menuLabel": "MENU",
+    "itemsCount": "{count, plural, one {# item} other {# items}}",
+    "cityFallback": "TBILISI, GEORGIA",
+    "featuredLabel": "FEATURED",
+    "featuredHeading": "House favourites",
+    "drag": "DRAG",
+    "storyLabel": "STORY",
+    "galleryLabel": "GALLERY",
+    "infoLabel": "VISIT",
+    "infoHeading": "Come find us",
+    "hours": "HOURS",
+    "contact": "CONTACT",
+    "directions": "DIRECTIONS",
+    "backToTop": "BACK TO TOP",
+    "poweredBy": "POWERED BY",
+    "close": "CLOSE",
+    "tunnelLabel": "THE CORRIDOR",
+    "tunnelHeading": "Step inside {name}",
+    "tunnelCta": "ENTER THE MENU"
   }
 }
