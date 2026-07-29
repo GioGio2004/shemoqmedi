@@ -74,9 +74,11 @@ export const RM_CSS = /* css */ `
 
 .rm-nav.is-scrolled .rm-nav-line { transform: scaleX(1); }
 
-/* Category rail (scroll-spy) — desktop inline, mobile its own strip */
+/* Category rail (scroll-spy) — desktop inline, mobile its own strip.
+ * NO display property here: this <style> is injected after Tailwind's
+ * stylesheet, so declaring flex would override the responsive hidden/flex
+ * utilities the JSX uses to show/hide the rails (it did — doubled rails). */
 .rm-nav-cats {
-  display: flex;
   align-items: center;
   gap: 20px;
   overflow-x: auto;
@@ -233,11 +235,14 @@ export const RM_CSS = /* css */ `
 
 .rm-cat-head {
   position: sticky;
-  top: 60px;
+  top: 104px; /* clears the nav bar + the mobile category strip */
   z-index: 5;
   background: color-mix(in srgb, var(--v-bg) 92%, transparent);
   backdrop-filter: blur(6px);
   padding-block: 14px 10px;
+}
+@media (min-width: 768px) {
+  .rm-cat-head { top: 60px; } /* desktop nav is a single 60px bar */
 }
 
 .rm-row {
@@ -337,6 +342,144 @@ export const RM_CSS = /* css */ `
   object-fit: cover;
   transform: scale(1.15);
   will-change: transform;
+}
+
+/* ═══ 6b. Menu — the visual wall (masonry gallery) ════════════════════════
+ * Pinterest-density card wall (aicreatorawards reference). CSS columns give
+ * true masonry flow; every card gets a deterministic aspect ratio from its
+ * index so layout is stable (no CLS) but reads organically varied. Food
+ * photography renders FULL COLOR. Items without photos become typographic
+ * poster cards — outline / raised / accent tones, the tunnel-panel family. */
+
+/* Sticky category-filter chips over the feed (Pinterest control strip).
+ * Chips reuse .rm-nav-cat (mono link + accent underline). */
+.rm-filter {
+  position: sticky;
+  top: 60px;
+  z-index: 6;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-block: 14px 12px;
+  margin-top: 10px;
+  background: color-mix(in srgb, var(--v-bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+.rm-filter::-webkit-scrollbar { display: none; }
+
+.rm-mas {
+  columns: 2;
+  column-gap: 12px;
+  padding-top: 20px;
+}
+@media (min-width: 768px)  { .rm-mas { columns: 3; column-gap: clamp(14px, 1.6vw, 22px); } }
+@media (min-width: 1280px) { .rm-mas { columns: 4; } }
+
+.rm-mas-card {
+  display: block;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: 12px;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+}
+@media (min-width: 768px) { .rm-mas-card { margin-bottom: clamp(14px, 1.6vw, 22px); } }
+
+.rm-mas-img {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--v-radius);
+  background: var(--v-bg-raise);
+}
+
+/* Deterministic Pinterest variety — aspect by card index, zero layout shift */
+.rm-mas-card[data-a="0"] .rm-mas-img { aspect-ratio: 4 / 5; }
+.rm-mas-card[data-a="1"] .rm-mas-img { aspect-ratio: 1 / 1; }
+.rm-mas-card[data-a="2"] .rm-mas-img { aspect-ratio: 3 / 4; }
+.rm-mas-card[data-a="3"] .rm-mas-img { aspect-ratio: 16 / 11; }
+.rm-mas-card[data-a="4"] .rm-mas-img { aspect-ratio: 5 / 6; }
+
+.rm-mas-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (pointer: fine) {
+  .rm-mas-card:hover .rm-mas-img img { transform: scale(1.045); }
+  .rm-mas-card:hover .rm-mas-name { color: var(--v-accent); }
+}
+
+/* Overlays on photo cards */
+.rm-mas-idx {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 2;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.rm-mas-price {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  padding: 3px 8px;
+  border-radius: var(--v-radius);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--v-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Typographic poster cards (no photo) — the tunnel-panel tone family */
+.rm-mas-fill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+}
+.rm-mas-img[data-tone="line"]   { background: transparent; box-shadow: inset 0 0 0 1px var(--v-line); color: var(--v-ink); }
+.rm-mas-img[data-tone="raise"]  { background: var(--v-bg-raise); color: var(--v-ink); }
+.rm-mas-img[data-tone="accent"] { background: var(--v-accent); color: var(--v-accent-ink); }
+.rm-mas-img[data-tone="accent"] .rm-mas-fill [data-dim] { color: color-mix(in srgb, var(--v-accent-ink) 62%, transparent); }
+.rm-mas-img[data-tone="line"] .rm-mas-fill [data-dim],
+.rm-mas-img[data-tone="raise"] .rm-mas-fill [data-dim] { color: var(--v-faint); }
+
+.rm-mas-fill-name {
+  font-family: var(--v-font-display);
+  font-weight: 500;
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Meta row under photo cards */
+.rm-mas-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+}
+.rm-mas-name {
+  font-family: var(--v-font-display);
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--v-ink);
+  transition: color 0.3s ease;
+  min-width: 0;
 }
 
 /* ═══ 7. Story (bone) ═════════════════════════════════════════════════════ */
@@ -587,14 +730,21 @@ export const RM_CSS = /* css */ `
   width: 0;
   height: 0;
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
-/* Fades land here: a wall's own rotate still applies when it groups. */
+/* Fades land here: a wall's own rotate still applies when it groups.
+ * backface-visibility makes a wrong rotation sign fail LOUDLY (wall
+ * disappears) instead of silently rendering a mirrored photo. */
 .rm-tun-wall {
   position: absolute;
-  will-change: opacity;
+  backface-visibility: hidden;
 }
+
+/* Compositor layers exist only while the corridor is on screen — RmTunnel
+ * toggles .is-live from its IntersectionObserver. 46 resident layers on a
+ * long menu page are not free. */
+.rm-tunnel.is-live .rm-tun-seg { will-change: transform; }
+.rm-tunnel.is-live .rm-tun-wall { will-change: opacity; }
 
 .rm-tun-wall[data-wall="top"],
 .rm-tun-wall[data-wall="bottom"] {
@@ -612,7 +762,8 @@ export const RM_CSS = /* css */ `
 }
 
 /* Opposite rotation signs per pair — every front face points INTO the tube.
- * A shared sign turns one of each pair backface-on and it disappears. */
+ * With backface-visibility:hidden above, a shared sign turns one of each
+ * pair backface-on and it disappears — the intended loud failure. */
 .rm-tun-wall[data-wall="top"]    { transform: translateY(calc(var(--tun-sy) * -1)) rotateX(-90deg); }
 .rm-tun-wall[data-wall="bottom"] { transform: translateY(var(--tun-sy)) rotateX(90deg); }
 .rm-tun-wall[data-wall="left"]   { transform: translateX(calc(var(--tun-sx) * -1)) rotateY(90deg); }

@@ -1276,6 +1276,7 @@
     "close": "დახურვა",
     "tunnelLabel": "დერეფანი",
     "tunnelHeading": "შემოდი {name}-ში",
-    "tunnelCta": "მენიუში შესვლა"
+    "tunnelCta": "მენიუში შესვლა",
+    "all": "ყველა"
   }
 }

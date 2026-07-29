@@ -20,6 +20,7 @@ export default function RmNav({
   locale,
   slug,
   menuLabel,
+  showCats = true,
 }: {
   name: string;
   categories: RmCategory[];
@@ -27,6 +28,8 @@ export default function RmNav({
   locale: string;
   slug: string;
   menuLabel: string;
+  /** false in feed (gallery) mode — the filter chips over the wall take over. */
+  showCats?: boolean;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const lenis = useLenis();
@@ -67,9 +70,12 @@ export default function RmNav({
             {name}
           </button>
 
-          {/* Category rail — desktop */}
+          {/* Category rail — desktop (editorial rows mode only) */}
           <nav
-            className="rm-nav-cats v-t-mono hidden md:flex"
+            className={cn(
+              "rm-nav-cats v-t-mono",
+              showCats ? "hidden md:flex" : "hidden",
+            )}
             aria-label={menuLabel}
           >
             {categories.map((c) => (
@@ -109,10 +115,11 @@ export default function RmNav({
           </div>
         </div>
 
-        {/* Category rail — mobile strip */}
+        {/* Category rail — mobile strip (editorial rows mode only) */}
         <nav
           className={cn(
-            "rm-nav-cats v-t-mono flex md:hidden pb-2.5 -mt-1 transition-opacity",
+            "rm-nav-cats v-t-mono pb-2.5 -mt-1 transition-opacity",
+            showCats ? "flex md:hidden" : "hidden",
             scrolled ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
           aria-label={menuLabel}

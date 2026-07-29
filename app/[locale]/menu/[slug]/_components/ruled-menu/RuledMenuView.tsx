@@ -75,6 +75,8 @@ export default function RuledMenuView({
   }, []);
 
   // ── Derived content ─────────────────────────────────────────────────────────
+  const menuStyle: "rows" | "gallery" =
+    config?.menuStyle === "rows" ? "rows" : "gallery";
   const name = org.name;
   const tagline = pick(org.storefrontConfig?.heroSubheadline, locale);
   const coverImage =
@@ -247,6 +249,7 @@ export default function RuledMenuView({
           locale={locale}
           slug={slug}
           menuLabel={t("menuLabel")}
+          showCats={menuStyle === "rows"}
         />
 
         <main>
@@ -277,6 +280,8 @@ export default function RuledMenuView({
             locale={locale}
             index={indexes.menu}
             label={t("menuLabel")}
+            layout={menuStyle}
+            allLabel={t("all")}
             onOpen={(item, category) => setOpenItem({ item, category })}
             onActiveCat={handleActiveCat}
           />

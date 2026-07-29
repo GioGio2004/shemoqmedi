@@ -33,6 +33,7 @@ export type RmRuledConfig = {
   storyImageUrl?: string;
   galleryImageUrls?: string[];
   accentColor?: string;
+  menuStyle?: "rows" | "gallery";
   showTicker?: boolean;
   showFeatured?: boolean;
   showStory?: boolean;

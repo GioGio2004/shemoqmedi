@@ -5,10 +5,11 @@
 // THE CORRIDOR — an infinite one-point-perspective tunnel (units.gr homage)
 // built from the venue's own photography, RULED hairlines and the accent.
 //
-// Geometry: each segment is a slice of a square tube — four real CSS 3D
+// Geometry: each segment is a slice of a rectangular tube — four real CSS 3D
 // planes. Every wall is rotated so its FRONT face points into the tube
-// (right/top get the opposite sign of left/bottom — with a shared sign one of
-// each pair shows its back to the camera and vanishes).
+// (right/top get the opposite sign of left/bottom). backface-visibility:
+// hidden on .rm-tun-wall is the guard that makes a wrong-sign wall DISAPPEAR
+// loudly instead of silently rendering a mirrored photo.
 //
 // Scale: the tube measures its container (ResizeObserver) and derives
 // s (half-width), d (segment depth) and the perspective from it, so the same
@@ -153,11 +154,15 @@ export default function RmTunnel({
 
       const tick = (now: number) => {
         raf = requestAnimationFrame(tick);
-        const dt = Math.min((now - last) / 1000, 0.05);
+        // dt clamp 0.033 keeps the worst-case per-frame step inside the wrap
+        // invisibility buffer (near − fadeEnd) so a rim ring never pops.
+        const dt = Math.min((now - last) / 1000, 0.033);
         last = now;
+        // Decay runs even while hidden — otherwise the scroll boost ratchets
+        // off-screen and the corridor lurches on viewport entry.
+        speedMul += (1 - speedMul) * Math.min(dt * 3, 1);
         if (!visible) return;
         progress += geo.current.m * BASE_SPEED_RATIO * speedMul * dt;
-        speedMul += (1 - speedMul) * Math.min(dt * 3, 1);
         place(progress);
       };
       raf = requestAnimationFrame(tick);
@@ -167,13 +172,19 @@ export default function RmTunnel({
         end: "max",
         onUpdate: (self) => {
           const v = Math.abs(self.getVelocity());
-          speedMul = Math.max(speedMul, gsap.utils.clamp(1, 6, 1 + v / 380));
+          speedMul = Math.max(speedMul, gsap.utils.clamp(1, 3, 1 + v / 380));
         },
       });
 
       const io = new IntersectionObserver(
-        ([entry]) => {
+        (entries) => {
+          // Coalesced entries arrive oldest-first — only the last is current.
+          const entry = entries[entries.length - 1];
+          const wasVisible = visible;
           visible = entry.isIntersecting;
+          // will-change layers live only while the corridor is on screen.
+          root.classList.toggle("is-live", visible);
+          if (visible && !wasVisible) speedMul = 1;
           last = performance.now();
         },
         { rootMargin: "120px" },
@@ -261,8 +272,14 @@ export default function RmTunnel({
           ))}
         </div>
 
-        <span className="rm-tun-vignette" />
       </div>
+
+      {/* Fog overlay — MUST stay a sibling of the stage, never inside it:
+          inside the preserve-3d context it sits in the z=0 plane and forces
+          per-frame BSP plane-splitting against the ring that straddles z=0
+          (hairline seams / WebKit flicker). As a sibling it's a plain 2D
+          overlay with identical output. */}
+      <span className="rm-tun-vignette" aria-hidden="true" />
 
       <div className="rm-tun-core">
         <p className="v-t-mono rm-tun-kicker">{label}</p>
