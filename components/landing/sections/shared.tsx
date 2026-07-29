@@ -54,6 +54,17 @@ export function Roll({ children }: { children: ReactNode }) {
 
 /* ── Unsplash image under the grayscale-at-rest law (spec §4.2) ──────────── */
 
+/**
+ * Route remote images through Next's optimizer: served same-origin (no
+ * third-party cookies from images.unsplash.com) and recompressed to AVIF at
+ * q=75. 828/1920 are in Next's default deviceSizes allow-list; the optimizer
+ * never upscales, so an 800px source stays 800px wide.
+ */
+const opt = (url: string, w: number) =>
+  url.startsWith("http")
+    ? `/_next/image?url=${encodeURIComponent(url)}&w=${w}&q=75`
+    : url;
+
 export function UImg({
   src,
   alt,
@@ -79,8 +90,8 @@ export function UImg({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
-      srcSet={`${small} 800w, ${src} 1600w`}
+      src={opt(src, 1920)}
+      srcSet={`${opt(small, 828)} 800w, ${opt(src, 1920)} 1600w`}
       sizes={sizes}
       alt={alt}
       className={cn("v-img", className)}

@@ -27,6 +27,7 @@
 
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
 import MenuRouterClient from "./_components/MenuRouterClient";
@@ -90,6 +91,50 @@ async function fetchVenue(slug: string): Promise<PublicVenue> {
   }
 }
 
+/**
+ * assertVenueExists — turns unknown slugs into a real HTTP 404.
+ *
+ * Any random /{locale}/menu/{anything} used to return 200 with fallback
+ * content (a soft 404 — infinite duplicate URL space for crawlers, and the
+ * source of "Not found" noise in Search Console). A slug is real when it
+ * exists in EITHER public source:
+ *   - publicVenues.getBySlug  → seeded/storefront venues
+ *   - publicMenu.get          → org-born partner venues (what the client renders)
+ * Convex being unreachable must NOT 404 a real page, so query errors skip
+ * the check (the page renders its client shell as before).
+ *
+ * Returns the organization name when only the org source matched, so the
+ * SEO shell can use the real venue name.
+ */
+async function assertVenueExists(
+  venue: PublicVenue,
+  slug: string,
+): Promise<string | null> {
+  if (venue) return venue.name;
+  let menu: { organization: { name?: string } } | null;
+  try {
+    menu = await fetchQuery(api.publicMenu.get, { slug }, { url: CONVEX_URL });
+  } catch {
+    return null; // Convex unreachable — don't 404 a possibly-real page.
+  }
+  if (menu === null) notFound(); // definitively unknown slug → real 404
+  return menu.organization?.name ?? null;
+}
+
+/**
+ * Meta descriptions must be 70–158 chars for search snippets (Ahrefs flags
+ * "too short"/"too long"). Venue descriptions come from the DB, so clamp.
+ */
+function clampDescription(raw: string, venueName: string): string {
+  let d = raw.trim();
+  if (d.length < 70) {
+    const tail = `Browse ${venueName}'s live digital menu on VOLOO — ask the AI concierge about dishes, ingredients and allergens. No app needed.`;
+    d = d ? `${d.replace(/[.\s]+$/, "")}. ${tail}` : tail;
+  }
+  if (d.length > 158) d = `${d.slice(0, 155).trimEnd().replace(/[,;:—\s]+$/, "")}…`;
+  return d;
+}
+
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({
@@ -101,9 +146,11 @@ export async function generateMetadata({
   const venue = await fetchVenue(slug);
 
   const venueName = venue?.name || slugToVenueName(slug);
-  const description =
+  const description = clampDescription(
     venue?.description?.trim() ||
-    `Explore the full digital menu of ${venueName} — crafted with care and powered by Voloo. Browse our categories, discover seasonal specials, and order with ease.`;
+      `Explore the full digital menu of ${venueName} — crafted with care and powered by Voloo. Browse our categories, discover seasonal specials, and order with ease.`,
+    venueName,
+  );
 
   // Canonical MUST match the real route (/{locale}/menu/{slug}).
   const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
@@ -190,7 +237,15 @@ export default async function Page({
   }
 
   const venue = await fetchVenue(slug);
-  const venueName = venue?.name || slugToVenueName(slug);
+  // Hard-404s definitively unknown slugs; returns the organization name for
+  // org-born venues that have no publicVenues row.
+  const knownName = await assertVenueExists(venue, slug);
+  const venueName = venue?.name || knownName || slugToVenueName(slug);
+  const description = clampDescription(
+    venue?.description?.trim() ||
+      `Explore the full digital menu of ${venueName} — crafted with care and powered by Voloo.`,
+    venueName,
+  );
   const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
 
   // ── JSON-LD: LocalBusiness + Restaurant ─────────────────────────────────────
@@ -311,6 +366,34 @@ export default async function Page({
           __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
         }}
       />
+
+      {/*
+       * Crawlable SEO shell — the interactive menu renders client-side over a
+       * Convex WebSocket, so without this block the served HTML contains no
+       * <h1>, no copy, and no outgoing links (Ahrefs: "H1 missing", "low word
+       * count", "no outgoing links"; ka/ru menu variants become orphans).
+       * Visually hidden, real content for crawlers and screen readers.
+       */}
+      <div className="sr-only">
+        <h1>{venueName} — Digital Menu</h1>
+        <p>{description}</p>
+        <nav aria-label="VOLOO">
+          <a href={`/${locale}`}>
+            VOLOO by Shemoqmedi — digital menus &amp; Surprise Bags in Tbilisi
+          </a>
+          <a href={`/${locale}#venues`}>All venues on VOLOO</a>
+          {(["en", "ka", "ru"] as const)
+            .filter((l) => l !== locale)
+            .map((l) => (
+              <a key={l} href={buildMenuUrl(l, slug)}>
+                {venueName} —{" "}
+                {l === "en" ? "English" : l === "ka" ? "ქართული" : "Русский"}
+              </a>
+            ))}
+          <a href={`/${locale}/privacy`}>Privacy Policy</a>
+          <a href={`/${locale}/terms`}>Terms &amp; Conditions</a>
+        </nav>
+      </div>
 
       {/*
        * MenuRouterClient handles all real-time interactivity:

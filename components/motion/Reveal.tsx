@@ -66,10 +66,14 @@ export default function Reveal({
   style,
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
+  const visualRef = useRef<HTMLSpanElement | null>(null);
+  const isSplit = type === "lines" || type === "chars";
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const visual = visualRef.current;
+    if (isSplit && !visual) return;
 
     gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -78,6 +82,13 @@ export default function Reveal({
 
     let mm: gsap.MatchMedia | null = null;
     let cancelled = false;
+
+    // Hide split reveals until the font-swap reflow and SplitText's mask
+    // insertion are done — invisible elements don't count toward CLS.
+    if (isSplit) el.style.visibility = "hidden";
+    const show = () => {
+      el.style.visibility = "";
+    };
 
     // Split after fonts settle so SplitText measures final line breaks.
     const ready: Promise<unknown> =
@@ -97,16 +108,23 @@ export default function Reveal({
 
       // Reduced motion: every reveal becomes a quiet opacity fade (spec §3.1).
       mm.add("(prefers-reduced-motion: reduce)", () => {
+        show();
         gsap.from(el, { opacity: 0, duration: 0.4, delay, scrollTrigger: { ...st } });
       });
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        if (type === "lines" || type === "chars") {
-          const split = new SplitText(el, {
+        if (isSplit && visual) {
+          // Split the aria-hidden visual layer, never the semantic element:
+          // SplitText's default aria handling writes aria-label onto the split
+          // target, which is prohibited on generic spans/paragraphs (axe
+          // aria-prohibited-attr). The sr-only twin carries the text instead.
+          const split = new SplitText(visual, {
             type: type === "chars" ? "lines,chars" : "lines",
             mask: "lines",
             linesClass: "v-split-line",
+            aria: "none",
           });
+          visual.removeAttribute("aria-label");
           const targets = type === "chars" ? split.chars : split.lines;
           gsap.from(targets, {
             yPercent: type === "chars" ? 118 : 110,
@@ -116,6 +134,7 @@ export default function Reveal({
             delay,
             scrollTrigger: { ...st },
           });
+          show();
           return () => split.revert();
         }
 
@@ -158,9 +177,10 @@ export default function Reveal({
 
     return () => {
       cancelled = true;
+      show();
       mm?.revert();
     };
-  }, [type, delay, duration, stagger, start]);
+  }, [type, isSplit, delay, duration, stagger, start]);
 
   // Widen the polymorphic tag to a single component type accepting the shared
   // props (a plain ElementType union is too complex for TS to represent).
@@ -180,7 +200,18 @@ export default function Reveal({
       style={style}
       className={cn(type === "frame" && "overflow-hidden", className)}
     >
-      {children}
+      {isSplit ? (
+        <>
+          {/* Screen readers get the intact text; the visual twin below is
+              SplitText's target and stays out of the accessibility tree. */}
+          <span className="sr-only">{children}</span>
+          <span aria-hidden="true" ref={visualRef} style={{ display: "inherit" }}>
+            {children}
+          </span>
+        </>
+      ) : (
+        children
+      )}
     </Tag>
   );
 }

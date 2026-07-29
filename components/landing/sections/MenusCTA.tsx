@@ -92,12 +92,13 @@ export default function MenusCTA({
         />
       </div>
 
+      {/* No aria-label: the button's visible text (which includes the CTA)
+          must be part of the accessible name — WCAG 2.5.3 (label-in-name). */}
       <button
         type="button"
         className="ml-mcta-btn"
         onClick={onShowMenus}
         data-cursor={t("cursor")}
-        aria-label={t("cta")}
       >
         <span className="ml-mcta-hl" aria-hidden="true" />
         <span className="ml-wrap ml-mcta-row">

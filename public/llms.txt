@@ -2,14 +2,13 @@
 
 > VOLOO is a digital menu platform and Surprise Bag (surplus food) marketplace for cafés and restaurants in Tbilisi, Georgia, built by Shemoqmedi. Diners tap an NFC tag or scan a QR code at the table to open the venue's live menu in the browser — no app required — ask a multilingual AI concierge about dishes, ingredients, and allergens (English, Georgian, Russian), and reserve Surprise Bags: good unsold food packed at the end of the day and sold at up to 50% off, paid by card online and picked up before closing.
 
-## Key URLs
+## Key pages
 
-- Home (English): https://www.shemoqmedi.space/en
-- Home (Georgian): https://www.shemoqmedi.space/ka
-- Home (Russian): https://www.shemoqmedi.space/ru
-- Venue catalogue on the landing page: https://www.shemoqmedi.space/en#venues
-- Venue menus: https://www.shemoqmedi.space/en/menu/{venue-slug}
-- Sitemap: https://www.shemoqmedi.space/sitemap.xml
+- [Home (English)](https://www.shemoqmedi.space/en): landing page — how VOLOO works, the AI concierge, venues, and the venue waitlist
+- [Home (Georgian)](https://www.shemoqmedi.space/ka): მთავარი გვერდი ქართულად
+- [Home (Russian)](https://www.shemoqmedi.space/ru): главная страница на русском
+- [Venue catalogue](https://www.shemoqmedi.space/en#venues): every venue with a live VOLOO menu
+- [Sitemap](https://www.shemoqmedi.space/sitemap.xml): all indexable pages, including per-venue menu URLs of the form /en/menu/{venue-slug}
 
 ## For consumers
 
@@ -22,9 +21,14 @@
 
 - Cafés and restaurants in Tbilisi join by invitation; joining is free at launch.
 - Venues receive a hosted digital menu, NFC table tags, the AI concierge on their menu, and a listing in the Surprise Bag marketplace.
-- Contact: hello@shemoqmedi.space
+- Contact: [hello@shemoqmedi.space](mailto:hello@shemoqmedi.space)
+
+## Legal
+
+- [Privacy Policy](https://www.shemoqmedi.space/en/privacy): data handling for partners and diners — Georgian law + GDPR-aligned
+- [Terms & Conditions](https://www.shemoqmedi.space/en/terms): terms governing menus, AI features, and partner subscriptions
 
 ## Company
 
 - Shemoqmedi — Tbilisi, Georgia
-- Contact: hello@shemoqmedi.space
+- Contact: [hello@shemoqmedi.space](mailto:hello@shemoqmedi.space)

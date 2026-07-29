@@ -47,7 +47,9 @@ export default function LandingNav({
   return (
     <nav className="ml-nav" data-scrolled={scrolled ? "true" : "false"}>
       <div className="ml-navbar">
-        <a href="#top" className="ml-brand" aria-label="VOLOO by Shemoqmedi">
+        {/* No aria-label: the visible text names the link, and an override
+            that doesn't contain it fails WCAG 2.5.3 (label-in-name). */}
+        <a href="#top" className="ml-brand">
           <span className="ml-brand-wm">VOLOO</span>
           <span className="ml-brand-by">{t("by")}</span>
         </a>

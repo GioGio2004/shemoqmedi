@@ -73,7 +73,8 @@ function Wordmark() {
         });
       const leave = () =>
         gsap.to(chars, {
-          color: "rgba(244,243,240,.34)",
+          // Matches the AA-compliant --v-faint token (.52 ≈ 5.2:1 on #0A0A0A).
+          color: "rgba(244,243,240,.52)",
           duration: 0.4,
           ease: "expo.out",
           stagger: 0.03,
@@ -168,10 +169,12 @@ export default function LandingFooter({
           <div>
             <p className="ml-foot-col-t">{t("legal")}</p>
             <div className="ml-foot-col">
-              <Link href="/privacy" className="ml-foot-link ml-rollhost">
+              {/* Locale-prefixed: bare /privacy 3XX-redirects through the
+                  locale middleware and orphans the ka/ru legal pages. */}
+              <Link href={`/${locale}/privacy`} className="ml-foot-link ml-rollhost">
                 <Roll>{t("privacy")}</Roll>
               </Link>
-              <Link href="/terms" className="ml-foot-link ml-rollhost">
+              <Link href={`/${locale}/terms`} className="ml-foot-link ml-rollhost">
                 <Roll>{t("terms")}</Roll>
               </Link>
             </div>

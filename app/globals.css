@@ -233,8 +233,10 @@ html, body {
   --v-ink-inv:   #141412;  /* text on bone (never pure #000) */
   --v-mut:       rgba(244,243,240,.62);
   --v-mut-inv:   rgba(20,20,18,.60);
-  --v-faint:     rgba(244,243,240,.34);
-  --v-faint-inv: rgba(20,20,18,.34);
+  /* Faint text still has to clear WCAG AA 4.5:1 on its background:
+     .52 on #0A0A0A ≈ 5.2:1 · .60 on #EDEBE6 ≈ 4.6:1 */
+  --v-faint:     rgba(244,243,240,.52);
+  --v-faint-inv: rgba(20,20,18,.60);
   --v-line:      rgba(244,243,240,.14);  /* THE hairline, dark theme */
   --v-line-inv:  rgba(20,20,18,.16);     /* hairline on bone */
   --v-accent:    #D8FF3A;  /* the ONE accent — see accent discipline in spec §1.1 */

@@ -85,6 +85,7 @@ export default function Hero({
   // SCROLL cue line loop + rotator entrance fade — motion-gated.
   useEffect(() => {
     const mm = gsap.matchMedia();
+    let cancelled = false;
     mm.add("(prefers-reduced-motion: no-preference)", () => {
       if (cueRef.current) {
         gsap.fromTo(
@@ -101,15 +102,30 @@ export default function Hero({
         );
       }
       if (rotWrapRef.current) {
-        gsap.from(rotWrapRef.current, {
-          autoAlpha: 0,
-          duration: 0.9,
-          ease: "expo.out",
-          delay: 0.5,
+        // Keep the rotator hidden until web fonts settle: the accent word
+        // re-measures on font load, and a visible re-measure is the page's
+        // biggest layout-shift (CLS) entry.
+        const rotWrap = rotWrapRef.current;
+        gsap.set(rotWrap, { autoAlpha: 0 });
+        const ready: Promise<unknown> =
+          "fonts" in document
+            ? document.fonts.ready.catch(() => undefined)
+            : Promise.resolve();
+        ready.then(() => {
+          if (cancelled) return;
+          gsap.to(rotWrap, {
+            autoAlpha: 1,
+            duration: 0.9,
+            ease: "expo.out",
+            delay: 0.5,
+          });
         });
       }
     });
-    return () => mm.revert();
+    return () => {
+      cancelled = true;
+      mm.revert();
+    };
   }, []);
 
   const words = [t("word1"), t("word2"), t("word3"), t("word4")];

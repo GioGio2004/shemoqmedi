@@ -30,6 +30,34 @@ const nextConfig: NextConfig = {
     "*.serveo.net",
   ] as any,
   serverExternalPackages: [],
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // Vercel's default HSTS lacks includeSubDomains/preload.
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+          // Clickjacking mitigation. The admin dashboard's Storefront Studio
+          // LiveFrame embeds this site (prod + local dev), so frame-ancestors
+          // must allow *.shemoqmedi.space and localhost — never 'none'.
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'self' https://*.shemoqmedi.space http://localhost:* http://127.0.0.1:*",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       // Legacy public menu route → new /menu path (301).

@@ -48,9 +48,10 @@ export default function CustomScrollIndicator() {
 
   return (
     <div className="fixed right-3 md:right-6 top-1/2 -translate-y-1/2 z-50 pointer-events-none flex items-center gap-2 md:gap-3">
-      {/* Typography: Clean, vertical typography on the left of the track */}
+      {/* Typography: Clean, vertical typography on the left of the track.
+          white/45 ≈ 4.8:1 on the #0a0a0a body — the WCAG AA floor. */}
       <span
-        className="text-[8px] md:text-[10px] font-light tracking-[0.4em] uppercase text-white/20 select-none"
+        className="text-[8px] md:text-[10px] font-light tracking-[0.4em] uppercase text-white/45 select-none"
         style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
       >
         SHEMOQMEDI
@@ -58,13 +59,15 @@ export default function CustomScrollIndicator() {
 
       {/* The Track Container */}
       <div className="relative h-[40vh] md:h-[50vh] w-0.5 md:w-1.5 bg-white/[0.05] rounded-full overflow-hidden">
-        {/* The Indicator Pill */}
+        {/* The Indicator Pill — moved with translateY (compositable) rather
+            than `top`, which can't be GPU-accelerated and forces layout. The
+            pill is 15% tall, so sweeping 0→85% of the track equals 0→566.67%
+            of its own height. */}
         <div
-          className="absolute left-0 w-full bg-white/80 rounded-full transition-all duration-75 ease-out"
+          className="absolute left-0 top-0 w-full bg-white/80 rounded-full transition-transform duration-75 ease-out"
           style={{
             height: "15%",
-            // Move from 0% to 85% of the container height so it never breaches the bottom edge
-            top: `${scrollProgress * 85}%`,
+            transform: `translateY(${((scrollProgress * 85) / 15) * 100}%)`,
           }}
         />
       </div>

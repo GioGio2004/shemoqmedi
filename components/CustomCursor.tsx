@@ -66,17 +66,19 @@ export default function CustomCursor() {
 
   return (
     <>
+      {/* x/y (transform) instead of left/top: layout-position updates run on
+          the main thread and every frame registers as a layout shift (CLS). */}
       <motion.div
         aria-hidden="true"
         className="cc-dot"
-        style={{ left: x, top: y }}
+        style={{ x, y }}
         animate={{ scale: hovering ? 0 : 1 }}
         transition={{ duration: 0.2 }}
       />
       <motion.div
         aria-hidden="true"
         className="cc-ring"
-        style={{ left: ringX, top: ringY }}
+        style={{ x: ringX, y: ringY }}
         animate={{ scale: hovering ? 2.4 : 1, opacity: hovering ? 1 : 0.55 }}
         transition={{ type: "spring", damping: 20, stiffness: 260 }}
       >

@@ -146,7 +146,10 @@ export async function generateMetadata({
       type: "website",
       locale: locale,
       alternateLocale: LOCALES.filter((l) => l !== locale),
-      url: `${baseUrl}/${locale}`,
+      // NOTE: no `url` here on purpose. og:url must equal each page's own
+      // canonical; a layout-level value leaks the homepage URL onto every
+      // route that doesn't override openGraph (Ahrefs: "Open Graph URL not
+      // matching canonical"). Pages define their own og:url.
       title: title,
       description: description,
       siteName: "Shemoqmedi",
@@ -170,15 +173,12 @@ export async function generateMetadata({
       shortcut: "/favicon-16x16.png",
       apple: "/apple-touch-icon.png",
     },
-    alternates: {
-      canonical: `${baseUrl}/${locale}`,
-      languages: {
-        en: `${baseUrl}/en`,
-        ka: `${baseUrl}/ka`,
-        ru: `${baseUrl}/ru`,
-        "x-default": `${baseUrl}/en`,
-      },
-    },
+    // NOTE: no `alternates` here on purpose. A layout-level canonical/hreflang
+    // set pointing at the homepage gets inherited by every route that doesn't
+    // override it (sign-in, sign-up, sso-callback), which declares the
+    // homepage as their canonical and emits conflicting hreflang clusters
+    // (Ahrefs: "More than one page for same language in hreflang"). Every
+    // indexable page defines its own reciprocal alternates instead.
     robots: {
       index: true,
       follow: true,

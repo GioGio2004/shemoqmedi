@@ -15,10 +15,12 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const title = "Privacy Policy";
+  const description =
+    "How Shemoqmedi collects, uses, and protects personal data — for café/restaurant partners and diners. Georgian law + GDPR-aligned.";
   return {
-    title: "Privacy Policy",
-    description:
-      "How Shemoqmedi collects, uses, and protects personal data — for café/restaurant partners and diners. Georgian law + GDPR-aligned.",
+    title,
+    description,
     alternates: {
       canonical: `${BASE_URL}/${locale}/privacy`,
       languages: {
@@ -28,6 +30,14 @@ export async function generateMetadata({
         "x-default": `${BASE_URL}/en/privacy`,
       },
     },
+    // og:url must match this page's canonical (not the layout's homepage URL).
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/${locale}/privacy`,
+      type: "website",
+      siteName: "Shemoqmedi",
+    },
     robots: { index: true, follow: true },
   };
 }
@@ -36,11 +46,19 @@ function H({ children }: { children: React.ReactNode }) {
   return <h2 className="text-xl font-semibold text-white mt-10 mb-3">{children}</h2>;
 }
 
-export default function PrivacyPage() {
+export default async function PrivacyPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  // Locale-prefixed hrefs: bare "/" and "/terms" bounce through the locale
+  // middleware (internal 3XX for crawlers) and leave /ka/... and /ru/...
+  // legal pages with zero incoming links (Ahrefs orphan pages).
+  const { locale } = await params;
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-zinc-300">
       <div className="max-w-2xl mx-auto px-6 py-20">
-        <Link href="/" className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors">
+        <Link href={`/${locale}`} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors">
           ← Shemoqmedi
         </Link>
         <h1 className="text-4xl font-bold text-white mt-6 mb-2">Privacy Policy</h1>
@@ -184,9 +202,20 @@ export default function PrivacyPage() {
           Tbilisi, Georgia.
         </p>
 
-        <div className="mt-14 pt-6 border-t border-white/10 flex gap-6 text-sm text-zinc-500">
-          <Link href="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
-          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+        <div className="mt-14 pt-6 border-t border-white/10 flex flex-wrap gap-6 text-sm text-zinc-500">
+          <Link href={`/${locale}/terms`} className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
+          <Link href={`/${locale}`} className="hover:text-white transition-colors">Home</Link>
+          <nav className="ml-auto flex gap-3" aria-label="Languages">
+            {(["en", "ka", "ru"] as const).map((l) => (
+              <Link
+                key={l}
+                href={`/${l}/privacy`}
+                className={l === locale ? "text-white" : "hover:text-white transition-colors"}
+              >
+                {l.toUpperCase()}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
     </main>

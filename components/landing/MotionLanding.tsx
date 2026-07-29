@@ -63,7 +63,8 @@ const PALETTE = {
     "--raise": "#111110",
     "--ink": "#F4F3F0",
     "--mut": "rgba(244,243,240,.62)",
-    "--faint": "rgba(244,243,240,.34)",
+    // .52/.60 keep faint text at ≥4.5:1 (WCAG AA) — mirror --v-faint tokens.
+    "--faint": "rgba(244,243,240,.52)",
     "--line": "rgba(244,243,240,.14)",
   },
   bone: {
@@ -71,7 +72,7 @@ const PALETTE = {
     "--raise": "#E4E1DA",
     "--ink": "#141412",
     "--mut": "rgba(20,20,18,.6)",
-    "--faint": "rgba(20,20,18,.34)",
+    "--faint": "rgba(20,20,18,.60)",
     "--line": "rgba(20,20,18,.16)",
   },
 } as const;
