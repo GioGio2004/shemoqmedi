@@ -15,11 +15,13 @@ const CONVEX_URL =
 
 // Per-locale home metadata (title/description tuned per language; the layout
 // title template `%s | Shemoqmedi` is intentionally bypassed by these full titles).
+// Keep every description in the 70–158 char window — Google truncates past
+// ~160 and Ahrefs flags anything outside it.
 const HOME_META: Record<string, { title: string; description: string }> = {
   en: {
     title: "VOLOO by Shemoqmedi — Good Food Deserves a Better Menu",
     description:
-      "AI menus for Tbilisi's best rooms — tap the table, ask the concierge anything, rescue a Surprise Bag before close. No app, no wait. Put your venue on VOLOO.",
+      "AI menus for Tbilisi's best rooms — tap the table, ask the concierge anything, rescue a Surprise Bag before close. No app, no wait.",
   },
   ka: {
     title: "VOLOO — კარგი საკვები უკეთეს მენიუს იმსახურებს",

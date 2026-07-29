@@ -31,12 +31,22 @@ export async function generateMetadata({
       },
     },
     // og:url must match this page's canonical (not the layout's homepage URL).
+    // og:image is required for a complete card — without it Ahrefs reports
+    // "Open Graph tags incomplete" and shares render as a bare link.
     openGraph: {
       title,
       description,
       url: `${BASE_URL}/${locale}/privacy`,
       type: "website",
       siteName: "Shemoqmedi",
+      images: [
+        {
+          url: `${BASE_URL}/og-default.jpg`,
+          width: 1200,
+          height: 630,
+          alt: "VOLOO by Shemoqmedi",
+        },
+      ],
     },
     robots: { index: true, follow: true },
   };

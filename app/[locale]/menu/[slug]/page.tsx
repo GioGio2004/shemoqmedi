@@ -26,6 +26,7 @@
  */
 
 import type { Metadata } from "next";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { fetchQuery } from "convex/nextjs";
@@ -64,6 +65,16 @@ type PublicVenue = {
   googleDataLastFetchedAt: number | null;
 } | null;
 
+/** Shape of api.publicMenu.get — only the fields this Server Component reads. */
+type PublicMenu = {
+  organization: { name?: string };
+  categories?: Array<{
+    _id: string;
+    name: Record<string, string> | string;
+    items?: Array<{ _id: string; name: Record<string, string> | string }>;
+  }>;
+} | null;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
@@ -79,7 +90,7 @@ function slugToVenueName(slug: string): string {
 }
 
 /** Server-side venue fetch; never throws — returns null on any failure. */
-async function fetchVenue(slug: string): Promise<PublicVenue> {
+const fetchVenue = cache(async (slug: string): Promise<PublicVenue> => {
   try {
     return await fetchQuery(
       api.publicVenues.getBySlug,
@@ -89,6 +100,69 @@ async function fetchVenue(slug: string): Promise<PublicVenue> {
   } catch {
     return null;
   }
+});
+
+/**
+ * The org-born menu payload (categories + items). `cache()` dedupes the call
+ * across generateMetadata() and the page body — one Convex round-trip per
+ * request instead of three.
+ *
+ * `undefined` means "Convex was unreachable" (unknown), `null` means "no
+ * organization owns this slug" (definitively no native menu). The two must
+ * stay distinguishable: an outage must never 404 or noindex a real page.
+ */
+const fetchMenu = cache(async (slug: string): Promise<PublicMenu | undefined> => {
+  try {
+    return (await fetchQuery(
+      api.publicMenu.get,
+      { slug },
+      { url: CONVEX_URL },
+    )) as PublicMenu;
+  } catch {
+    return undefined;
+  }
+});
+
+/**
+ * SEO-shell chrome, localised. The shell is what Google actually reads on a
+ * /ka or /ru menu URL, so an English h1 there would misrepresent the page's
+ * language and undercut the hreflang cluster.
+ */
+const SHELL_LABELS: Record<
+  string,
+  { digitalMenu: string; menuOf: string; allVenues: string; privacy: string; terms: string }
+> = {
+  en: {
+    digitalMenu: "Digital Menu",
+    menuOf: "menu",
+    allVenues: "All venues on VOLOO",
+    privacy: "Privacy Policy",
+    terms: "Terms & Conditions",
+  },
+  ka: {
+    digitalMenu: "ციფრული მენიუ",
+    menuOf: "მენიუ",
+    allVenues: "ყველა ლოკაცია VOLOO-ზე",
+    privacy: "კონფიდენციალურობის პოლიტიკა",
+    terms: "წესები და პირობები",
+  },
+  ru: {
+    digitalMenu: "Цифровое меню",
+    menuOf: "меню",
+    allVenues: "Все заведения на VOLOO",
+    privacy: "Политика конфиденциальности",
+    terms: "Условия использования",
+  },
+};
+
+/** Multilingual DB fields are Record<locale, string>; fall back en → first. */
+function pickLocale(
+  value: Record<string, string> | string | null | undefined,
+  locale: string,
+): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value[locale] || value.en || Object.values(value)[0] || "";
 }
 
 /**
@@ -110,15 +184,27 @@ async function assertVenueExists(
   venue: PublicVenue,
   slug: string,
 ): Promise<string | null> {
-  if (venue) return venue.name;
-  let menu: { organization: { name?: string } } | null;
-  try {
-    menu = await fetchQuery(api.publicMenu.get, { slug }, { url: CONVEX_URL });
-  } catch {
-    return null; // Convex unreachable — don't 404 a possibly-real page.
+  const menu = await fetchMenu(slug);
+  if (menu === undefined) return null; // Convex unreachable — never 404.
+  if (menu === null) {
+    if (venue) return venue.name; // seeded venue, thin fallback page
+    notFound(); // definitively unknown slug → real 404
   }
-  if (menu === null) notFound(); // definitively unknown slug → real 404
-  return menu.organization?.name ?? null;
+  return menu?.organization?.name ?? venue?.name ?? null;
+}
+
+/**
+ * hasNativeMenu — is there real menu content behind this slug?
+ *
+ * Only org-born slugs have categories/items. Seeded `venues` rows with no
+ * organization render a thin fallback shell that the city directory
+ * deliberately never links (see CityDirectory.tsx), so indexing them creates
+ * exactly the orphan pages Ahrefs flags. During a Convex outage we assume
+ * "yes" so a transient failure can never deindex a live menu.
+ */
+async function hasNativeMenu(slug: string): Promise<boolean> {
+  const menu = await fetchMenu(slug);
+  return menu !== null;
 }
 
 /**
@@ -192,8 +278,12 @@ export async function generateMetadata({
       description,
       images: [ogImageUrl],
     },
+    // Thin fallback pages (a seeded venue with no organization behind it)
+    // carry no menu content and are linked from nowhere — indexing them just
+    // manufactures orphan pages. Keep them crawlable (follow) but out of the
+    // index until the venue is claimed and gets a real menu.
     robots: {
-      index: true,
+      index: await hasNativeMenu(slug),
       follow: true,
     },
   };
@@ -247,6 +337,20 @@ export default async function Page({
     venueName,
   );
   const canonicalUrl = `${BASE_URL}${buildMenuUrl(locale, slug)}`;
+
+  // ── Server-rendered menu content (crawlable) ───────────────────────────────
+  // Already fetched and cached by assertVenueExists above — no extra round-trip.
+  const L = SHELL_LABELS[locale] ?? SHELL_LABELS.en;
+  const menu = await fetchMenu(slug);
+  const menuSections = (menu?.categories ?? [])
+    .map((c) => ({
+      id: c._id,
+      name: pickLocale(c.name, locale),
+      items: (c.items ?? [])
+        .map((i) => ({ id: i._id, name: pickLocale(i.name, locale) }))
+        .filter((i) => i.name),
+    }))
+    .filter((c) => c.name || c.items.length > 0);
 
   // ── JSON-LD: LocalBusiness + Restaurant ─────────────────────────────────────
   //
@@ -308,6 +412,24 @@ export default async function Page({
       "@id": `${canonicalUrl}#menu`,
       name: `${venueName} Digital Menu`,
       url: canonicalUrl,
+      // Real sections/items when the venue has a native menu — this is what
+      // Google reads for restaurant menu rich results.
+      ...(menuSections.length > 0
+        ? {
+            hasMenuSection: menuSections.map((c) => ({
+              "@type": "MenuSection",
+              name: c.name,
+              ...(c.items.length > 0
+                ? {
+                    hasMenuItem: c.items.map((i) => ({
+                      "@type": "MenuItem",
+                      name: i.name,
+                    })),
+                  }
+                : {}),
+            })),
+          }
+        : {}),
     },
     // Site-wide Organization node rendered by the [locale] layout
     // (components/seo/JsonLd.tsx) — referenced by @id, never re-declared.
@@ -375,13 +497,42 @@ export default async function Page({
        * Visually hidden, real content for crawlers and screen readers.
        */}
       <div className="sr-only">
-        <h1>{venueName} — Digital Menu</h1>
+        <h1>
+          {venueName} — {L.digitalMenu}
+        </h1>
         <p>{description}</p>
+
+        {/*
+         * The real menu, server-rendered. The interactive UI only exists after
+         * the Convex socket connects, so without this the served HTML is pure
+         * boilerplate (~45 words) and the page ranks for nothing. Dish and
+         * category names are the actual content people search for.
+         */}
+        {menuSections.length > 0 && (
+          <section>
+            <h2>
+              {venueName} — {L.menuOf}
+            </h2>
+            {menuSections.map((c) => (
+              <div key={c.id}>
+                <h3>{c.name}</h3>
+                {c.items.length > 0 && (
+                  <ul>
+                    {c.items.map((item) => (
+                      <li key={item.id}>{item.name}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </section>
+        )}
+
         <nav aria-label="VOLOO">
           <a href={`/${locale}`}>
             VOLOO by Shemoqmedi — digital menus &amp; Surprise Bags in Tbilisi
           </a>
-          <a href={`/${locale}#venues`}>All venues on VOLOO</a>
+          <a href={`/${locale}#venues`}>{L.allVenues}</a>
           {(["en", "ka", "ru"] as const)
             .filter((l) => l !== locale)
             .map((l) => (
@@ -390,8 +541,8 @@ export default async function Page({
                 {l === "en" ? "English" : l === "ka" ? "ქართული" : "Русский"}
               </a>
             ))}
-          <a href={`/${locale}/privacy`}>Privacy Policy</a>
-          <a href={`/${locale}/terms`}>Terms &amp; Conditions</a>
+          <a href={`/${locale}/privacy`}>{L.privacy}</a>
+          <a href={`/${locale}/terms`}>{L.terms}</a>
         </nav>
       </div>
 

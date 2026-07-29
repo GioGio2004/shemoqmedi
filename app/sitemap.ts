@@ -27,21 +27,35 @@ const STATIC_ROUTES = ["", "/privacy", "/terms"];
 // makes Chrome render the sitemap as flat text instead of the XML tree.
 
 /**
- * fetchPublishedVenueSlugs — only venues with isPublished = true.
- * Draft / partially-onboarded venues are never submitted to Google.
+ * fetchMenuSlugs — slugs that actually own a native /menu/{slug} page.
+ *
+ * A menu URL belongs in the sitemap only when the site itself links to it.
+ * Two sources exist and they are NOT interchangeable:
+ *
+ *   - publicMenu.listOrganizations → org-born venues. These have real menu
+ *     data, and the landing page's partner catalogue links straight to
+ *     /{locale}/menu/{slug}. THESE are the indexable menu pages.
+ *   - publicVenues.listPublished   → every published `venues` row, including
+ *     seeded/unclaimed ones that have no organization behind them. The city
+ *     directory deliberately never links those to /menu/{slug} (see the note
+ *     in components/landing/sections/CityDirectory.tsx) because there is no
+ *     native menu to show — the route only renders a thin fallback shell.
+ *
+ * Submitting the second group is what produced Ahrefs' "orphan page" (a
+ * sitemap URL with zero incoming internal links), while the org-born venues
+ * the homepage *does* link went missing from the sitemap entirely. Sourcing
+ * from organizations keeps the sitemap and the internal link graph identical.
  */
-async function fetchPublishedVenueSlugs(): Promise<{ slug: string; updatedAt: number }[]> {
+async function fetchMenuSlugs(): Promise<{ slug: string; updatedAt: number }[]> {
+  const now = Date.now();
   try {
-    const venues = await fetchQuery(api.publicVenues.listPublished, {}, { url: CONVEX_URL });
-    if (!Array.isArray(venues)) return [];
-    return venues
-      .filter(
-        (v): v is { slug: string; updatedAt: number } & typeof v =>
-          typeof v.slug === "string" && v.slug.length > 0,
-      )
-      .map((v) => ({ slug: v.slug, updatedAt: v.updatedAt }));
+    const orgs = await fetchQuery(api.publicMenu.listOrganizations, {}, { url: CONVEX_URL });
+    if (!Array.isArray(orgs)) return [];
+    return orgs
+      .filter((o) => typeof o?.slug === "string" && o.slug.length > 0)
+      .map((o) => ({ slug: o.slug as string, updatedAt: now }));
   } catch (err) {
-    console.warn("[sitemap] Could not fetch published venue slugs from Convex:", err);
+    console.warn("[sitemap] Could not fetch menu slugs from Convex:", err);
     return [];
   }
 }
@@ -63,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // 2. Dynamic venue menu pages (real route — matches buildMenuUrl / MENU_ROUTE_BASE)
-  const publishedVenues = await fetchPublishedVenueSlugs();
+  const publishedVenues = await fetchMenuSlugs();
   for (const { slug, updatedAt } of publishedVenues) {
     const path = `/${MENU_ROUTE_BASE}/${slug}`;
     for (const locale of LOCALES) {
