@@ -255,6 +255,16 @@ export type PublicApiType = {
     >;
     listUsers: FunctionReference<"query", "public", Record<string, never>, any>;
   };
+  studio: {
+    // Published design-as-data config for a venue, or null when the venue
+    // has never published one. Written by the admin's Storefront Studio.
+    getPublishedDesign: FunctionReference<
+      "query",
+      "public",
+      { slug: string },
+      any
+    >;
+  };
   publicMenu: {
     get: FunctionReference<"query", "public", { slug: string }, any>;
     listOrganizations: FunctionReference<

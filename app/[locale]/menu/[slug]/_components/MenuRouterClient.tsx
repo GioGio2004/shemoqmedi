@@ -5,6 +5,7 @@ import { api } from "@/convex-helpers-api";
 import VenueClientView from "./basic-menu/VenueClientView";
 import SpatialSnapGrid from "./dragable-menu/_components/SpatialSnapGrid";
 import RuledMenuView from "./ruled-menu/RuledMenuView";
+import StudioMenuView from "./studio-menu/StudioMenuView";
 import { MenuSkeleton } from "./basic-menu/_components/menu-skeleton";
 import { MultiplayerProvider } from "@/components/multiplayer/MultiplayerContext";
 import { TableSuggestionToast } from "@/components/multiplayer/TableSuggestionToast";
@@ -25,9 +26,12 @@ export default function MenuRouterClient({
   seatNumber = null,
 }: MenuRouterClientProps) {
   const data = useQuery(api.publicMenu.get, { slug });
+  // The venue's own published design (null unless they published one in the
+  // admin's Storefront Studio). Fetched alongside so there's no second wait.
+  const studioDesign = useQuery(api.studio.getPublishedDesign, { slug });
 
   // ── Loading state — full-page skeleton ──────────────────────────────────────
-  if (data === undefined) {
+  if (data === undefined || studioDesign === undefined) {
     return <MenuSkeleton />;
   }
 
@@ -54,7 +58,10 @@ export default function MenuRouterClient({
     );
   }
 
+  // "studio" = render the venue's own published design. Falls back to the
+  // basic template if the flag is set but no design was ever published.
   const menuType = data.organization.themeSettings?.menuType || "basic";
+  const useStudio = menuType === "studio" && studioDesign;
 
   return (
     <MultiplayerProvider
@@ -67,7 +74,9 @@ export default function MenuRouterClient({
         catalog={data.categories || []}
         themeSettings={data.organization.themeSettings ?? null}
       />
-      {menuType === "ruled" ? (
+      {useStudio ? (
+        <StudioMenuView config={studioDesign} data={data} />
+      ) : menuType === "ruled" ? (
         <RuledMenuView data={data} slug={slug} />
       ) : menuType === "dragable" ? (
         <SpatialSnapGrid data={data} slug={slug} />
