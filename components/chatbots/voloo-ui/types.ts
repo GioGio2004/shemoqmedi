@@ -51,6 +51,8 @@ export interface CafeConfig {
   cafeId: string;
   brandName: string;
   theme: CafeTheme;
+  /** ISO code from organizations.currency ("GEL", "USD"…). Defaults to GEL. */
+  currency?: string;
 }
 
 /**

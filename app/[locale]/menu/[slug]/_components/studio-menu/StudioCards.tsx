@@ -1,7 +1,8 @@
 "use client";
 
 import type { StudioConfig } from "./studio-config";
-import { formatPrice, tr } from "./studio-config";
+import { formatPrice, imgSrcSet, tr } from "./studio-config";
+import { allergenLabel } from "@/lib/allergens";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The five menu-item card components, rendering from the published
@@ -16,6 +17,8 @@ export type StudioItem = {
   price: number;
   imageUrl: string | null;
   tags: string[];
+  /** Canonical allergen keys (lib/allergens.ts) — legal declaration. */
+  allergens?: string[];
   isFeatured: boolean;
 };
 
@@ -30,18 +33,22 @@ function CardImage({
   locale,
   ratio,
   square = false,
+  showImage = true,
 }: {
   item: StudioItem;
   locale: string;
   ratio: string;
   square?: boolean;
+  /** When false, always render the gradient placeholder (no image download). */
+  showImage?: boolean;
 }) {
   const aspect = square ? "1 / 1" : ratio;
-  if (item.imageUrl) {
+  if (showImage && item.imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={item.imageUrl}
+        {...imgSrcSet(item.imageUrl)}
+        sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
         alt={tr(item.name, locale)}
         loading="lazy"
         className="w-full object-cover"
@@ -167,6 +174,42 @@ function Tags({ item }: { item: StudioItem }) {
   );
 }
 
+/**
+ * Allergen declaration — NOT gated by cards.showTags. Georgian food-info law
+ * requires this before purchase, typographically distinct from other text
+ * (bolder ink, warning border) so it can't be mistaken for a marketing tag.
+ */
+function Allergens({
+  item,
+  locale,
+  onDark = false,
+}: {
+  item: StudioItem;
+  locale: string;
+  onDark?: boolean;
+}) {
+  if (!item.allergens?.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {item.allergens.map((key) => (
+        <span
+          key={key}
+          className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+          style={{
+            color: onDark ? "#FFD48A" : "var(--sd-ink)",
+            border: onDark
+              ? "1px solid rgba(255, 212, 138, 0.5)"
+              : "1px solid var(--sd-ink-60)",
+            borderRadius: "calc(var(--sd-radius) * 0.5)",
+          }}
+        >
+          {allergenLabel(key, locale)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function StudioItemCard({
   item,
   locale,
@@ -200,6 +243,7 @@ export function StudioItemCard({
           <TitleRow item={item} locale={locale} cards={cards} currency={currency} />
           {cards.showDescriptions && <Description item={item} locale={locale} />}
           {cards.showTags && <Tags item={item} />}
+          <Allergens item={item} locale={locale} />
         </div>
       );
 
@@ -210,7 +254,7 @@ export function StudioItemCard({
           style={{ borderRadius: "var(--sd-radius)" }}
           {...interactive}
         >
-          <CardImage item={item} locale={locale} ratio={ratio} />
+          <CardImage item={item} locale={locale} ratio={ratio} showImage={cards.showImages} />
           <div
             className="absolute inset-x-2 bottom-2 backdrop-blur-md"
             style={{
@@ -222,6 +266,8 @@ export function StudioItemCard({
           >
             <TitleRow item={item} locale={locale} cards={cards} currency={currency} />
             {cards.showDescriptions && <Description item={item} locale={locale} />}
+            {cards.showTags && <Tags item={item} />}
+            <Allergens item={item} locale={locale} />
           </div>
         </div>
       );
@@ -246,6 +292,7 @@ export function StudioItemCard({
             <TitleRow item={item} locale={locale} cards={cards} currency={currency} />
             {cards.showDescriptions && <Description item={item} locale={locale} />}
             {cards.showTags && <Tags item={item} />}
+            <Allergens item={item} locale={locale} />
           </div>
         </div>
       );
@@ -257,7 +304,7 @@ export function StudioItemCard({
           style={{ borderRadius: "var(--sd-radius)" }}
           {...interactive}
         >
-          <CardImage item={item} locale={locale} ratio="16 / 9" />
+          <CardImage item={item} locale={locale} ratio="16 / 9" showImage={cards.showImages} />
           <div
             aria-hidden
             className="absolute inset-0"
@@ -283,6 +330,14 @@ export function StudioItemCard({
                     {tr(item.description, locale)}
                   </p>
                 )}
+                {cards.showTags && (
+                  <div className="mt-1.5">
+                    <Tags item={item} />
+                  </div>
+                )}
+                <div className="mt-1.5">
+                  <Allergens item={item} locale={locale} onDark />
+                </div>
               </div>
               <Price
                 value={item.price}
@@ -317,6 +372,7 @@ export function StudioItemCard({
             <TitleRow item={item} locale={locale} cards={cards} currency={currency} />
             {cards.showDescriptions && <Description item={item} locale={locale} />}
             {cards.showTags && <Tags item={item} />}
+            <Allergens item={item} locale={locale} />
           </div>
         </div>
       );

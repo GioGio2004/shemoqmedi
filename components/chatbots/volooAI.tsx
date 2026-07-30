@@ -1162,6 +1162,7 @@ export function VolooAI({
                           onOpenDetails={setSelectedDetailProduct}
                           primaryColor={theme.primaryColor}
                           primaryColorLight={theme.primaryColorLight}
+                          currency={cafeConfig.currency}
                         />
                       )}
                     </div>
@@ -1313,6 +1314,7 @@ export function VolooAI({
                 handlePlaceOrder(items, total);
               }}
               theme={theme}
+              currency={cafeConfig.currency}
               updateQuantity={updateQuantity}
             />
           ) : (
@@ -1323,6 +1325,7 @@ export function VolooAI({
               basketCount={basketCount}
               basketTotal={basketTotal}
               theme={theme}
+              currency={cafeConfig.currency}
               updateQuantity={updateQuantity}
               handlePlaceOrder={handlePlaceOrder}
               isPlacingOrder={isPlacingOrder}
@@ -1355,6 +1358,7 @@ export function VolooAI({
           onClose={() => setSelectedDetailProduct(null)}
           onAddToBasket={addToBasket}
           theme={theme}
+          currency={cafeConfig.currency}
         />
       )}
     </>

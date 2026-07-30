@@ -13,7 +13,7 @@
  *       - a stable numeric `id` (hash of the Convex `_id` string)
  *       - `name`, `description`, `price` (converted from tetri → display unit)
  *       - `image`, `category`, `color`
- *       - tags → `allergens` (so the AI can filter by dietary restrictions)
+ *       - allergens → localized labels (the AI filters by dietary restrictions)
  *
  *  2. CAFE CONTEXT INJECTION
  *     Injects the org name + menu into the AI's system prompt via a custom
@@ -49,6 +49,7 @@ import {
   type CafeTheme,
 } from "@/components/chatbots/volooAI";
 import type { ConvexCategory } from "./menu-section";
+import { allergenLabel } from "@/lib/allergens";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -166,8 +167,13 @@ export function MenuAIBridge({
             "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=600",
           // Color from DB, or a neutral dark fallback
           color: item.accentColor || "bg-zinc-800",
-          // Tags become allergens — the AI uses these for dietary filtering
-          allergens: item.tags && item.tags.length > 0 ? item.tags : undefined,
+          // REAL allergen declaration (canonical keys → English labels for the
+          // AI + popup). Tags are marketing copy and must never stand in for
+          // allergens — a "spicy" tag is not a legal food-safety claim.
+          allergens:
+            item.allergens && item.allergens.length > 0
+              ? item.allergens.map((a) => allergenLabel(a, "en"))
+              : undefined,
         };
       });
     });
@@ -186,8 +192,9 @@ export function MenuAIBridge({
       cafeId: slug,
       brandName: `${organizationName} AI`,
       theme: buildCafeTheme(themeSettings),
+      currency,
     }),
-    [slug, organizationName, themeSettings],
+    [slug, organizationName, themeSettings, currency],
   );
 
   /**

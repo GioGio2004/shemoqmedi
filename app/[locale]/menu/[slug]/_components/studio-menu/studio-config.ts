@@ -93,8 +93,26 @@ export function tr(
 
 /** Tetri integer → display string. 550 → "5.50 ₾" */
 export function formatPrice(tetri: number, currency = "GEL"): string {
-  const symbol = currency === "GEL" ? "₾" : currency === "USD" ? "$" : "";
-  return `${(tetri / 100).toFixed(2)} ${symbol}`.trim();
+  const value = (tetri / 100).toFixed(2);
+  if (currency === "USD") return `$${value}`;
+  if (currency === "EUR") return `€${value}`;
+  // Suffix style; unknown codes fall back to the code itself, never bare.
+  return `${value} ${currency === "GEL" ? "₾" : currency}`;
+}
+
+/**
+ * Responsive srcset for a stored image URL (mirrors ruled-menu/types.ts).
+ * ImageKit URLs get real width transforms; anything else is passed through.
+ */
+export function imgSrcSet(url: string): { src: string; srcSet?: string } {
+  if (url.includes("ik.imagekit.io")) {
+    const sep = url.includes("?") ? "&" : "?";
+    return {
+      src: `${url}${sep}tr=w-1200,q-80`,
+      srcSet: `${url}${sep}tr=w-600,q-80 600w, ${url}${sep}tr=w-1200,q-80 1200w, ${url}${sep}tr=w-1800,q-80 1800w`,
+    };
+  }
+  return { src: url };
 }
 
 /** Theme tokens → CSS custom properties consumed by the renderer + cards. */

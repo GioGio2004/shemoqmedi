@@ -30,6 +30,7 @@ export const ProductRow = memo(
     onOpenDetails,
     primaryColor,
     primaryColorLight,
+    currency,
   }: {
     productIds: number[];
     localizedProducts: Product[];
@@ -41,6 +42,7 @@ export const ProductRow = memo(
     onOpenDetails?: (product: Product) => void;
     primaryColor: string;
     primaryColorLight: string;
+    currency?: string;
   }) => {
     const rowRef = useRef<HTMLDivElement>(null);
     const upsellRef = useRef<HTMLDivElement>(null);
@@ -99,6 +101,7 @@ export const ProductRow = memo(
                   onOpenDetails={onOpenDetails}
                   primaryColor={primaryColor}
                   primaryColorLight={primaryColorLight}
+                  currency={currency}
                 />
               </div>
             ))}
@@ -137,6 +140,7 @@ export const ProductRow = memo(
                   onOpenDetails={onOpenDetails}
                   primaryColor={primaryColor}
                   primaryColorLight={primaryColorLight}
+                  currency={currency}
                 />
               </div>
             </div>

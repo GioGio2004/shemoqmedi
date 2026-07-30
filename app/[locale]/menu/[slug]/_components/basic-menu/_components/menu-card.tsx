@@ -20,6 +20,36 @@ import { twMerge } from "tailwind-merge";
 import { useLocale } from "next-intl";
 import type { Product } from "./menu-section";
 import { Plus, Sparkles, X } from "lucide-react";
+import { formatMinor } from "@/lib/money";
+import { allergenLabel } from "@/lib/allergens";
+
+/** Legal allergen declaration — always shown, typographically distinct. */
+function AllergenChips({
+  allergens,
+  locale,
+  size = "sm",
+}: {
+  allergens?: string[];
+  locale: string;
+  size?: "sm" | "md";
+}) {
+  if (!allergens?.length) return null;
+  return (
+    <div className={cn("flex flex-wrap gap-1", size === "md" && "gap-1.5")}>
+      {allergens.map((key) => (
+        <span
+          key={key}
+          className={cn(
+            "rounded-[3px] border border-amber-300/60 bg-amber-400/10 font-bold uppercase tracking-wide text-amber-200 drop-shadow",
+            size === "sm" ? "px-1.5 py-0.5 text-[8.5px]" : "px-2 py-0.5 text-[10px]",
+          )}
+        >
+          {allergenLabel(key, locale)}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 function cn(...inputs: Parameters<typeof clsx>) {
@@ -74,6 +104,8 @@ interface MenuCardProps {
   /** Used to stagger the entrance animation per card within a category */
   animationIndex?: number;
   onClick?: () => void;
+  /** ISO code from organizations.currency ("GEL", "USD"…). Defaults to GEL. */
+  currency?: string;
 }
 
 // ─── Border Radius Resolver ───────────────────────────────────────────────────
@@ -108,6 +140,7 @@ export function MenuCard({
   shapeProps = {},
   animationIndex = 0,
   onClick,
+  currency,
 }: MenuCardProps) {
   const {
     borderRadius,
@@ -121,7 +154,7 @@ export function MenuCard({
 
   const productName =
     product.name[locale] || product.name["en"] || Object.values(product.name)[0] || "Unknown";
-  const displayPrice = (product.price / 100).toFixed(2);
+  const displayPrice = formatMinor(product.price, currency);
   const description = product.description
     ? typeof product.description === "string"
       ? product.description
@@ -202,7 +235,7 @@ export function MenuCard({
           className="text-[11px] sm:text-xs text-white tabular-nums shrink-0 drop-shadow-md"
           style={{ fontFamily: "var(--v-font-mono, ui-monospace, monospace)" }}
         >
-          {displayPrice} ₾
+          {displayPrice}
         </span>
       </div>
 
@@ -222,6 +255,10 @@ export function MenuCard({
         <p className="text-white/85 text-[10px] sm:text-[11px] leading-snug mb-2 sm:mb-3 line-clamp-2">
           {description || "A delicious treat made with the finest ingredients."}
         </p>
+
+        <div className="mb-2">
+          <AllergenChips allergens={product.allergens} locale={locale} />
+        </div>
 
         <div className="flex justify-between items-center mt-1">
           <button
@@ -284,7 +321,7 @@ export function MenuCard({
   );
 }
 
-export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
+export function ProductPopupModal({ product, shapeProps = {}, onClose, currency }: any) {
   useEffect(() => {
     // Calculate the scrollbar width to prevent layout shift
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -313,7 +350,7 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
   const locale = useLocale();
 
   const productName = product.name[locale] || product.name["en"] || Object.values(product.name)[0] || "Unknown";
-  const displayPrice = (product.price / 100).toFixed(2);
+  const displayPrice = formatMinor(product.price, currency);
   const description = product.description
     ? typeof product.description === "string"
       ? product.description
@@ -384,7 +421,7 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
             className="text-sm sm:text-base text-white tabular-nums shrink-0 drop-shadow-md"
             style={{ fontFamily: "var(--v-font-mono, ui-monospace, monospace)" }}
           >
-            {displayPrice} ₾
+            {displayPrice}
           </span>
         </div>
 
@@ -402,6 +439,10 @@ export function ProductPopupModal({ product, shapeProps = {}, onClose }: any) {
           <p className="text-white/85 text-xs sm:text-sm leading-snug mb-3 sm:mb-4">
             {description || "A delicious treat made with the finest ingredients."}
           </p>
+
+          <div className="mb-3">
+            <AllergenChips allergens={product.allergens} locale={locale} size="md" />
+          </div>
 
           <div className="flex justify-between items-center mt-2">
             <button

@@ -12,6 +12,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SectionHead, XFrame } from "@/components/motion/DecorLines";
 import { idx2, imgSrcSet, lari, pick, type RmItem } from "./types";
+import { currencySymbol } from "@/lib/money";
 
 export default function RmFeatured({
   items,
@@ -20,6 +21,7 @@ export default function RmFeatured({
   label,
   heading,
   dragLabel,
+  currency,
   onOpen,
 }: {
   items: RmItem[];
@@ -28,6 +30,8 @@ export default function RmFeatured({
   label: string;
   heading: string;
   dragLabel: string;
+  /** ISO code from organizations.currency. Defaults to GEL. */
+  currency?: string;
   onOpen: (item: RmItem) => void;
 }) {
   const [viewportRef] = useEmblaCarousel({
@@ -153,7 +157,7 @@ export default function RmFeatured({
                         {pick(item.name, locale)}
                       </span>
                       <span className="v-t-mono shrink-0 tabular-nums text-v-accent">
-                        ₾ {lari(item.price)}
+                        {currencySymbol(currency)} {lari(item.price)}
                       </span>
                     </span>
 

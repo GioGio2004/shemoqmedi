@@ -4,6 +4,7 @@ import { useRef, memo } from "react";
 import Image from "next/image";
 import { Check, Plus } from "lucide-react";
 import gsap from "gsap";
+import { formatMoney } from "@/lib/money";
 
 export interface Product {
   id: number;
@@ -25,6 +26,7 @@ interface ProductCardChatProps {
   onOpenDetails?: (product: Product) => void;
   primaryColor?: string;
   primaryColorLight?: string;
+  currency?: string;
 }
 
 export const ProductCard = memo(function ProductCard({
@@ -35,6 +37,7 @@ export const ProductCard = memo(function ProductCard({
   onOpenDetails,
   primaryColor = "#ea580c",
   primaryColorLight = "#f97316",
+  currency,
 }: ProductCardChatProps) {
   const toggleBtnRef = useRef<HTMLButtonElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
@@ -153,7 +156,7 @@ export const ProductCard = memo(function ProductCard({
         {/* Price + ADD row */}
         <div className="flex items-center justify-between mt-2">
           <span className="text-sm font-bold font-mono tracking-tighter text-white mix-blend-normal">
-            ${product.price.toFixed(2)}
+            {formatMoney(product.price, currency)}
           </span>
 
           <button

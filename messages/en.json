@@ -1238,6 +1238,16 @@
       "made": "MADE WITH ❤ IN TBILISI"
     }
   },
+  "MenuStudio": {
+    "menuLabel": "Menu",
+    "featuredLabel": "Featured",
+    "itemsCount": "{count, plural, one {# item} other {# items}}",
+    "hours": "Hours",
+    "directions": "Directions",
+    "poweredBy": "Powered by",
+    "emptyTitle": "Menu coming soon",
+    "emptyBody": "This venue is still putting its menu together. Check back shortly."
+  },
   "MenuRuled": {
     "kicker": "DIGITAL MENU",
     "menuLabel": "MENU",

@@ -19,6 +19,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
 import { Hairline } from "@/components/motion/DecorLines";
 import { idx2, imgSrcSet, lari, pick, type RmCategory, type RmItem } from "./types";
+import { currencySymbol } from "@/lib/money";
+import { allergenLabel } from "@/lib/allergens";
 
 export default function RmMenu({
   categories,
@@ -27,6 +29,7 @@ export default function RmMenu({
   label,
   layout = "gallery",
   allLabel = "ALL",
+  currency,
   onOpen,
   onActiveCat,
 }: {
@@ -38,6 +41,8 @@ export default function RmMenu({
   layout?: "rows" | "gallery";
   /** Chip label for the unfiltered feed (gallery mode). */
   allLabel?: string;
+  /** ISO code from organizations.currency. Defaults to GEL. */
+  currency?: string;
   onOpen: (item: RmItem, category: RmCategory) => void;
   onActiveCat: (id: string | null) => void;
 }) {
@@ -50,6 +55,7 @@ export default function RmMenu({
   });
 
   const totalItems = categories.reduce((n, c) => n + c.items.length, 0);
+  const sym = currencySymbol(currency);
 
   // ── Feed state (gallery mode): one continuous wall + category filter ──────
   const [filter, setFilter] = useState<string>("all");
@@ -284,9 +290,18 @@ export default function RmMenu({
                               ))}
                             </span>
                           )}
+                          {(item.allergens?.length ?? 0) > 0 && (
+                            <span className="rm-row-tags">
+                              {item.allergens!.map((a) => (
+                                <span key={a} className="rm-chip rm-chip-allergen v-t-micro">
+                                  {allergenLabel(a, locale)}
+                                </span>
+                              ))}
+                            </span>
+                          )}
                         </span>
 
-                        <span className="rm-row-price">₾ {lari(item.price)}</span>
+                        <span className="rm-row-price">{sym} {lari(item.price)}</span>
                         <span className="rm-row-line" aria-hidden="true" />
                       </button>
                     );
@@ -366,7 +381,7 @@ export default function RmMenu({
                           />
                           <span className="rm-mas-idx v-t-mono">{nn}</span>
                           <span className="rm-mas-price v-t-mono">
-                            ₾ {lari(item.price)}
+                            {sym} {lari(item.price)}
                           </span>
                         </>
                       ) : (
@@ -383,7 +398,7 @@ export default function RmMenu({
                           <span className="rm-mas-fill-name">{name}</span>
                           <span className="flex items-baseline justify-between gap-2">
                             <span className="v-t-mono tabular-nums">
-                              ₾ {lari(item.price)}
+                              {sym} {lari(item.price)}
                             </span>
                             {item.tags[0] && (
                               <span className="v-t-micro" data-dim>
@@ -398,6 +413,17 @@ export default function RmMenu({
                     {img && (
                       <span className="rm-mas-meta">
                         <span className="rm-mas-name truncate">{name}</span>
+                        {(item.allergens?.length ?? 0) > 0 && (
+                          <span
+                            className="v-t-micro shrink-0"
+                            style={{ color: "#E8B36A" }}
+                            title={item.allergens!
+                              .map((a) => allergenLabel(a, locale))
+                              .join(", ")}
+                          >
+                            ⚠
+                          </span>
+                        )}
                         <span
                           className="v-t-micro shrink-0"
                           style={{ color: "var(--v-faint)" }}

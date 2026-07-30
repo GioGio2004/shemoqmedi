@@ -4,6 +4,7 @@ import { X, Plus, Info } from "lucide-react";
 import gsap from "gsap";
 import { Product, CafeTheme } from "./types";
 import { BroadcastButton } from "@/components/multiplayer/BroadcastButton";
+import { formatMoney } from "@/lib/money";
 
 interface ProductDetailPopupProps {
   product: Product;
@@ -11,6 +12,7 @@ interface ProductDetailPopupProps {
   onClose: () => void;
   onAddToBasket: (product: Product) => void;
   theme: CafeTheme;
+  currency?: string;
 }
 
 export function ProductDetailPopup({
@@ -19,6 +21,7 @@ export function ProductDetailPopup({
   onClose,
   onAddToBasket,
   theme,
+  currency,
 }: ProductDetailPopupProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -112,7 +115,7 @@ export function ProductDetailPopup({
               className="text-xl font-bold font-mono tracking-tighter shrink-0"
               style={{ color: theme.primaryColor }}
             >
-              ${product.price.toFixed(2)}
+              {formatMoney(product.price, currency)}
             </div>
           </div>
 
@@ -153,7 +156,7 @@ export function ProductDetailPopup({
               style={{ backgroundColor: theme.primaryColor }}
             >
               <Plus className="w-4 h-4" strokeWidth={3} />
-              Add to Order — ${product.price.toFixed(2)}
+              Add to Order — {formatMoney(product.price, currency)}
             </button>
             <BroadcastButton itemName={product.name} theme={theme} />
           </div>

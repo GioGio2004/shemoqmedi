@@ -271,6 +271,7 @@ export default function RuledMenuView({
               label={t("featuredLabel")}
               heading={t("featuredHeading")}
               dragLabel={t("drag")}
+              currency={org.currency}
               onOpen={(item) => setOpenItem({ item, category: null })}
             />
           )}
@@ -282,6 +283,7 @@ export default function RuledMenuView({
             label={t("menuLabel")}
             layout={menuStyle}
             allLabel={t("all")}
+            currency={org.currency}
             onOpen={(item, category) => setOpenItem({ item, category })}
             onActiveCat={handleActiveCat}
           />
@@ -347,6 +349,7 @@ export default function RuledMenuView({
           category={openItem?.category ?? null}
           locale={locale}
           closeLabel={t("close")}
+          currency={org.currency}
           onClose={() => setOpenItem(null)}
         />
 

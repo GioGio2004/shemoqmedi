@@ -1256,6 +1256,16 @@
       "made": "MADE WITH ❤ IN TBILISI"
     }
   },
+  "MenuStudio": {
+    "menuLabel": "მენიუ",
+    "featuredLabel": "რჩეული",
+    "itemsCount": "{count, plural, one {# პოზიცია} other {# პოზიცია}}",
+    "hours": "სამუშაო საათები",
+    "directions": "მარშრუტი",
+    "poweredBy": "შექმნილია",
+    "emptyTitle": "მენიუ მალე დაემატება",
+    "emptyBody": "ეს დაწესებულება ჯერ კიდევ ადგენს მენიუს. შემოიარეთ ცოტა ხანში."
+  },
   "MenuRuled": {
     "kicker": "ციფრული მენიუ",
     "menuLabel": "მენიუ",

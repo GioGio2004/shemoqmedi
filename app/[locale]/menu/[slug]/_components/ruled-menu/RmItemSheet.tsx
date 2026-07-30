@@ -9,6 +9,8 @@ import { useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useLenis } from "@/components/motion/SmoothScroll";
 import { idx2, imgSrcSet, lari, pick, type RmCategory, type RmItem } from "./types";
+import { currencySymbol } from "@/lib/money";
+import { allergenLabel } from "@/lib/allergens";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -17,12 +19,15 @@ export default function RmItemSheet({
   category,
   locale,
   closeLabel,
+  currency,
   onClose,
 }: {
   item: RmItem | null;
   category: RmCategory | null;
   locale: string;
   closeLabel: string;
+  /** ISO code from organizations.currency. Defaults to GEL. */
+  currency?: string;
   onClose: () => void;
 }) {
   const lenis = useLenis();
@@ -128,11 +133,21 @@ export default function RmItemSheet({
                   </div>
                 )}
 
+                {(item.allergens?.length ?? 0) > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {item.allergens!.map((a) => (
+                      <span key={a} className="rm-chip rm-chip-allergen v-t-micro">
+                        {allergenLabel(a, locale)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-auto pt-8">
                   <span className="v-line-x mb-4 block" aria-hidden="true" />
                   <span className="flex items-baseline justify-between">
                     <span className="v-t-mono" style={{ color: "var(--v-faint)" }}>
-                      ₾
+                      {currencySymbol(currency)}
                     </span>
                     <span className="font-v-display text-[clamp(1.8rem,4vw,2.6rem)] font-medium tabular-nums tracking-tight text-v-accent">
                       {lari(item.price)}

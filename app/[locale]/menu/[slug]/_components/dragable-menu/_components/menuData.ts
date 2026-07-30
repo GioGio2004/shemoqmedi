@@ -4,6 +4,8 @@ export interface MenuItem {
   price: string;
   description: string;
   image: string;
+  /** Localized allergen labels — legal declaration, always rendered. */
+  allergens?: string[];
 }
 
 export interface Zone {

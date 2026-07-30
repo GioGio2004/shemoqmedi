@@ -14,6 +14,8 @@ export type RmItem = {
   price: number; // tetri
   imageUrl: string | null;
   tags: string[];
+  /** Canonical allergen keys (lib/allergens.ts) — legal declaration. */
+  allergens?: string[];
   accentColor: string | null;
   isFeatured?: boolean;
   sortOrder: number;

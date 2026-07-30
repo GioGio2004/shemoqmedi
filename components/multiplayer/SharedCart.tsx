@@ -6,6 +6,7 @@ import { X, ShoppingBag, Users, Lock, Plus, Minus, Trash2, CheckCircle2, Clock }
 import { useQuery } from "convex/react";
 import { api } from "../../convex-helpers-api";
 import { useMultiplayer } from "./MultiplayerContext";
+import { formatMoney } from "@/lib/money";
 
 interface CartItem {
   id: string;
@@ -33,6 +34,8 @@ interface SharedCartProps {
   onCheckout: (guestCount: number, items: CartItem[], total: number) => void;
   /** Theme pulled from the DB — matches the AI chatbot's look */
   theme?: SharedCartTheme;
+  /** ISO code from organizations.currency ("GEL", "USD"…). Defaults to GEL. */
+  currency?: string;
   updateQuantity?: (productId: number, quantity: number) => void;
 }
 
@@ -42,6 +45,7 @@ export function SharedCart({
   localBasketItems = [],
   onCheckout,
   theme,
+  currency,
   updateQuantity,
 }: SharedCartProps) {
   const { guestId: localGuestId, sessionId, isDineIn } = useMultiplayer();
@@ -215,7 +219,7 @@ export function SharedCart({
                               {item.name}
                             </span>
                             <span className="font-medium mt-1 text-sm" style={{ color: t.primaryColor }}>
-                              {item.price.toFixed(2)}₾
+                              {formatMoney(item.price, currency)}
                             </span>
                           </div>
                         </div>
@@ -297,7 +301,7 @@ export function SharedCart({
                             <span className="line-clamp-1" style={{ color: `${t.textColor}77` }}>{item.name}</span>
                           </div>
                           <span className="font-medium shrink-0" style={{ color: `${t.textColor}88` }}>
-                            {item.price.toFixed(2)}₾
+                            {formatMoney(item.price, currency)}
                           </span>
                         </li>
                       ))}
@@ -342,7 +346,7 @@ export function SharedCart({
                                 <span className="line-clamp-1" style={{ color: `${t.textColor}77` }}>{item.name}</span>
                               </div>
                               <span className="font-medium shrink-0" style={{ color: `${t.textColor}88` }}>
-                                {item.price.toFixed(2)}₾
+                                {formatMoney(item.price, currency)}
                               </span>
                             </li>
                           ))}
@@ -373,7 +377,7 @@ export function SharedCart({
                   className="text-2xl font-medium tracking-tight"
                   style={{ color: t.primaryColor }}
                 >
-                  {grandTotal.toFixed(2)}₾
+                  {formatMoney(grandTotal, currency)}
                 </span>
               </div>
 

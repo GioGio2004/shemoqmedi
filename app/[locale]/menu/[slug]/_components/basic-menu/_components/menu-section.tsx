@@ -43,6 +43,8 @@ export interface ConvexMenuItem {
   price: number;
   imageUrl: string | null;
   tags: string[];
+  /** Canonical allergen keys (lib/allergens.ts) — legal declaration. */
+  allergens?: string[];
   accentColor: string | null;
   sortOrder: number;
 }
@@ -86,12 +88,15 @@ export function MenuSection({
   categories,
   socialLinks,
   themeSettings,
+  currency,
 }: {
   activeCategory: string;
   onCategoryChange: (category: string) => void;
   categories: ConvexCategory[];
   socialLinks: any;
   themeSettings: ThemeSettings | null;
+  /** ISO code from organizations.currency ("GEL", "USD"…). Defaults to GEL. */
+  currency?: string;
 }) {
   const pillNavRef = useRef<HTMLDivElement>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -317,6 +322,7 @@ export function MenuSection({
                         shapeProps={shapeProps}
                         animationIndex={itemIndex}
                         onClick={() => setSelectedProduct({...product, categoryName: selectedPopupCategory!})}
+                        currency={currency}
                       />
                     ))}
                   </div>
@@ -332,6 +338,7 @@ export function MenuSection({
                 product={selectedProduct}
                 shapeProps={shapeProps}
                 onClose={() => setSelectedProduct(null)}
+                currency={currency}
               />
             )}
           </AnimatePresence>
@@ -486,6 +493,7 @@ export function MenuSection({
                     shapeProps={shapeProps}
                     animationIndex={itemIndex}
                     onClick={() => setSelectedProduct(product)}
+                    currency={currency}
                   />
                 ))}
               </div>
@@ -511,6 +519,7 @@ export function MenuSection({
               product={selectedProduct}
               shapeProps={shapeProps}
               onClose={() => setSelectedProduct(null)}
+              currency={currency}
             />
           )}
         </AnimatePresence>

@@ -655,6 +655,17 @@ export const RM_CSS = /* css */ `
   color: var(--v-c-mut, var(--v-mut));
 }
 
+/* Allergen declaration — legally required, typographically distinct from
+   marketing tags (bolder, amber, uppercase). Never hidden by layout toggles. */
+.rm-chip-allergen {
+  border-color: rgba(232, 179, 106, 0.55);
+  background: rgba(232, 179, 106, 0.08);
+  color: #e8b36a;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .rm-accent-dot {
   display: inline-block;
   width: 6px;

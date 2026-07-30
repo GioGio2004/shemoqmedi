@@ -1,6 +1,7 @@
 import { X, ShoppingBag, Trash2, Minus, Plus, Loader2, Lock } from "lucide-react";
 import Image from "next/image";
 import { CafeTheme, BasketItem } from "./types";
+import { formatMoney } from "@/lib/money";
 
 interface BasketDrawerProps {
   isBasketOpen: boolean;
@@ -9,6 +10,7 @@ interface BasketDrawerProps {
   basketCount: number;
   basketTotal: number;
   theme: CafeTheme;
+  currency?: string;
   updateQuantity: (productId: number, quantity: number) => void;
   handlePlaceOrder: () => void;
   isPlacingOrder: boolean;
@@ -25,6 +27,7 @@ export function BasketDrawer({
   basketCount,
   basketTotal,
   theme,
+  currency,
   updateQuantity,
   handlePlaceOrder,
   isPlacingOrder,
@@ -145,7 +148,7 @@ export function BasketDrawer({
                   className="text-[10px] font-mono opacity-50"
                   style={{ color: theme.textColor }}
                 >
-                  ${(product.price * quantity).toFixed(2)}
+                  {formatMoney(product.price * quantity, currency)}
                 </p>
               </div>
 
@@ -212,7 +215,7 @@ export function BasketDrawer({
               className="text-base font-black font-mono"
               style={{ color: theme.primaryColorLight }}
             >
-              ${basketTotal.toFixed(2)}
+              {formatMoney(basketTotal, currency)}
             </span>
           </div>
 

@@ -75,7 +75,7 @@ export default function MenuRouterClient({
         themeSettings={data.organization.themeSettings ?? null}
       />
       {useStudio ? (
-        <StudioMenuView config={studioDesign} data={data} />
+        <StudioMenuView config={studioDesign} data={data} slug={slug} />
       ) : menuType === "ruled" ? (
         <RuledMenuView data={data} slug={slug} />
       ) : menuType === "dragable" ? (

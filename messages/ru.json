@@ -1238,6 +1238,16 @@
       "made": "MADE WITH ❤ IN TBILISI"
     }
   },
+  "MenuStudio": {
+    "menuLabel": "Меню",
+    "featuredLabel": "Рекомендуем",
+    "itemsCount": "{count, plural, one {# позиция} few {# позиции} many {# позиций} other {# позиции}}",
+    "hours": "Часы работы",
+    "directions": "Маршрут",
+    "poweredBy": "Работает на",
+    "emptyTitle": "Меню скоро появится",
+    "emptyBody": "Заведение ещё составляет меню. Загляните чуть позже."
+  },
   "MenuRuled": {
     "kicker": "ЦИФРОВОЕ МЕНЮ",
     "menuLabel": "МЕНЮ",

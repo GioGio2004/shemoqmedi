@@ -137,6 +137,7 @@ export default function VenueClientView({ slug, data }: VenueClientViewProps) {
         categories={data.categories}
         socialLinks={data.organization.socialLinks}
         themeSettings={themeSettings ?? null}
+        currency={data.organization.currency}
       />
 
       {/* Section divider — hairline (RULED) */}

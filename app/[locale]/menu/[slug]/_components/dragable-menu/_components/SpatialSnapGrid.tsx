@@ -12,6 +12,8 @@ import {
 import { Zone, MenuItem } from "./menuData";
 import Image from "next/image";
 import { MenuAIBridge } from "../../basic-menu/_components/menu-ai-bridge";
+import { formatMinor } from "@/lib/money";
+import { allergenLabel } from "@/lib/allergens";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -190,6 +192,20 @@ const MenuItemCard = React.memo(
           <p className="text-[10px] md:text-[11px] font-medium text-white/90 leading-tight line-clamp-2 md:line-clamp-3 pr-10 font-body">
             {item.description}
           </p>
+
+          {/* Legal allergen declaration — always visible */}
+          {item.allergens && item.allergens.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1 pr-10">
+              {item.allergens.map((a) => (
+                <span
+                  key={a}
+                  className="rounded-[3px] border border-amber-300/60 bg-amber-400/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-200"
+                >
+                  {a}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Absolute ADD+ Button */}
@@ -560,12 +576,15 @@ export default function SpatialSnapGrid({
         items: cat.items.map((item: any) => ({
           id: item._id,
           name: item.name["en"] || item.name["ka"],
-          price: (item.price / 100).toFixed(2) + " ₾",
+          price: formatMinor(item.price, data.organization?.currency),
           description:
             item.description?.["en"] || item.description?.["ka"] || "",
           image:
             item.imageUrl ||
             "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop",
+          allergens: item.allergens?.length
+            ? item.allergens.map((a: string) => allergenLabel(a, "en"))
+            : undefined,
         })),
       };
     });
