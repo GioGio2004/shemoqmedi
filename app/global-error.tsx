@@ -1,7 +1,7 @@
 "use client";
 
-// Root-layout error boundary (catches errors thrown by the locale layout
-// itself). Must render its own <html>/<body>.
+// Root-layout error boundary (errors thrown by the locale layout itself).
+// Must render its own <html>/<body>.
 
 export default function GlobalError({
   reset,
@@ -19,33 +19,14 @@ export default function GlobalError({
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 20,
-          background: "#0A0A0A",
-          color: "#F4F3F0",
-          fontFamily: "monospace",
-          letterSpacing: ".06em",
-          textTransform: "uppercase",
-          textAlign: "center",
-          padding: 24,
+          gap: 16,
+          background: "#0a0a0a",
+          color: "#fafafa",
+          fontFamily: "system-ui, sans-serif",
         }}
       >
-        <span style={{ fontSize: 12, opacity: 0.5 }}>( ERROR )</span>
-        <h1 style={{ fontSize: 18, fontWeight: 500 }}>Something broke.</h1>
-        <button
-          type="button"
-          onClick={reset}
-          style={{
-            cursor: "pointer",
-            background: "#D8FF3A",
-            color: "#0A0A0A",
-            border: 0,
-            padding: "12px 20px",
-            fontFamily: "inherit",
-            letterSpacing: "inherit",
-            textTransform: "inherit",
-            fontSize: 12,
-          }}
-        >
+        <h1 style={{ fontSize: 20, fontWeight: 600 }}>Something broke.</h1>
+        <button type="button" onClick={reset} style={{ padding: "8px 16px" }}>
           Try again
         </button>
       </body>

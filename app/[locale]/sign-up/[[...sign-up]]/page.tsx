@@ -1,15 +1,22 @@
-// app/[locale]/sign-up/[[...sign-up]]/page.tsx
-// Standalone consumer sign-up — same RULED AuthPanel (the email-code flow
-// auto-creates accounts for unknown emails), sign-up header label.
-
 import type { Metadata } from "next";
-import AuthPageClient from "@/components/auth/AuthPageClient";
+import { SignUp } from "@clerk/nextjs";
+import { AuthShell } from "@/components/auth/AuthShell";
 
-export const metadata: Metadata = {
-  title: "Sign up",
-  robots: { index: false },
-};
+export const metadata: Metadata = { title: "Sign up", robots: { index: false } };
 
-export default function SignUpPage() {
-  return <AuthPageClient intent="sign-up" />;
+export default async function SignUpPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return (
+    <AuthShell locale={locale}>
+      <SignUp
+        path={`/${locale}/sign-up`}
+        signInUrl={`/${locale}/sign-in`}
+        fallbackRedirectUrl={`/${locale}/account`}
+      />
+    </AuthShell>
+  );
 }

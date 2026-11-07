@@ -1,16 +1,22 @@
-// app/[locale]/sign-in/[[...sign-in]]/page.tsx
-// Standalone consumer sign-in — renders the RULED AuthPanel full-page on a
-// dark stage (no bare white Clerk defaults). Optional catch-all so any
-// Clerk-style sub-paths (e.g. /sign-in/factor-one) resolve here too.
-
 import type { Metadata } from "next";
-import AuthPageClient from "@/components/auth/AuthPageClient";
+import { SignIn } from "@clerk/nextjs";
+import { AuthShell } from "@/components/auth/AuthShell";
 
-export const metadata: Metadata = {
-  title: "Sign in",
-  robots: { index: false },
-};
+export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
-export default function SignInPage() {
-  return <AuthPageClient intent="sign-in" />;
+export default async function SignInPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return (
+    <AuthShell locale={locale}>
+      <SignIn
+        path={`/${locale}/sign-in`}
+        signUpUrl={`/${locale}/sign-up`}
+        fallbackRedirectUrl={`/${locale}/account`}
+      />
+    </AuthShell>
+  );
 }
