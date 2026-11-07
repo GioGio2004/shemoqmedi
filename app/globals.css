@@ -107,21 +107,34 @@
   }
 
   /*
-   * Header, same as the admin panel: white bar, hairline border, rounded
-   * bottom corners. It sits at the top and scrolls away with the page; the
-   * crow logo (CrowNav) is a separate fixed layer that stays.
+   * Transparent header that turns into white glass once the page scrolls.
+   * Pure CSS (scroll-driven animation), so the header ships no JavaScript.
    */
   .site-header {
-    border: 1px solid rgb(0 0 0 / 0.1);
-    border-top: 0;
-    border-radius: 0 0 28px 28px;
-    background: rgb(255 255 255 / 0.9);
-    -webkit-backdrop-filter: blur(22px);
-    backdrop-filter: blur(22px);
+    background: transparent;
+    border-bottom: 1px solid transparent;
   }
-  @media (min-width: 768px) {
+  @supports (animation-timeline: scroll()) {
     .site-header {
-      border-radius: 0 0 36px 36px;
+      animation: header-solidify linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 96px;
     }
+  }
+  @supports not (animation-timeline: scroll()) {
+    .site-header {
+      background: rgb(255 255 255 / 0.86);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
+  }
+}
+
+@keyframes header-solidify {
+  to {
+    background: rgb(255 255 255 / 0.86);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom-color: rgb(0 0 0 / 0.08);
   }
 }
