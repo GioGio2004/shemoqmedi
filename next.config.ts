@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Turbopack's on-disk dev cache survives restarts, and on Windows it
+    // twice kept a stale route table after route files changed under a
+    // running server (every /sign-in, then every /sites/* page 404ed).
+    // Slightly slower cold starts in exchange for routes that always match disk.
+    turbopackFileSystemCacheForDev: false,
+  },
   async redirects() {
     return [
       // The site used to be localized under /en, /ka and /ru. It is

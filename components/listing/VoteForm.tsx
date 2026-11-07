@@ -1,9 +1,9 @@
 "use client";
 
+import { friendlyError } from "@/lib/errors";
 import { useState } from "react";
 import Link from "next/link";
 import { Authenticated, AuthLoading, Unauthenticated, useMutation, useQuery } from "convex/react";
-import { ConvexError } from "convex/values";
 import { api, type Pillars } from "@/convex-helpers-api";
 import { PILLARS } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
@@ -18,11 +18,6 @@ function average(scores: Pillars) {
   return (scores.design + scores.usability + scores.creativity + scores.code) / 4;
 }
 
-function errorMessage(err: unknown) {
-  if (err instanceof ConvexError) return String(err.data);
-  if (err instanceof Error) return err.message;
-  return "Something went wrong. Please try again.";
-}
 
 /**
  * Community vote: four 1–10 sliders (Design, Usability, Creativity, Code).
@@ -116,7 +111,7 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
       await cast({ slug, scores });
       setStatus("done");
     } catch (err) {
-      setError(errorMessage(err));
+      setError(friendlyError(err));
       setStatus("idle");
     }
   }

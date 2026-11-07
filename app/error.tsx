@@ -13,7 +13,8 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    // Details only while developing; visitors just see the message below.
+    if (process.env.NODE_ENV === "development") console.error(error);
   }, [error]);
 
   return (

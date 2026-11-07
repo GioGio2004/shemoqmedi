@@ -1,9 +1,9 @@
 "use client";
 
+import { friendlyError } from "@/lib/errors";
 import { useId, useState } from "react";
 import Link from "next/link";
 import { Authenticated, AuthLoading, Unauthenticated, useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { api } from "@/convex-helpers-api";
 import { LIMITS } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
@@ -18,11 +18,6 @@ const REMOVAL_PREFIX = "Removal request: ";
 
 type Intent = "claim" | "removal";
 
-function errorMessage(err: unknown) {
-  if (err instanceof ConvexError) return String(err.data);
-  if (err instanceof Error) return err.message;
-  return "Something went wrong. Please try again.";
-}
 
 /**
  * "This is mine": claim an unclaimed listing or creator profile, or (for a
@@ -120,7 +115,7 @@ function Form({
       });
       setStatus("done");
     } catch (err) {
-      setError(errorMessage(err));
+      setError(friendlyError(err));
       setStatus("idle");
     }
   }

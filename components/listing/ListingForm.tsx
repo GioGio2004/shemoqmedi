@@ -1,9 +1,9 @@
 "use client";
 
+import { friendlyError } from "@/lib/errors";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { useUser } from "@clerk/nextjs";
 import { z } from "zod";
 import { api } from "@/convex-helpers-api";
@@ -439,13 +439,7 @@ export function ListingForm() {
       });
       router.push("/account?submitted=1");
     } catch (err) {
-      setError(
-        err instanceof ConvexError
-          ? String(err.data)
-          : err instanceof Error
-            ? err.message
-            : "Something went wrong. Please try again.",
-      );
+      setError(friendlyError(err));
       setStatus("idle");
       busy.current = false;
     }

@@ -1,8 +1,8 @@
 "use client";
 
+import { friendlyError } from "@/lib/errors";
 import { useState } from "react";
 import Link from "next/link";
-import { ConvexError } from "convex/values";
 import {
   Authenticated,
   AuthLoading,
@@ -97,11 +97,7 @@ function List() {
     try {
       await withdraw({ id: listing.id });
     } catch (err) {
-      setError(
-        err instanceof ConvexError
-          ? String(err.data)
-          : "Could not remove the site. Please try again.",
-      );
+      setError(friendlyError(err, "Could not remove the site. Please try again."));
     }
   }
 
