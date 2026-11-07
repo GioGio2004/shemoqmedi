@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/site/MediaImage";
 import Link from "next/link";
 import type { PublicListing } from "@/convex-helpers-api";
 import { categoryName } from "@/lib/collections";

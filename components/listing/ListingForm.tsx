@@ -3,7 +3,8 @@
 import { friendlyError } from "@/lib/errors";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useAction, useMutation } from "convex/react";
+import { MAX_IMAGE_INPUT_BYTES, uploadToImageKit } from "@/lib/imagekitUpload";
 import { useUser } from "@clerk/nextjs";
 import { z } from "zod";
 import { api } from "@/convex-helpers-api";
@@ -90,9 +91,10 @@ const schema = z.object({
     .trim()
     .max(LIMITS.url, "Creator website is too long.")
     .refine((v) => v === "" || isPublicUrl(v), "Creator website must be a public website address."),
-  cover: mediaFile("Main screenshot", IMAGE_TYPES, LIMITS.imageBytes, "a PNG, JPG or WebP image"),
+  // Screenshots are converted to WebP before upload; the 5 MB limit applies after that.
+  cover: mediaFile("Main screenshot", IMAGE_TYPES, MAX_IMAGE_INPUT_BYTES, "a PNG, JPG or WebP image"),
   extras: z
-    .array(mediaFile("Each extra screenshot", IMAGE_TYPES, LIMITS.imageBytes, "a PNG, JPG or WebP image"))
+    .array(mediaFile("Each extra screenshot", IMAGE_TYPES, MAX_IMAGE_INPUT_BYTES, "a PNG, JPG or WebP image"))
     .max(LIMITS.gallery, `Add up to ${LIMITS.gallery} more screenshots.`),
   video: mediaFile("Preview video", VIDEO_TYPES, LIMITS.videoBytes, "an MP4 or WebM file").nullable(),
 });
@@ -344,7 +346,8 @@ const pill = (on: boolean) =>
 export function ListingForm() {
   const router = useRouter();
   const { user } = useUser();
-  const generateUploadUrl = useMutation(api.listings.generateUploadUrl);
+  const getUploadAuth = useAction(api.media.uploadAuth);
+  const registerMedia = useMutation(api.media.register);
   const submit = useMutation(api.listings.submit);
 
   const [title, setTitle] = useState("");
@@ -376,16 +379,10 @@ export function ListingForm() {
           : [...current, name],
     );
 
-  async function upload(file: File): Promise<Id<"_storage">> {
-    const postUrl = await generateUploadUrl({});
-    const res = await fetch(postUrl, {
-      method: "POST",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
-    if (!res.ok) throw new Error("Upload failed. Please try again.");
-    const { storageId } = (await res.json()) as { storageId: Id<"_storage"> };
-    return storageId;
+  /** WebP-converted, SEO-named upload to ImageKit (lib/imagekitUpload.ts). */
+  async function upload(file: File, label: string): Promise<Id<"media">> {
+    const args = await uploadToImageKit(file, { site: title, label }, () => getUploadAuth({}));
+    return await registerMedia(args);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -416,10 +413,10 @@ export function ListingForm() {
     setError(null);
     try {
       setStatus("uploading");
-      const coverId = await upload(data.cover);
-      const galleryIds: Id<"_storage">[] = [];
-      for (const file of data.extras) galleryIds.push(await upload(file));
-      const videoId = data.video ? await upload(data.video) : undefined;
+      const coverId = await upload(data.cover, "cover");
+      const galleryIds: Id<"media">[] = [];
+      for (const [i, file] of data.extras.entries()) galleryIds.push(await upload(file, `screenshot-${i + 2}`));
+      const videoId = data.video ? await upload(data.video, "preview") : undefined;
       setStatus("saving");
       await submit({
         title: data.title,
@@ -597,7 +594,7 @@ export function ListingForm() {
         <MediaPicker
           id="cover"
           label="Main screenshot"
-          hint="16:9, ideally 1920 × 1080, or a full-page screenshot. PNG, JPG or WebP, up to 5 MB."
+          hint="16:9, ideally 1920 × 1080, or a full-page screenshot. PNG, JPG or WebP up to 20 MB. We optimise it to WebP."
           file={cover}
           onChange={setCover}
           aspect="aspect-video"

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/site/MediaImage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowIcon } from "@/components/site/ui";
 import { cn } from "@/lib/utils";

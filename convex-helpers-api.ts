@@ -2,11 +2,12 @@
 //
 // The Convex backend lives in the shemoqmedi-admin repo (convex/). This app
 // has no convex/ folder, so these types are declared here by hand. Keep them
-// in sync with shemoqmedi-admin/convex/{listings,votes,creators,claims,users}.ts.
+// in sync with shemoqmedi-admin/convex/{media,listings,votes,creators,claims,users}.ts.
 
 import { type DefaultFunctionArgs, type FunctionReference, anyApi } from "convex/server";
 import { type GenericId as Id } from "convex/values";
 import type { AwardSlug, CreatorTier, RegionSlug } from "@/lib/taxonomy";
+import type { RegisterArgs, UploadAuth } from "@/lib/imagekitUpload";
 
 export type Pillars = { design: number; usability: number; creativity: number; code: number };
 
@@ -96,6 +97,10 @@ export type ConvexUser = {
 
 type Q<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"query", "public", Args, Ret>;
 type M<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"mutation", "public", Args, Ret>;
+type A<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"action", "public", Args, Ret>;
+
+/** A screenshot or video: an older Convex storage file or an ImageKit media row. */
+export type MediaId = Id<"_storage"> | Id<"media">;
 type Empty = Record<string, never>;
 
 export type SubmitArgs = {
@@ -109,12 +114,18 @@ export type SubmitArgs = {
   creditName: string;
   creditUrl?: string;
   submissionTier: "standard" | "express";
-  coverId: Id<"_storage">;
-  galleryIds?: Id<"_storage">[];
-  videoId?: Id<"_storage">;
+  coverId: MediaId;
+  galleryIds?: MediaId[];
+  videoId?: MediaId;
 };
 
 export type PublicApiType = {
+  media: {
+    /** Signed parameters for one browser → ImageKit upload (signed-in users). */
+    uploadAuth: A<Empty, UploadAuth>;
+    /** Record a finished ImageKit upload; returns the id submit takes. */
+    register: M<RegisterArgs, Id<"media">>;
+  };
   users: {
     getCurrentUser: Q<Empty, ConvexUser | null>;
   };

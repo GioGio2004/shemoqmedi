@@ -8,5 +8,7 @@ import { ConvexError } from "convex/values";
  */
 export function friendlyError(err: unknown, fallback = "Something went wrong. Please try again.") {
   if (err instanceof ConvexError && typeof err.data === "string" && err.data.trim()) return err.data;
+  // Our own upload messages (lib/imagekitUpload.ts) are written for people.
+  if (err instanceof Error && err.name === "UploadError") return err.message;
   return fallback;
 }
