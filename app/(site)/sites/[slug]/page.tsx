@@ -169,13 +169,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
       {/* Gallery */}
       <section aria-label="Screenshots" className="container-site">
-        <div
-          className={
-            listing.coverUrl && listing.mobileUrl
-              ? "grid gap-6 lg:grid-cols-[1fr_minmax(0,300px)]"
-              : ""
-          }
-        >
+        <div>
           {listing.coverUrl && (
             <a
               href={liveUrl}
@@ -186,7 +180,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
             >
               <Image
                 src={listing.coverUrl}
-                alt={`${listing.title} desktop screenshot`}
+                alt={`${listing.title} screenshot 1`}
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 1100px"
@@ -194,18 +188,31 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
               />
             </a>
           )}
-          {listing.mobileUrl && (
-            <div className="relative mx-auto aspect-[9/19.5] w-full max-w-[300px] overflow-hidden rounded-3xl border border-black/8 lg:mx-0">
-              <Image
-                src={listing.mobileUrl}
-                alt={`${listing.title} mobile screenshot`}
-                fill
-                sizes="300px"
-                className="object-cover object-top"
-              />
-            </div>
-          )}
         </div>
+
+        {listing.galleryUrls.length > 0 && (
+          <ul className="mt-6 grid gap-6 md:grid-cols-2">
+            {listing.galleryUrls.map((src, i) => (
+              <li key={src}>
+                <a
+                  href={src}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label={`Open screenshot ${i + 2} of ${listing.title} full size`}
+                  className="relative block aspect-video overflow-hidden rounded-3xl border border-black/8"
+                >
+                  <Image
+                    src={src}
+                    alt={`${listing.title} screenshot ${i + 2}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 680px"
+                    className="object-cover object-top"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {listing.videoUrl && (
           <figure className="mt-6">

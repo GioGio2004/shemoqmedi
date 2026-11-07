@@ -38,9 +38,9 @@ function nearby(centre: number, n: number) {
  * Home header: one full-screen card per listing, in an endless loop.
  *
  * Motion: between slides every card pulls back (scales down, corners
- * round), glides sideways and pushes in again, while the screenshot drifts
- * on its own layer (parallax). A full-page screenshot (taller than 16:9)
- * scrolls down the site and glides back up; a 16:9 one zooms in slowly.
+ * round), glides sideways and pushes in again. Screenshots themselves stay
+ * still (no zoom); only a full-page screenshot (taller than 16:9) scrolls
+ * down the site and glides back up.
  * Drag or flick it (mouse, touch, trackpad), use the arrows or keys, or let
  * it play. GSAP drives one number (the position) and every frame writes
  * transforms directly, so React re-renders only when the centre card
@@ -64,7 +64,6 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const boxRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
   const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const titleRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLSpanElement>(null);
@@ -110,11 +109,6 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
         el.style.borderRadius = `${radius + 8}px`;
         const box = boxRefs.current[i];
         if (box) box.style.borderRadius = `${radius}px`;
-        const media = mediaRefs.current[i];
-        if (media) {
-          const k = Math.min(ad, 1);
-          media.style.transform = `translate3d(${-d * 7}%,0,0) scale(${1 + 0.16 * k})`;
-        }
       }
       const idx = (((Math.round(p) % n) + n) % n) || 0;
       if (idx !== activeRef.current) {
@@ -205,13 +199,13 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
     };
   }, []);
 
-  // The centre card's screenshot moves: a full page scrolls down and back up;
-  // a 16:9 one zooms in slowly. Other cards reset.
+  // A full-page screenshot on the centre card scrolls down and back up;
+  // 16:9 ones stay still. Other cards return to the top.
   useEffect(() => {
     motion.current?.kill();
     motion.current = null;
     scrollRefs.current.forEach((el, i) => {
-      if (el && i !== active) gsap.to(el, { y: 0, scale: 1, duration: 0.8, ease: "power3.out", overwrite: true });
+      if (el && i !== active) gsap.to(el, { y: 0, duration: 0.8, ease: "power3.out", overwrite: true });
     });
     slideDuration.current = INTERVAL;
 
@@ -222,17 +216,11 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
       if (distance > 40) {
         const down = gsap.utils.clamp(5, 18, distance / 180); // about 180 px a second
         const tl = gsap.timeline({ repeat: -1, delay: 1.1 });
-        tl.fromTo(el, { y: 0, scale: 1 }, { y: -distance, duration: down, ease: "power1.inOut" })
+        tl.fromTo(el, { y: 0 }, { y: -distance, duration: down, ease: "power1.inOut" })
           .to(el, { y: 0, duration: 1.6, ease: "expo.inOut" }, "+=1.4")
           .to({}, { duration: 1 });
         motion.current = tl;
         slideDuration.current = Math.max(INTERVAL, 1.1 + down + 1.2); // move on at the bottom
-      } else {
-        motion.current = gsap.fromTo(
-          el,
-          { scale: 1, y: 0 },
-          { scale: 1.07, duration: INTERVAL + 2, ease: "none", transformOrigin: "50% 0%" },
-        );
       }
     }
     rearm();
@@ -407,12 +395,7 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
                 }}
                 className="relative h-full w-full overflow-hidden rounded-[22px] bg-black/[0.03]"
               >
-                <div
-                  ref={(el) => {
-                    mediaRefs.current[i] = el;
-                  }}
-                  className="absolute inset-0 will-change-transform"
-                >
+                <div className="absolute inset-0">
                   <div
                     ref={(el) => {
                       scrollRefs.current[i] = el;

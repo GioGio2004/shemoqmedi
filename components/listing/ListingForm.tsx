@@ -90,13 +90,10 @@ const schema = z.object({
     .trim()
     .max(LIMITS.url, "Creator website is too long.")
     .refine((v) => v === "" || isPublicUrl(v), "Creator website must be a public website address."),
-  cover: mediaFile("Desktop screenshot", IMAGE_TYPES, LIMITS.imageBytes, "a PNG, JPG or WebP image"),
-  mobile: mediaFile(
-    "Mobile screenshot",
-    IMAGE_TYPES,
-    LIMITS.imageBytes,
-    "a PNG, JPG or WebP image",
-  ).nullable(),
+  cover: mediaFile("Main screenshot", IMAGE_TYPES, LIMITS.imageBytes, "a PNG, JPG or WebP image"),
+  extras: z
+    .array(mediaFile("Each extra screenshot", IMAGE_TYPES, LIMITS.imageBytes, "a PNG, JPG or WebP image"))
+    .max(LIMITS.gallery, `Add up to ${LIMITS.gallery} more screenshots.`),
   video: mediaFile("Preview video", VIDEO_TYPES, LIMITS.videoBytes, "an MP4 or WebM file").nullable(),
 });
 
@@ -219,6 +216,65 @@ function MediaPicker({
   );
 }
 
+/** Up to LIMITS.gallery more screenshots: previews with remove, plus an add tile. */
+function ExtraShots({ files, onChange }: { files: File[]; onChange: (files: File[]) => void }) {
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => previews.forEach((p) => URL.revokeObjectURL(p)), [previews]);
+  const add = (list: FileList | null) =>
+    onChange([...files, ...Array.from(list ?? [])].slice(0, LIMITS.gallery));
+
+  return (
+    <Field
+      label={`More screenshots (optional) ${files.length}/${LIMITS.gallery}`}
+      hint="Other pages of the site, shown after the main one. 16:9 works best."
+      htmlFor="extras"
+    >
+      <div className="grid grid-cols-2 gap-3">
+        {files.map((file, i) => (
+          <div key={`${file.name}-${i}`} className="relative aspect-video overflow-hidden rounded-2xl border border-black/10">
+            {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
+            <img src={previews[i]} alt="" className="absolute inset-0 size-full object-cover object-top" />
+            <button
+              type="button"
+              aria-label={`Remove ${file.name}`}
+              onClick={() => onChange(files.filter((_, k) => k !== i))}
+              className="absolute top-2 right-2 grid size-7 place-items-center rounded-full bg-white text-sm leading-none hover:bg-black hover:text-white"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        {files.length < LIMITS.gallery && (
+          <label
+            htmlFor="extras"
+            className="relative flex aspect-video cursor-pointer items-center justify-center rounded-2xl border border-dashed border-black/25 text-center transition-colors hover:border-black has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              add(e.dataTransfer.files);
+            }}
+          >
+            <span className="px-4 text-xs text-black/55">
+              Drop images or <span className="text-black underline underline-offset-4">browse</span>
+            </span>
+            <input
+              id="extras"
+              type="file"
+              multiple
+              accept={IMAGE_TYPES.join(",")}
+              className="sr-only"
+              onChange={(e) => {
+                add(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
+      </div>
+    </Field>
+  );
+}
+
 /** A large selectable card backed by a native radio input. */
 function OptionCard({
   name,
@@ -302,7 +358,7 @@ export function ListingForm() {
   const [creditTouched, setCreditTouched] = useState(false);
   const [creditUrl, setCreditUrl] = useState("");
   const [cover, setCover] = useState<File | null>(null);
-  const [mobile, setMobile] = useState<File | null>(null);
+  const [extras, setExtras] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">("idle");
@@ -347,7 +403,7 @@ export function ListingForm() {
       creditName: displayCredit,
       creditUrl,
       cover,
-      mobile,
+      extras,
       video,
     });
     if (!parsed.success) {
@@ -361,7 +417,8 @@ export function ListingForm() {
     try {
       setStatus("uploading");
       const coverId = await upload(data.cover);
-      const mobileId = data.mobile ? await upload(data.mobile) : undefined;
+      const galleryIds: Id<"_storage">[] = [];
+      for (const file of data.extras) galleryIds.push(await upload(file));
       const videoId = data.video ? await upload(data.video) : undefined;
       setStatus("saving");
       await submit({
@@ -377,7 +434,7 @@ export function ListingForm() {
         // Express Fast-Track is not open yet; the backend rejects it.
         submissionTier: "standard",
         coverId,
-        mobileId,
+        galleryIds: galleryIds.length ? galleryIds : undefined,
         videoId,
       });
       router.push("/account?submitted=1");
@@ -545,20 +602,13 @@ export function ListingForm() {
       <div className="grid content-start gap-6 lg:col-span-5">
         <MediaPicker
           id="cover"
-          label="Desktop screenshot"
-          hint="16:9, ideally 1920 × 1080. PNG, JPG or WebP, up to 5 MB."
+          label="Main screenshot"
+          hint="16:9, ideally 1920 × 1080, or a full-page screenshot. PNG, JPG or WebP, up to 5 MB."
           file={cover}
           onChange={setCover}
           aspect="aspect-video"
         />
-        <MediaPicker
-          id="mobile"
-          label="Mobile screenshot (optional)"
-          hint="Portrait, e.g. 390 × 844."
-          file={mobile}
-          onChange={setMobile}
-          aspect="aspect-[9/12] max-w-[260px]"
-        />
+        <ExtraShots files={extras} onChange={setExtras} />
         <MediaPicker
           id="video"
           kind="video"

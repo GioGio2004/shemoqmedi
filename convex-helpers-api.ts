@@ -38,8 +38,8 @@ export type PublicListing = {
   votingEndsAt: number;
   awardedAt: number | null;
   isClaimed: boolean;
-  coverUrl: string | null; // 16:10 desktop screenshot
-  mobileUrl: string | null;
+  coverUrl: string | null; // first screenshot: 16:9, or a full page that scrolls
+  galleryUrls: string[]; // up to 4 more screenshots, in order
   videoUrl: string | null; // short muted hover preview
 };
 
@@ -110,7 +110,7 @@ export type SubmitArgs = {
   creditUrl?: string;
   submissionTier: "standard" | "express";
   coverId: Id<"_storage">;
-  mobileId?: Id<"_storage">;
+  galleryIds?: Id<"_storage">[];
   videoId?: Id<"_storage">;
 };
 
