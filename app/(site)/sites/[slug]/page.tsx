@@ -6,6 +6,7 @@ import type { PublicListing } from "@/convex-helpers-api";
 import { PageHero } from "@/components/listing/PageHero";
 import { AwardBadge, TierBadge } from "@/components/listing/Badges";
 import { Countdown } from "@/components/listing/Countdown";
+import { InViewVideo } from "@/components/listing/InViewVideo";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
 import { getListing, withRef } from "@/lib/listings";
@@ -216,11 +217,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
         {listing.videoUrl && (
           <figure className="mt-6">
-            <video
+            {/* Plays muted on a loop once it scrolls into view; controls stay for pause/unmute. */}
+            <InViewVideo
               controls
-              muted
-              playsInline
-              preload="none"
               poster={listing.coverUrl ?? undefined}
               src={listing.videoUrl}
               aria-label={`${listing.title} walkthrough`}

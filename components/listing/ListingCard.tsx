@@ -2,19 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
 import type { PublicListing } from "@/convex-helpers-api";
 import { categoryName } from "@/lib/collections";
 import { withRefClient } from "@/lib/ref";
 import { cn } from "@/lib/utils";
 import { AwardBadge, ScoreBadge } from "./Badges";
 import { Countdown } from "./Countdown";
+import { InViewVideo } from "./InViewVideo";
 import { ArrowIcon } from "@/components/site/ui";
 
 /**
- * Directory card. Static 16:9 screenshot at rest; on hover: slow zoom, the
- * muted preview video (if any) fades in, and a floating "Visit site" pill.
- * The video uses preload="none", so it costs nothing until someone hovers.
+ * Directory card. 16:9 screenshot; if the listing has a preview video it
+ * plays muted on a loop whenever the card is on screen (fading in over the
+ * screenshot once it starts) and pauses when it scrolls away. On hover: slow
+ * zoom and a floating "Visit site" pill.
  */
 export function ListingCard({
   listing,
@@ -25,18 +26,10 @@ export function ListingCard({
   priority?: boolean;
   showCountdown?: boolean;
 }) {
-  const video = useRef<HTMLVideoElement>(null);
-  const play = () => {
-    const el = video.current;
-    if (!el) return;
-    el.currentTime = 0;
-    void el.play().catch(() => {});
-  };
-  const stop = () => video.current?.pause();
   const countdown = showCountdown ?? listing.status === "in_voting";
 
   return (
-    <article className="group relative" onMouseEnter={play} onMouseLeave={stop} onFocus={play} onBlur={stop}>
+    <article className="group relative">
       <div className="relative aspect-video overflow-hidden rounded-2xl border border-black/8 bg-white">
         <Link href={`/sites/${listing.slug}`} aria-label={listing.title} className="absolute inset-0 block">
           {listing.coverUrl && (
@@ -50,15 +43,11 @@ export function ListingCard({
             />
           )}
           {listing.videoUrl && (
-            <video
-              ref={video}
+            <InViewVideo
               src={listing.videoUrl}
-              muted
-              loop
-              playsInline
-              preload="none"
+              fadeIn
               aria-hidden="true"
-              className="absolute inset-0 size-full object-cover object-top opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              className="absolute inset-0 size-full object-cover object-top"
             />
           )}
         </Link>
