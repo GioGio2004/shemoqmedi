@@ -1,9 +1,14 @@
-import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
-const withNextIntl = createNextIntlPlugin("./i18n.ts");
-
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // The site used to be localized under /en, /ka and /ru. It is
+      // English-only now; send old links (and search results) to the clean paths.
+      { source: "/:locale(en|ka|ru)", destination: "/", permanent: true },
+      { source: "/:locale(en|ka|ru)/:path*", destination: "/:path*", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
@@ -36,4 +41,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

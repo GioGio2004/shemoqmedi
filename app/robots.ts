@@ -1,11 +1,11 @@
 import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  // Must match the serving host (www); see the canonical-host note in [locale]/layout.tsx.
+  // Must match the serving host (www); see the canonical-host note in app/layout.tsx.
   const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
 
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/*/account"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/account"] }],
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

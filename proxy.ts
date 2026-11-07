@@ -1,36 +1,19 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import createMiddleware from "next-intl/middleware";
-import { NextResponse, type NextRequest } from "next/server";
-import { DEFAULT_LOCALE, LOCALES } from "@/lib/i18n";
-
-const intlMiddleware = createMiddleware({
-  locales: [...LOCALES],
-  defaultLocale: DEFAULT_LOCALE,
-});
+import { NextResponse } from "next/server";
 
 // Pages that need a signed-in user. Everything else is public.
-const isProtectedRoute = createRouteMatcher(["/:locale/account(.*)"]);
-
-const isApiRoute = createRouteMatcher(["/api/(.*)", "/trpc/(.*)"]);
-
-// Send signed-out visitors to our own localized sign-in page (not Clerk's
-// hosted Account Portal), then back to where they were going.
-function redirectToSignIn(req: NextRequest) {
-  const locale = req.nextUrl.pathname.split("/")[1] || "ka";
-  const url = new URL(`/${locale}/sign-in`, req.url);
-  url.searchParams.set("redirect_url", req.nextUrl.href);
-  return NextResponse.redirect(url);
-}
+const isProtectedRoute = createRouteMatcher(["/account(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // API routes never get a locale prefix.
-  if (isApiRoute(req)) return;
+  if (!isProtectedRoute(req)) return;
 
-  if (isProtectedRoute(req)) {
-    const { userId } = await auth();
-    if (!userId) return redirectToSignIn(req);
+  const { userId } = await auth();
+  if (!userId) {
+    // Our own sign-in page (not Clerk's hosted one), then back here.
+    const url = new URL("/sign-in", req.url);
+    url.searchParams.set("redirect_url", req.nextUrl.href);
+    return NextResponse.redirect(url);
   }
-  return intlMiddleware(req);
 });
 
 export const config = {

@@ -1,6 +1,6 @@
 "use client";
 
-// Root-layout error boundary (errors thrown by the locale layout itself).
+// Root-layout error boundary (errors thrown by app/layout.tsx itself).
 // Must render its own <html>/<body>.
 
 export default function GlobalError({

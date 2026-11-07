@@ -1,13 +1,10 @@
-import { getTranslations } from "next-intl/server";
 import { CATEGORIES } from "@/lib/showcase";
 import { SectionHeader } from "./ui";
 
-export async function Categories() {
-  const t = await getTranslations("categories");
-
+export function Categories() {
   return (
     <section aria-labelledby="categories" className="container-site scroll-mt-20 pb-24">
-      <SectionHeader id="categories" label={t("label")} title={t("title")} />
+      <SectionHeader id="categories" label="Browse" title="Find work by category" />
       {/* Category pages come later; for now these are a typographic index. */}
       <ul className="mt-10 flex flex-wrap gap-x-4 gap-y-1 text-[clamp(1.75rem,4.5vw,4rem)] font-semibold leading-[1.1] tracking-[-0.045em]">
         {CATEGORIES.map((name, i) => (

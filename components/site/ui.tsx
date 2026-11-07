@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { LOCALES, LOCALE_LABELS } from "@/lib/i18n";
 
 // Small server-only building blocks shared by the landing sections.
 
@@ -78,28 +77,5 @@ export function ArrowLink({
         →
       </span>
     </Link>
-  );
-}
-
-/** Plain links to each locale's home page (no client JS). */
-export function LocaleLinks({ current }: { current: string }) {
-  return (
-    <ul className="flex items-center gap-3 text-xs">
-      {LOCALES.map((l) => (
-        <li key={l}>
-          <Link
-            href={`/${l}`}
-            hrefLang={l}
-            aria-current={l === current ? "true" : undefined}
-            className={cn(
-              "uppercase tracking-wide",
-              l === current ? "text-ink" : "text-ink-soft hover:text-ink",
-            )}
-          >
-            {LOCALE_LABELS[l]}
-          </Link>
-        </li>
-      ))}
-    </ul>
   );
 }

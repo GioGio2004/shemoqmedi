@@ -1,41 +1,39 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 import { NAV_ITEMS } from "./Navbar";
-import { LocaleLinks } from "./ui";
 
-export async function Footer({ locale }: { locale: string }) {
-  const t = await getTranslations("footer");
-  const nav = await getTranslations("nav");
-
+export function Footer() {
   return (
     <footer className="border-t border-line">
       <div className="container-site grid gap-10 py-14 md:grid-cols-12">
-        <p className="max-w-sm text-ink-soft md:col-span-6">{t("tagline")}</p>
+        <p className="max-w-sm text-ink-soft md:col-span-6">
+          shemoqmedi is a space for creators: a showcase of the web&apos;s finest
+          work, judged by the people who build it.
+        </p>
 
-        <nav aria-label={t("explore")} className="md:col-span-3">
-          <p className="label mb-4">{t("explore")}</p>
+        <nav aria-label="Explore" className="md:col-span-3">
+          <p className="label mb-4">Explore</p>
           <ul className="flex flex-col gap-2 text-sm">
             {NAV_ITEMS.map((item) => (
-              <li key={item.key}>
+              <li key={item.href}>
                 <Link href={item.href} className="hover:underline">
-                  {nav(item.key)}
+                  {item.label}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
 
-        <nav aria-label={t("account")} className="md:col-span-3">
-          <p className="label mb-4">{t("account")}</p>
+        <nav aria-label="Account" className="md:col-span-3">
+          <p className="label mb-4">Account</p>
           <ul className="flex flex-col gap-2 text-sm">
             <li>
-              <Link href={`/${locale}/sign-up`} className="hover:underline">
-                {nav("submit")}
+              <Link href="/sign-up" className="hover:underline">
+                Submit work
               </Link>
             </li>
             <li>
-              <Link href={`/${locale}/sign-in`} className="hover:underline">
-                {nav("login")}
+              <Link href="/sign-in" className="hover:underline">
+                Log in
               </Link>
             </li>
           </ul>
@@ -53,9 +51,8 @@ export async function Footer({ locale }: { locale: string }) {
       </div>
 
       <div className="border-t border-line">
-        <div className="container-site flex flex-col gap-4 py-6 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} shemoqmedi.space · {t("rights")}</p>
-          <LocaleLinks current={locale} />
+        <div className="container-site py-6 text-xs text-ink-soft">
+          <p>© {new Date().getFullYear()} shemoqmedi.space · All rights reserved</p>
         </div>
       </div>
     </footer>

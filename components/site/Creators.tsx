@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 import { CREATORS } from "@/lib/showcase";
 import { SectionHeader } from "./ui";
 
-export async function Creators({ locale }: { locale: string }) {
-  const t = await getTranslations("creators");
-
+export function Creators() {
   return (
     <section aria-labelledby="creators" className="container-site scroll-mt-20 py-24">
-      <SectionHeader id="creators" label={t("label")} title={t("title")} />
+      <SectionHeader id="creators" label="Community" title="Creators to follow" />
       <ul className="mt-10">
         {CREATORS.map((creator, i) => (
           <li
@@ -23,16 +20,16 @@ export async function Creators({ locale }: { locale: string }) {
               {creator.city}
             </span>
             <span className="hidden text-sm tabular-nums md:block">
-              {t("awards", { count: creator.awards })}
+              {creator.awards} {creator.awards === 1 ? "award" : "awards"}
             </span>
             <span className="hidden text-sm tabular-nums text-ink-soft md:block">
-              {t("followers", { count: creator.followers })}
+              {creator.followers} followers
             </span>
             <Link
-              href={`/${locale}/sign-up`}
+              href="/sign-up"
               className="row-span-2 rounded-full border border-line px-4 py-1.5 text-sm hover:bg-beige md:row-span-1"
             >
-              {t("follow")}
+              Follow
             </Link>
           </li>
         ))}

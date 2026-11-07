@@ -5,16 +5,10 @@ import { cn } from "@/lib/utils";
  * Wordmark. Gold is reserved for the logo and used nowhere else.
  * Placeholder typography until the real mark is designed.
  */
-export function Logo({
-  locale,
-  className,
-}: {
-  locale: string;
-  className?: string;
-}) {
+export function Logo({ className }: { className?: string }) {
   return (
     <Link
-      href={`/${locale}`}
+      href="/"
       aria-label="shemoqmedi, home"
       className={cn(
         "text-xl font-semibold tracking-[-0.04em] text-gold lowercase",

@@ -12,6 +12,25 @@ export const CRITERIA_WEIGHTS: Record<Criterion, number> = {
   content: 15,
 };
 
+export const CRITERIA: Record<Criterion, { name: string; description: string }> = {
+  design: {
+    name: "Design",
+    description: "Layout, typography, colour and visual consistency.",
+  },
+  craft: {
+    name: "Craft",
+    description: "Speed, accessibility and the quality of the build.",
+  },
+  originality: {
+    name: "Originality",
+    description: "A clear idea that we haven't seen a hundred times.",
+  },
+  content: {
+    name: "Content",
+    description: "Writing, imagery and how well it serves the visitor.",
+  },
+};
+
 export type Scores = Record<Criterion, number>;
 
 export type Project = {
