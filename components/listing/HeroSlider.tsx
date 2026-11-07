@@ -35,7 +35,7 @@ function nearby(centre: number, n: number) {
 }
 
 /**
- * Home header: one full-screen card per listing, in an endless loop.
+ * Home header: one full-width 16:9 card per listing, in an endless loop.
  *
  * Motion: between slides every card pulls back (scales down, corners
  * round), glides sideways and pushes in again. Screenshots themselves stay
@@ -355,7 +355,7 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
       aria-label="Featured websites"
       // `isolate` keeps the cards' z-index (up to 200) inside this section, so
       // they can never paint over the fixed header (z-50) or its menu.
-      className="relative isolate flex w-full flex-col overflow-hidden bg-white px-3 pt-[84px] pb-3 md:h-[100svh] md:min-h-[600px] md:px-4 md:pt-[92px] md:pb-4"
+      className="relative isolate w-full overflow-hidden bg-white px-3 pt-[84px] pb-3 md:px-4 md:pt-[92px] md:pb-4"
       onKeyDown={(e) => {
         if (!interactive) return;
         if (e.key === "ArrowRight") by(1);
@@ -364,13 +364,20 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
     >
       <div
         ref={viewportRef}
-        className="relative aspect-video w-full touch-pan-y select-none pointer-fine:cursor-none pointer-fine:[&_a]:cursor-none md:aspect-auto md:flex-1"
+        className="relative w-full touch-pan-y select-none pointer-fine:cursor-none pointer-fine:[&_a]:cursor-none"
         onPointerEnter={onPointerEnter}
         onPointerLeave={onPointerLeave}
         onPointerMove={(e) => trackCursor(e)}
         onPointerDown={onPointerDown}
         onWheel={onWheel}
       >
+        {/* Sizes the slider: full width, height from the 16:9 screenshot
+            (plus the card frame), so a screenshot is never cropped to fit
+            the window. On short screens the hero is simply taller than the
+            window. Same padding as the cards so the inner box is exactly 16:9. */}
+        <div aria-hidden="true" className="p-1.5 md:p-2">
+          <div className="aspect-video" />
+        </div>
         {ring.map((card, i) => {
           const isActive = i === active;
           const ratio = ratios[card.listing.slug];
@@ -413,7 +420,9 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
                         draggable={false}
                         sizes="100vw"
                         priority={i === 0}
-                        className="object-cover object-top"
+                        // Never crop: a non-16:9 shot is shown whole (contain);
+                        // a full-page shot fills the width and scrolls through.
+                        className={tall ? "object-cover object-top" : "object-contain"}
                         onLoad={(e) => {
                           const img = e.currentTarget;
                           const slug = card.listing.slug;
