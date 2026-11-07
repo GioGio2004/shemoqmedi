@@ -9,16 +9,19 @@ import { ArrowIcon } from "@/components/site/ui";
 
 const INTERVAL_MS = 6000;
 
-/** Frosted glass surface: translucent white, heavy blur, hairline white edge. No shadow. */
+/** See-through stroke around the card (and the controls) on the white page. No shadow. */
+const frame =
+  "border border-black/[0.07] bg-black/[0.035] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)]";
+
+/** Frosted glass over the screenshot: translucent white, heavy blur. No shadow. */
 const glass =
   "border border-white/60 bg-white/35 backdrop-blur-2xl backdrop-saturate-150 [-webkit-backdrop-filter:blur(40px)_saturate(1.5)]";
 
 /**
- * Home header: each listing's 16:9 screenshot (1920×1080) sits in a glass
- * card over a blurred, enlarged copy of itself, so the page takes its colour
- * from the site on show. The whole card links to the listing page. Speed:
- * only slides already shown, plus the next one, are mounted; the backdrop is
- * a tiny image blown up and blurred.
+ * Home header: on the white page, each listing's 16:9 screenshot (1920×1080)
+ * sits in a card with a see-through glass stroke. The whole card links to the
+ * listing page. Speed: only slides already shown, plus the next one, are
+ * mounted.
  */
 export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   const slides = listings.filter((l) => l.coverUrl);
@@ -64,15 +67,12 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   if (count === 0) return null;
   const current = slides[index];
 
-  const fade = (i: number) =>
-    cn("transition-opacity duration-[900ms] ease-out", i === index ? "opacity-100" : "opacity-0");
-
   return (
     <section
       ref={region}
       aria-roledescription="carousel"
       aria-label="Featured websites"
-      className="relative isolate flex w-full md:min-h-[620px] flex-col items-center justify-center overflow-hidden px-4 pt-24 pb-10 md:h-[100svh] md:px-6 md:pt-[104px]"
+      className="relative flex w-full bg-white md:min-h-[620px] flex-col items-center justify-center overflow-hidden px-4 pt-24 pb-10 md:h-[100svh] md:px-6 md:pt-[104px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -84,31 +84,13 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
         if (e.key === "ArrowLeft") go(index - 1);
       }}
     >
-      {/* Backdrop: the current screenshot, tiny, enlarged and blurred. */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-white">
-        {slides.map((slide, i) =>
-          mounted.has(i) ? (
-            <Image
-              key={slide.slug}
-              src={slide.coverUrl!}
-              alt=""
-              fill
-              sizes="96px"
-              className={cn("scale-125 object-cover blur-3xl saturate-150", fade(i))}
-            />
-          ) : null,
-        )}
-        <div className="absolute inset-0 bg-white/45" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-white" />
-      </div>
-
-      {/* The card: glass frame around a 16:9 screenshot; the whole card is the link. */}
+      {/* The card: glass stroke around a 16:9 screenshot; the whole card is the link. */}
       <Link
         href={`/sites/${current.slug}`}
         aria-label={`${current.title}, by ${current.creditName}. Open the listing`}
         className={cn(
           "group relative block w-[min(100%,1280px,calc((100svh-15rem)*16/9))] min-w-[min(100%,560px)] rounded-[28px] p-2 md:rounded-[36px] md:p-3",
-          glass,
+          frame,
         )}
       >
         <div className="relative aspect-video overflow-hidden rounded-[20px] bg-white/40 md:rounded-[26px]">
@@ -150,7 +132,7 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
       </Link>
 
       {count > 1 && (
-        <div className={cn("mt-5 flex items-center gap-2 rounded-full p-1.5", glass)}>
+        <div className={cn("mt-5 flex items-center gap-2 rounded-full p-1.5", frame)}>
           <button
             type="button"
             onClick={() => go(index - 1)}
