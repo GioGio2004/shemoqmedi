@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { PublicListing } from "@/convex-helpers-api";
 import { PageHero } from "@/components/listing/PageHero";
 import { AwardBadge, TierBadge } from "@/components/listing/Badges";
 import { Countdown } from "@/components/listing/Countdown";
 import { InViewVideo } from "@/components/listing/InViewVideo";
+import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ScreenshotGallery } from "@/components/listing/ScreenshotGallery";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
-import { getListing, withRef } from "@/lib/listings";
+import { getListing, getPublicSlugs, withRef } from "@/lib/listings";
+import { resolveListingSlug } from "@/lib/slugRedirect";
 import { categoryName, regionName, technologySlug } from "@/lib/collections";
-import { formatDate, hostOf } from "@/lib/format";
-
-const BASE_URL = (process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space").replace(/\/+$/, "");
+import { formatDate, formatScore, hostOf } from "@/lib/format";
+import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+import { AWARDS } from "@/lib/taxonomy";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -21,8 +24,143 @@ const BASE_URL = (process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space")
 export const dynamic = "force-static";
 export const revalidate = 60;
 
-export function generateStaticParams() {
-  return [];
+// Every public listing is prerendered at build, so the first visit after a
+// deploy (often Googlebot's) is a cache hit. New listings still render on
+// demand (dynamicParams stays true).
+export async function generateStaticParams() {
+  const slugs = await getPublicSlugs();
+  return slugs.map(({ slug }) => ({ slug }));
+}
+
+// ── SEO copy ────────────────────────────────────────────────────────────────
+
+const TITLE_MAX = 60; // before the layout's " | Shemoqmedi"
+const DESCRIPTION_MAX = 160;
+const listFormat = new Intl.ListFormat("en", { type: "conjunction" });
+const list = (items: string[]) => listFormat.format(items);
+
+/** The listing's awards, best first (SOTD, BSC, HM). */
+function rankedAwards(listing: PublicListing) {
+  return AWARDS.filter((a) => listing.awards.includes(a.slug));
+}
+
+/** Category for running text: "architecture", "AI", "SaaS"; null for "other". */
+function categoryPhrase(slug: string) {
+  if (slug === "other") return null;
+  const name = categoryName(slug);
+  return /^(AI|SaaS)$/.test(name) ? name : name.toLowerCase();
+}
+
+/**
+ * Search title, aiming at "<brand> website" and design queries:
+ * "Kencho Group: Architecture Website by Giorgi Khvichia", or with an award
+ * "FLOEMA Website by Bürocratik: Site of the Day". The first variant that
+ * fits in TITLE_MAX wins; the H1 stays the plain listing title.
+ */
+function listingTitle(listing: PublicListing) {
+  const title = listing.title.trim();
+  const credit = listing.creditName.trim();
+  const named = credit.toLowerCase() !== title.toLowerCase(); // a portfolio named after its maker
+  const site = listing.category === "other" ? null : `${categoryName(listing.category)} Website`;
+  const award = rankedAwards(listing)[0]?.name;
+  const options = [
+    award && named && `${title} Website by ${credit}: ${award}`,
+    award && named && `${title} by ${credit}: ${award}`,
+    award && `${title} Website: ${award}`,
+    site && named && `${title}: ${site} by ${credit}`,
+    site && `${title}: ${site}`,
+    named && `${title} Website by ${credit}`,
+    named && `${title} by ${credit}`,
+    `${title} Website`,
+  ].filter((t): t is string => !!t);
+  return options.find((t) => t.length <= TITLE_MAX) ?? title;
+}
+
+/** "Text" → "Text." (leaves . ! ? … and a closing quote or bracket alone). */
+function asSentence(text: string) {
+  const s = text.trim().replace(/\s+/g, " ");
+  return !s || /[.!?…]["'”’)\]]?$/.test(s) ? s : `${s}.`;
+}
+
+/** As many whole leading sentences of `text` as fit in `max` ("" if not even one). */
+function leadingSentences(text: string, max: number) {
+  let out = "";
+  for (const sentence of text.split(/(?<=[.!?…]["'”’)\]]?)\s+/)) {
+    const next = out ? `${out} ${sentence}` : sentence;
+    if (next.length > max) break;
+    out = next;
+  }
+  return out;
+}
+
+/** Cut at a word boundary so the result, with its "…", fits in `max`. */
+function clip(text: string, max: number) {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const atWord = cut.replace(/\s+\S*$/, "") || cut;
+  return `${atWord.replace(/[\s,;:.!?–—-]+$/, "")}…`;
+}
+
+/**
+ * Meta description (~150-160 chars): the jury note (or the tagline), then
+ * what it is ("Architecture website by Giorgi Khvichia, built with Next.js,
+ * GSAP, and Motion."), then the award or score. A long lead is trimmed to
+ * whole sentences; if none fits, the facts come first and the lead is cut.
+ */
+function listingDescription(listing: PublicListing) {
+  const lead = asSentence(listing.juryNote?.trim() || listing.tagline);
+  const what = listing.category === "other" ? "Website" : `${categoryName(listing.category)} website`;
+  const stack = listing.technologies.length
+    ? `, built with ${list(listing.technologies.slice(0, 3))}`
+    : "";
+  const facts = `${what} by ${listing.creditName.trim()}${stack}.`;
+  const awards = rankedAwards(listing).map((a) => a.name);
+  const verdict = awards.length
+    ? `Awarded ${list(awards)} on ${SITE_NAME}.`
+    : listing.finalScore !== null
+      ? `Scored ${formatScore(listing.finalScore)}/10 on ${SITE_NAME}.`
+      : "";
+
+  const join = (...parts: string[]) => parts.filter(Boolean).join(" ");
+  // The lead trimmed to whole sentences that leave room for `tail` ("" if none fits).
+  const fit = (tail: string) => leadingSentences(lead, DESCRIPTION_MAX - tail.length - 1);
+  const led = (head: string, ...tail: string[]) => (head ? join(head, ...tail) : "");
+  const candidates = [
+    join(lead, facts, verdict),
+    led(fit(join(facts, verdict)), facts, verdict),
+    join(lead, facts),
+    led(fit(facts), facts),
+  ];
+  return (
+    candidates.find((text) => text && text.length <= DESCRIPTION_MAX) ??
+    clip(join(facts, verdict, lead), DESCRIPTION_MAX)
+  );
+}
+
+/**
+ * Social card from the cover: ImageKit crops it to a 1200x630 JPG from the top.
+ * No cover: the site's default card (this page's openGraph replaces the root's,
+ * so app/opengraph-image.tsx would not apply on its own).
+ */
+function socialImage(listing: PublicListing) {
+  const src = listing.coverUrl;
+  if (!src) {
+    return { url: "/opengraph-image", width: 1200, height: 630, alt: "Shemoqmedi: the web's finest websites" };
+  }
+  const alt = `${listing.title} website by ${listing.creditName}`;
+  if (!isImageKit(src)) return { url: src, alt }; // older Convex file: real size unknown
+  const url = new URL(src);
+  url.searchParams.set("tr", "w-1200,h-630,fo-top,f-jpg,q-80");
+  return { url: url.toString(), width: 1200, height: 630, alt };
+}
+
+/**
+ * The walkthrough poster resized and cached (same path as MediaImage: Next's
+ * optimiser, or ImageKit with NEXT_PUBLIC_IMAGE_CDN=imagekit), never the
+ * full-size original. 1920 is in images.deviceSizes.
+ */
+function posterUrl(src: string) {
+  return optimizedImageUrl(src, 1920);
 }
 
 export async function generateMetadata({
@@ -33,19 +171,31 @@ export async function generateMetadata({
   const { slug } = await params;
   const listing = await getListing(slug);
   if (!listing) return { title: "Site not found", robots: { index: false } };
-  const title = `${listing.title} by ${listing.creditName}`;
+
+  const title = listingTitle(listing);
+  const description = listingDescription(listing);
+  const url = absoluteUrl(`/sites/${listing.slug}`);
+  const image = socialImage(listing);
   return {
     title,
-    description: listing.tagline,
-    alternates: { canonical: `/sites/${slug}` },
+    description,
+    alternates: { canonical: url },
     openGraph: {
       type: "article",
+      siteName: SITE_NAME,
+      locale: "en_US",
       title,
-      description: listing.tagline,
-      url: `/sites/${slug}`,
-      images: listing.coverUrl ? [{ url: listing.coverUrl, width: 1600, height: 1000 }] : [],
+      description,
+      url,
+      publishedTime: new Date(listing.publishedAt).toISOString(),
+      images: [image],
     },
-    twitter: { card: "summary_large_image" },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -55,49 +205,63 @@ const pill =
   "inline-flex h-6 items-center rounded-full border border-black/15 px-2.5 text-[10px] font-medium tracking-[0.08em] text-black uppercase";
 const monoPill = `${pill} font-mono tabular-nums`;
 
-function buildJsonLd(listing: PublicListing) {
-  const pageUrl = `${BASE_URL}/sites/${listing.slug}`;
+/**
+ * WebPage + CreativeWork + BreadcrumbList. No rating markup: Google shows
+ * review stars only for specific types (not CreativeWork), and the final
+ * score is jury-weighted, not an average of user ratings.
+ */
+function buildJsonLd(listing: PublicListing, meta: { title: string; description: string }) {
+  const pageUrl = absoluteUrl(`/sites/${listing.slug}`);
   const category = categoryName(listing.category);
-  const rated = listing.communityVotesCount > 0 && listing.finalScore !== null;
+  const published = new Date(listing.publishedAt).toISOString();
+  const images = [listing.coverUrl, ...listing.galleryUrls].filter((src): src is string => !!src);
+  const awards = rankedAwards(listing);
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "WebPage",
+        "@id": pageUrl,
+        url: pageUrl,
+        name: meta.title,
+        description: meta.description,
+        inLanguage: "en",
+        isPartOf: { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: SITE_NAME, url: `${SITE_URL}/` },
+        primaryImageOfPage: listing.coverUrl ?? undefined,
+        datePublished: published,
+        breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
+        mainEntity: { "@id": `${pageUrl}#work` },
+      },
+      {
         "@type": "CreativeWork",
+        "@id": `${pageUrl}#work`,
         name: listing.title,
         description: listing.tagline,
         url: listing.url,
-        image: listing.coverUrl ?? undefined,
+        image: images.length > 0 ? images : undefined,
         genre: category,
-        keywords: listing.technologies.join(", "),
-        datePublished: new Date(listing.publishedAt).toISOString(),
+        keywords: listing.technologies.length > 0 ? listing.technologies.join(", ") : undefined,
+        datePublished: published,
         creator: {
           "@type": listing.creatorTier === "solo" ? "Person" : "Organization",
+          // Same @id as the creator profile's main entity.
+          ...(listing.creator ? { "@id": `${absoluteUrl(`/creators/${listing.creator.slug}`)}#creator` } : {}),
           name: listing.creditName,
           url: listing.creditUrl ?? undefined,
         },
-        mainEntityOfPage: pageUrl,
-        ...(rated
-          ? {
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: Number(listing.finalScore!.toFixed(2)),
-                bestRating: 10,
-                worstRating: 1,
-                ratingCount: listing.communityVotesCount,
-              },
-            }
-          : {}),
+        ...(awards.length > 0 ? { award: awards.map((a) => `${SITE_NAME} ${a.name}`) } : {}),
+        mainEntityOfPage: { "@id": pageUrl },
       },
       {
         "@type": "BreadcrumbList",
+        "@id": `${pageUrl}#breadcrumb`,
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Websites", item: `${BASE_URL}/` },
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
           {
             "@type": "ListItem",
             position: 2,
             name: category,
-            item: `${BASE_URL}/collections/${listing.category}`,
+            item: absoluteUrl(`/collections/${listing.category}`),
           },
           { "@type": "ListItem", position: 3, name: listing.title, item: pageUrl },
         ],
@@ -117,11 +281,19 @@ function closedLabel(listing: PublicListing) {
 export default async function SitePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const listing = await getListing(slug);
-  if (!listing) notFound();
+  if (!listing) {
+    // Renamed in the admin: send the old URL (and its ranking) to the new one.
+    const current = await resolveListingSlug(slug);
+    if (current) permanentRedirect(`/sites/${current}`);
+    notFound();
+  }
 
   const liveUrl = withRef(listing.url);
   const inVoting = listing.status === "in_voting";
-  const jsonLd = buildJsonLd(listing);
+  const jsonLd = buildJsonLd(listing, {
+    title: listingTitle(listing),
+    description: listingDescription(listing),
+  });
 
   return (
     <>
@@ -147,7 +319,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         <ul className="flex flex-wrap items-center gap-2">
           {listing.awards.map((award) => (
             <li key={award}>
-              <AwardBadge award={award} full />
+              <Link href={`/collections/${award.toLowerCase()}`} className="group inline-flex">
+                <AwardBadge award={award} full className="transition-colors group-hover:bg-black/80" />
+              </Link>
             </li>
           ))}
           <li>
@@ -173,9 +347,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         {/* Click any screenshot to see it whole in a popup (no new tab). */}
         <ScreenshotGallery
           title={listing.title}
-          shots={[listing.coverUrl, ...listing.galleryUrls]
-            .filter((src): src is string => !!src)
-            .map((src, i) => ({ src, alt: `${listing.title} screenshot ${i + 1}` }))}
+          credit={listing.creditName}
+          category={categoryPhrase(listing.category)}
+          srcs={[listing.coverUrl, ...listing.galleryUrls].filter((src): src is string => !!src)}
         />
 
         {listing.videoUrl && (
@@ -184,7 +358,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
             <InViewVideo
               toggle
               toggleLabel="walkthrough"
-              poster={listing.coverUrl ?? undefined}
+              poster={listing.coverUrl ? posterUrl(listing.coverUrl) : undefined}
               src={listing.videoUrl}
               aria-label={`${listing.title} walkthrough`}
               className="aspect-video w-full rounded-3xl border border-black/8 bg-white object-cover"
@@ -193,6 +367,16 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           </figure>
         )}
       </section>
+
+      {/* Jury note: the owner's own short review */}
+      {listing.juryNote?.trim() && (
+        <section aria-labelledby="jury-note-title" className="container-site mt-12">
+          <h2 id="jury-note-title" className="eyebrow">
+            Jury note
+          </h2>
+          <p className="mt-3 max-w-2xl text-lg leading-relaxed tracking-[-0.01em]">{listing.juryNote}</p>
+        </section>
+      )}
 
       {/* Details */}
       <section aria-label="Details" className="container-site mt-12">
@@ -308,6 +492,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           ← All websites
         </Link>
       </section>
+
+      {/* Up to 3 neighbouring listings: same category, then shared stack, then newest */}
+      <RelatedListings listing={listing} />
     </>
   );
 }

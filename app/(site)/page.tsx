@@ -21,11 +21,20 @@ import { LiveVotingRail } from "@/components/listing/LiveVotingRail";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
 import { getPublicListings } from "@/lib/listings";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
-const BASE_URL = (process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space").replace(/\/+$/, "");
-
+// Title and description are the root defaults (app/layout.tsx), which Next
+// also copies into og:title and og:description. This openGraph replaces the
+// root one, so it repeats the shared fields and the default share image.
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
+    url: "/",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Shemoqmedi: the web's finest websites" }],
+  },
 };
 
 // Static HTML from the CDN, refreshed in the background at most once a
@@ -38,21 +47,40 @@ export default async function Home() {
   const listings = await getPublicListings();
 
   const listed = listings.slice(0, 20);
+  // Organization gives Google the logo; WebSite gives it the site name (the
+  // domain used to carry another product). No SearchAction: there is no
+  // search page. Add sameAs to the Organization once social profiles exist.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "WebSite", name: "Shemoqmedi", url: `${BASE_URL}/` },
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: SITE_NAME,
+        url: `${SITE_URL}/`,
+        logo: { "@type": "ImageObject", url: absoluteUrl("/brand/crow.png"), width: 179, height: 200 },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: SITE_NAME,
+        alternateName: ["shemoqmedi.space"],
+        url: `${SITE_URL}/`,
+        inLanguage: "en",
+        publisher: { "@id": `${SITE_URL}/#organization` },
+      },
       ...(listed.length > 0
         ? [
             {
               "@type": "ItemList",
+              "@id": `${SITE_URL}/#latest`,
               name: "Websites",
               numberOfItems: listed.length,
               itemListElement: listed.map((listing, i) => ({
                 "@type": "ListItem",
                 position: i + 1,
                 name: listing.title,
-                url: `${BASE_URL}/sites/${listing.slug}`,
+                url: absoluteUrl(`/sites/${listing.slug}`),
               })),
             },
           ]
@@ -71,7 +99,7 @@ export default async function Home() {
         afterHero={listings.some((l) => l.coverUrl)}
         prelude="the web's finest"
         title="Websites"
-        lede="Sites worth seeing, scored by a jury and the community. The best get awarded."
+        lede="Web design inspiration: sites worth seeing, scored by a jury and the community. The best get awarded."
         meta={`${listings.length} ${listings.length === 1 ? "website" : "websites"}`}
         action={<PillLink href="/submit">Submit your site</PillLink>}
       />

@@ -9,6 +9,15 @@ type Shot = { src: string; alt: string };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * Descriptive alt text for image search: "Kencho Group website, main
+ * screenshot (architecture web design by Giorgi Khvichia)".
+ */
+function shotAlt(i: number, count: number, title: string, credit: string, category: string | null) {
+  const which = i === 0 ? "main screenshot" : `screenshot ${i + 1} of ${count}`;
+  return `${title} website, ${which} (${category ? `${category} ` : ""}web design by ${credit})`;
+}
+
 /** Lock the page behind the popup while it is open. */
 function lockPage(locked: boolean) {
   document.documentElement.style.overflow = locked ? "hidden" : "";
@@ -20,9 +29,28 @@ function lockPage(locked: boolean) {
  * <dialog>, so focus, Esc and the top layer come for free) instead of a new
  * tab. The popup shows the whole screenshot: a 16:9 one fits the screen, a
  * full-page one spans the width and scrolls. Arrows / ← → step through,
- * Esc / Close / a click on the white space closes.
+ * Esc / Close / a click on the white space closes. The cover is the page's
+ * LCP image, so it is preloaded with high fetch priority.
  */
-export function ScreenshotGallery({ title, shots }: { title: string; shots: Shot[] }) {
+export function ScreenshotGallery({
+  title,
+  credit,
+  category,
+  srcs,
+}: {
+  /** Listing title ("Kencho Group"). */
+  title: string;
+  /** Who made it ("Giorgi Khvichia"). */
+  credit: string;
+  /** Category for running text ("architecture", "AI"), or null for none. */
+  category: string | null;
+  /** Cover first, then the gallery, in order. */
+  srcs: string[];
+}) {
+  const shots: Shot[] = srcs.map((src, i) => ({
+    src,
+    alt: shotAlt(i, srcs.length, title, credit, category),
+  }));
   const dialogRef = useRef<HTMLDialogElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState<number | null>(null);
@@ -64,14 +92,15 @@ export function ScreenshotGallery({ title, shots }: { title: string; shots: Shot
       <button
         type="button"
         onClick={() => open(0)}
-        aria-label={`View ${cover.alt}`}
+        aria-label={`View ${title} screenshot 1 of ${count} full size`}
         className="relative block aspect-video w-full cursor-zoom-in overflow-hidden rounded-3xl border border-black/8"
       >
         <Image
           src={cover.src}
           alt={cover.alt}
           fill
-          priority
+          preload
+          fetchPriority="high"
           sizes="(max-width: 1024px) 100vw, 1100px"
           className="object-cover object-top"
         />
@@ -84,7 +113,7 @@ export function ScreenshotGallery({ title, shots }: { title: string; shots: Shot
               <button
                 type="button"
                 onClick={() => open(i + 1)}
-                aria-label={`View ${shot.alt}`}
+                aria-label={`View ${title} screenshot ${i + 2} of ${count} full size`}
                 className="relative block aspect-video w-full cursor-zoom-in overflow-hidden rounded-3xl border border-black/8"
               >
                 <Image

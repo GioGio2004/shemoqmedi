@@ -29,6 +29,8 @@ function frames(listings: PublicListing[]): Frame[] {
 /**
  * The two headline sites side by side: latest Site of the Day (left) and
  * latest Best Solo Creation (right). Server component, zero client JS of its own.
+ * Below the fold (under the slider and the page heading), so its images load
+ * lazily and leave the bandwidth to the slider's first slide.
  */
 export function HeroShowcase({ listings }: { listings: PublicListing[] }) {
   const items = frames(listings);
@@ -67,7 +69,6 @@ function HeroFrame({
               src={listing.coverUrl}
               alt={`${listing.title} website screenshot`}
               fill
-              priority
               sizes={wide ? "(max-width: 1440px) 100vw, 1392px" : "(max-width: 1024px) 100vw, 50vw"}
               className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.015]"
             />

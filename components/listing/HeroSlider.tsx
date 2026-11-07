@@ -44,7 +44,10 @@ function nearby(centre: number, n: number) {
  * Drag or flick it (mouse, touch, trackpad), use the arrows or keys, or let
  * it play. GSAP drives one number (the position) and every frame writes
  * transforms directly, so React re-renders only when the centre card
- * changes. Only the centre card and its two neighbours load an image.
+ * changes. First paint loads only the first slide's image, at high fetch
+ * priority (it is the page's LCP). Its two neighbours follow once it has
+ * loaded, or on the first drag, arrow or key press; after that the centre
+ * card and its two neighbours are kept loaded.
  */
 export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   const slides = useMemo(() => listings.filter((l) => l.coverUrl), [listings]);
@@ -84,9 +87,11 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   const reduced = useRef(false);
   const wheelLock = useRef(0);
   const cursor = useRef<{ x: (v: number) => void; y: (v: number) => void } | null>(null);
+  const warmed = useRef(false);
 
   const [active, setActive] = useState(0);
-  const [loaded, setLoaded] = useState<Set<number>>(() => nearby(0, n || 1));
+  // Ring indexes whose image is rendered. Only the first slide at first paint.
+  const [loaded, setLoaded] = useState<Set<number>>(() => new Set([0]));
   // Height ÷ width of each screenshot (by slug) once loaded.
   const [ratios, setRatios] = useState<Record<string, number>>({});
 
@@ -123,6 +128,25 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
     [n],
   );
 
+  /** Load the centre card's neighbours, once: after the first image, or on the first interaction. */
+  const warm = useCallback(() => {
+    if (warmed.current || n < 2) return;
+    warmed.current = true;
+    setLoaded((prev) => {
+      const add = [...nearby(activeRef.current, n)].filter((k) => !prev.has(k));
+      return add.length ? new Set([...prev, ...add]) : prev;
+    });
+  }, [n]);
+
+  // Fallback for a first image that fails to load: warm up on window load.
+  // (After a client-side navigation the page is already loaded; the first
+  // image's onLoad or an interaction does it.)
+  useEffect(() => {
+    if (document.readyState === "complete") return;
+    window.addEventListener("load", warm, { once: true });
+    return () => window.removeEventListener("load", warm);
+  }, [warm]);
+
   /** Restart the autoplay clock for the centre card (progress line back to 0). */
   const rearm = useCallback(() => {
     auto.current?.kill();
@@ -154,7 +178,13 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
     [n, render, rearm],
   );
 
-  const by = useCallback((delta: number) => goTo(Math.round(pos.current.p) + delta), [goTo]);
+  const by = useCallback(
+    (delta: number) => {
+      warm();
+      goTo(Math.round(pos.current.p) + delta);
+    },
+    [goTo, warm],
+  );
 
   useEffect(() => {
     advance.current = () => by(1);
@@ -282,6 +312,7 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!interactive || (e.pointerType === "mouse" && e.button !== 0)) return;
+    warm();
     tween.current?.kill();
     auto.current?.pause();
     moved.current = false;
@@ -419,11 +450,20 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
                         fill
                         draggable={false}
                         sizes="100vw"
-                        priority={i === 0}
+                        // The LCP image: preloaded from the <head> and fetched
+                        // ahead of everything else. (`priority` is deprecated
+                        // in Next 16 and adds no fetch priority.)
+                        preload={i === 0}
+                        fetchPriority={i === 0 ? "high" : undefined}
+                        // Other cards mount only once wanted (`loaded`), so they
+                        // fetch at once: lazy loading would wait until the card
+                        // slides into the clipped viewport, i.e. too late.
+                        loading={i === 0 ? undefined : "eager"}
                         // Never crop: a non-16:9 shot is shown whole (contain);
                         // a full-page shot fills the width and scrolls through.
                         className={tall ? "object-cover object-top" : "object-contain"}
                         onLoad={(e) => {
+                          if (i === 0) warm();
                           const img = e.currentTarget;
                           const slug = card.listing.slug;
                           if (!img.naturalWidth) return;

@@ -1,41 +1,83 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { PublicCreator, PublicListing } from "@/convex-helpers-api";
 import { PageHero } from "@/components/listing/PageHero";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { TierBadge } from "@/components/listing/Badges";
 import { PillLink } from "@/components/site/ui";
 import { regionName } from "@/lib/collections";
 import { hostOf } from "@/lib/format";
-import { getCreator } from "@/lib/listings";
+import { isImageKit } from "@/lib/imageLoader";
+import { getCreator, getCreators } from "@/lib/listings";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
-const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
-
-// Rendered on first visit, then cached and refreshed at most once a minute.
-// Convex reads are POST requests, which Next treats as uncacheable; force-static
-// keeps the page static (ISR) and revalidate refreshes it in the background.
+// Pre-rendered at build for every known creator, then refreshed at most once
+// a minute; a new creator renders on first visit. Convex reads are POST
+// requests, which Next treats as uncacheable; force-static keeps the page
+// static (ISR) and revalidate refreshes it in the background.
 export const dynamic = "force-static";
 export const revalidate = 60;
 
 type Params = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  return (await getCreators()).map(({ slug }) => ({ slug }));
+}
+
+/** "A", "A and B", "A, B and 3 more" (a repeated title is named once). */
+function nameWorks(titles: string[]) {
+  const unique = [...new Set(titles)];
+  if (unique.length <= 2) return unique.join(" and ");
+  return `${unique.slice(0, 2).join(", ")} and ${unique.length - 2} more`;
+}
+
+/** Snippet for a creator without a bio: who they are and what they made. */
+function fallbackDescription(creator: PublicCreator, listings: PublicListing[]) {
+  const who = `${creator.name}, ${creator.tier === "solo" ? "solo developer" : "design agency"}${
+    creator.location ? ` in ${creator.location}` : ""
+  }`;
+  if (listings.length === 0) return `${who}. Websites, jury and community scores and awards on ${SITE_NAME}.`;
+  return `Websites by ${who}: ${nameWorks(listings.map((l) => l.title))}. Scored by a jury and the community on ${SITE_NAME}.`;
+}
+
+/**
+ * Share image from a listing screenshot. ImageKit crops it to a 1200x630 JPG
+ * from the top (JPG for the crawlers that skip WebP); an older Convex file
+ * is used as it is, with no size declared since it is unknown.
+ */
+function coverOgImage(src: string, alt: string) {
+  if (!isImageKit(src)) return { url: src, alt };
+  const u = new URL(src);
+  u.searchParams.set("tr", "w-1200,h-630,fo-top,f-jpg,q-80");
+  return { url: u.toString(), width: 1200, height: 630, alt };
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const data = await getCreator(slug);
   if (!data) return { title: "Creator not found", robots: { index: false } };
-  const { creator } = data;
+  const { creator, listings } = data;
   const title = `${creator.name}: websites and awards`;
-  const description =
-    creator.bio ??
-    `Websites by ${creator.name}, ${creator.tier === "solo" ? "solo developer" : "agency"}, reviewed and scored on shemoqmedi.`;
+  const description = creator.bio ?? fallbackDescription(creator, listings);
+  const cover = listings.find((l) => l.coverUrl);
   return {
     title,
     description,
     alternates: { canonical: `/creators/${creator.slug}` },
-    openGraph: { type: "profile", title, description, url: `/creators/${creator.slug}` },
+    // Replaces the root openGraph, so the shared fields are repeated here.
+    openGraph: {
+      type: "profile",
+      siteName: SITE_NAME,
+      locale: "en_US",
+      url: `/creators/${creator.slug}`,
+      title,
+      description,
+      images: [
+        cover
+          ? coverOgImage(cover.coverUrl!, `${cover.title} website by ${creator.name}`)
+          : { url: "/opengraph-image", width: 1200, height: 630, alt: "Shemoqmedi: the web's finest websites" },
+      ],
+    },
   };
 }
 
@@ -59,16 +101,47 @@ export default async function CreatorPage({ params }: Params) {
   const { creator, listings } = data;
   const website = safeWebsite(creator.website);
 
-  const url = `${BASE_URL}/creators/${creator.slug}`;
+  // ProfilePage about one Person (solo) or Organization (agency). The
+  // creator's @id is the one listing pages use for their creator, so both
+  // describe one entity; each work's @id is the listing page's CreativeWork.
+  const url = absoluteUrl(`/creators/${creator.slug}`);
+  const creatorId = `${url}#creator`;
+  const solo = creator.tier === "solo";
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": creator.tier === "solo" ? "Person" : "Organization",
-    "@id": url,
-    name: creator.name,
-    url: website ?? url,
-    mainEntityOfPage: url,
-    description: creator.bio ?? undefined,
-    sameAs: website ? [website] : undefined,
+    "@graph": [
+      {
+        "@type": "ProfilePage",
+        "@id": url,
+        url,
+        name: `${creator.name}: websites and awards`,
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+        mainEntity: { "@id": creatorId },
+      },
+      {
+        "@type": solo ? "Person" : "Organization",
+        "@id": creatorId,
+        name: creator.name,
+        url: website ?? url,
+        description: creator.bio ?? undefined,
+        sameAs: website ? [website] : undefined,
+        ...(creator.location
+          ? { [solo ? "homeLocation" : "location"]: { "@type": "Place", name: creator.location } }
+          : {}),
+      },
+      ...listings.map((listing) => {
+        const page = absoluteUrl(`/sites/${listing.slug}`);
+        return {
+          "@type": "CreativeWork",
+          "@id": `${page}#work`,
+          name: listing.title,
+          url: listing.url,
+          mainEntityOfPage: { "@id": page },
+          image: listing.coverUrl ?? undefined,
+          creator: { "@id": creatorId },
+        };
+      }),
+    ],
   };
 
   const counters = [

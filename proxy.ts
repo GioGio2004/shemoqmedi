@@ -22,10 +22,20 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
+  // Clerk runs only where a session matters: the (auth) route group, which is
+  // the only place ClerkProvider is mounted, and API routes. Public pages
+  // (/, /sites, /creators, /collections, /badges, sitemap, robots) never use
+  // auth, so they skip the proxy: cached HTML is served straight away and
+  // returning signed-in visitors (and crawlers) never get a handshake redirect.
+  // "/x/:path*" also matches "/x" itself.
   matcher: [
-    // Skip Next.js internals and static assets, including sitemap.xml and robots.txt
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|xml|txt)).*)",
-    // Always run for API routes so Clerk can handle auth when needed
+    "/account/:path*",
+    "/submit/:path*",
+    "/vote/:path*",
+    "/claim/:path*",
+    "/sign-in/:path*",
+    "/sign-up/:path*",
+    "/sso-callback/:path*",
     "/(api|trpc)(.*)",
   ],
 };

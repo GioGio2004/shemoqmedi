@@ -3,10 +3,15 @@ import { notFound } from "next/navigation";
 import { PageHero } from "@/components/listing/PageHero";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { PillLink, Tag } from "@/components/site/ui";
-import { allCollections, getCollection, type Collection } from "@/lib/collections";
+import {
+  allCollections,
+  collectionDescription,
+  getCollection,
+  MIN_INDEXABLE,
+  type Collection,
+} from "@/lib/collections";
 import { getPublicListings } from "@/lib/listings";
-
-const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
+import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
 // keeps the page static (ISR) and revalidate refreshes it in the background.
@@ -24,20 +29,35 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { tag } = await params;
   const collection = getCollection(tag);
   if (!collection) return {};
+  // getPublicListings is cache()d, so the page below reuses this read.
+  const hits = (await getPublicListings()).filter(collection.match);
+  const description = collectionDescription(collection, hits);
   const url = `/collections/${collection.tag}`;
   return {
     title: { absolute: collection.title },
-    description: collection.description,
+    description,
     alternates: { canonical: url },
-    openGraph: { title: collection.title, description: collection.description, url },
+    // Replaces the root openGraph, so the shared fields and image are repeated.
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      locale: "en_US",
+      url,
+      title: collection.title,
+      description,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Shemoqmedi: the web's finest websites" }],
+    },
+    // Thin pages stay reachable and pass their links on, but are not indexed
+    // until they fill up (they are left out of the sitemap too).
+    ...(hits.length < MIN_INDEXABLE ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
 const PRELUDE: Record<Collection["kind"], string> = {
-  category: "the best of",
-  technology: "built with",
-  region: "the best of",
-  award: "winners of",
+  category: "the best",
+  technology: "the best",
+  region: "the best",
+  award: "all the",
   status: "voting now",
 };
 
@@ -46,16 +66,28 @@ function group(kind: Collection["kind"]) {
   return kind === "status" ? "award" : kind;
 }
 
+/**
+ * Smaller type for longer headings, so they wrap in two or three lines. The
+ * leading is restated because tailwind-merge drops PageHero's with its size.
+ */
+function headingSize(heading: string) {
+  if (heading.length <= 10) return undefined;
+  if (heading.length <= 18) return "text-[clamp(3rem,9vw,9rem)] leading-[0.88]";
+  return "text-[clamp(2.25rem,7vw,7rem)] leading-[0.9]";
+}
+
 export default async function CollectionPage({ params }: Params) {
   const { tag } = await params;
   const collection = getCollection(tag);
   if (!collection) notFound();
 
-  const listings = (await getPublicListings()).filter(collection.match);
+  const all = await getPublicListings();
+  const listings = all.filter(collection.match);
+  // Only link siblings that have something to show.
   const related = allCollections().filter(
-    (c) => c.tag !== collection.tag && group(c.kind) === group(collection.kind),
+    (c) => c.tag !== collection.tag && group(c.kind) === group(collection.kind) && all.some(c.match),
   );
-  const url = `${BASE_URL}/collections/${collection.tag}`;
+  const url = absoluteUrl(`/collections/${collection.tag}`);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -64,7 +96,7 @@ export default async function CollectionPage({ params }: Params) {
         "@type": "CollectionPage",
         "@id": url,
         name: collection.title,
-        description: collection.description,
+        description: collectionDescription(collection, listings),
         url,
         mainEntity: {
           "@type": "ItemList",
@@ -72,7 +104,7 @@ export default async function CollectionPage({ params }: Params) {
           itemListElement: listings.map((l, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            url: `${BASE_URL}/sites/${l.slug}`,
+            url: absoluteUrl(`/sites/${l.slug}`),
             name: l.title,
           })),
         },
@@ -80,7 +112,7 @@ export default async function CollectionPage({ params }: Params) {
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: `${BASE_URL}/` },
+          { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
           { "@type": "ListItem", position: 2, name: collection.name, item: url },
         ],
       },
@@ -95,8 +127,9 @@ export default async function CollectionPage({ params }: Params) {
       />
       <PageHero
         prelude={PRELUDE[collection.kind]}
-        title={collection.name}
-        titleClassName={collection.name.length > 10 ? "text-[clamp(3rem,9vw,9rem)]" : undefined}
+        title={collection.heading}
+        titleClassName={headingSize(collection.heading)}
+        lede={collection.intro}
         meta={`${listings.length} ${listings.length === 1 ? "website" : "websites"}`}
         action={
           <PillLink href="/submit" variant="outline">
@@ -117,7 +150,7 @@ export default async function CollectionPage({ params }: Params) {
         </nav>
       )}
 
-      <section aria-label={`${collection.name} websites`} className="container-site pb-24">
+      <section aria-label={collection.heading} className="container-site pb-24">
         <ListingGrid listings={listings} />
       </section>
     </>

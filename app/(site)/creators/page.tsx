@@ -5,17 +5,31 @@ import { TierBadge } from "@/components/listing/Badges";
 import { PillLink } from "@/components/site/ui";
 import { regionName } from "@/lib/collections";
 import { getCreators } from "@/lib/listings";
+import { SITE_NAME } from "@/lib/site";
 
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
 // keeps the page static (ISR) and revalidate refreshes it in the background.
 export const dynamic = "force-static";
 export const revalidate = 60;
 
+const title = "Creators: Web Developers & Design Agencies";
+const description =
+  "The solo developers and agencies behind the best websites on Shemoqmedi, with their nominations and awards.";
+
+// openGraph replaces the root one, so it repeats the shared fields and image.
 export const metadata: Metadata = {
-  title: "Creators",
-  description: "The solo developers and agencies behind the websites listed on shemoqmedi.",
+  title,
+  description,
   alternates: { canonical: "/creators" },
-  openGraph: { title: "Creators", url: "/creators" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
+    url: "/creators",
+    title,
+    description,
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Shemoqmedi: the web's finest websites" }],
+  },
 };
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;

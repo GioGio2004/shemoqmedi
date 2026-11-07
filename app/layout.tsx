@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -11,20 +12,26 @@ const inter = Inter({
   display: "swap",
 });
 
-// Canonical host: Vercel redirects apex → www, so www is the origin that
-// serves 200s. Keep NEXT_PUBLIC_URL=https://www.shemoqmedi.space in Vercel.
-const baseUrl = process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space";
-
-const title = "Shemoqmedi: the web's finest websites";
+// Canonical host: lib/site.ts (www; Vercel redirects the apex there).
+// The defaults below are the home page's: it sets no title of its own.
+const title = "Shemoqmedi: Website Awards & Web Design Inspiration";
 const description =
-  "A curated showcase of the best websites on the web, submitted by the people who built them.";
+  "The best websites, scored by a jury and the community. Web design inspiration and website awards: Site of the Day, Best Solo Creation, Honorable Mention.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
-  title: { default: title, template: "%s | Shemoqmedi" },
+  metadataBase: new URL(SITE_URL),
+  title: { default: title, template: `%s | ${SITE_NAME}` },
   description,
-  applicationName: "Shemoqmedi",
-  openGraph: { type: "website", locale: "en", siteName: "Shemoqmedi", title, description },
+  applicationName: SITE_NAME,
+  // Defaults for pages that set no openGraph: Next fills og:title and
+  // og:description from the page's own title and description, and the image
+  // comes from app/opengraph-image.tsx. No url, title or description here:
+  // they would label every such page as the home page. A page that sets
+  // openGraph replaces this whole object (Next merges metadata one key deep),
+  // so it must repeat siteName, locale, type and images itself.
+  openGraph: { type: "website", locale: "en_US", siteName: SITE_NAME },
+  // Title, description and image are copied from each page's openGraph.
+  twitter: { card: "summary_large_image" },
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon-16x16.png",

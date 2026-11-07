@@ -1,38 +1,65 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
+import { getCollectionCounts } from "@/lib/listings";
 
-const COLUMNS = [
-  {
-    title: "Explore",
-    links: [
-      { label: "Directory", href: "/" },
-      { label: "Live voting", href: "/collections/nominees" },
-      { label: "Creators", href: "/creators" },
-      { label: "Badges", href: "/badges" },
-    ],
-  },
-  {
-    title: "Collections",
-    links: [
-      { label: "Site of the Day", href: "/collections/sotd" },
-      { label: "Best Solo Creation", href: "/collections/bsc" },
-      { label: "Georgia", href: "/collections/georgia" },
-      { label: "Next.js", href: "/collections/nextjs" },
-      { label: "WebGL", href: "/collections/webgl" },
-      { label: "Portfolio", href: "/collections/portfolio" },
-      { label: "E-Commerce", href: "/collections/e-commerce" },
-    ],
-  },
-  {
-    title: "Account",
-    links: [
-      { label: "Submit a site", href: "/submit" },
-      { label: "Your sites", href: "/account" },
-      { label: "Log in", href: "/sign-in" },
-    ],
-  },
-] as const;
+type FooterLink = { label: string; href: string };
 
-export function Footer() {
+const EXPLORE: FooterLink[] = [
+  { label: "Directory", href: "/" },
+  { label: "Live voting", href: "/collections/nominees" },
+  { label: "Creators", href: "/creators" },
+  { label: "Badges", href: "/badges" },
+];
+
+/** Collections in the order we'd like to feature them; empty ones are skipped. */
+const COLLECTIONS: { tag: string; label: string }[] = [
+  { tag: "sotd", label: "Site of the Day" },
+  { tag: "bsc", label: "Best Solo Creation" },
+  { tag: "georgia", label: "Georgia" },
+  { tag: "nextjs", label: "Next.js" },
+  { tag: "webgl", label: "WebGL" },
+  { tag: "portfolio", label: "Portfolio" },
+  { tag: "e-commerce", label: "E-Commerce" },
+  { tag: "gsap", label: "GSAP" },
+  { tag: "agency", label: "Agency" },
+  { tag: "threejs", label: "Three.js" },
+];
+const MAX_COLLECTION_LINKS = 7;
+const toLink = (c: { tag: string; label: string }): FooterLink => ({
+  label: c.label,
+  href: `/collections/${c.tag}`,
+});
+
+const ACCOUNT: FooterLink[] = [
+  { label: "Submit a site", href: "/submit" },
+  { label: "Your sites", href: "/account" },
+  { label: "Log in", href: "/sign-in" },
+];
+
+/** Featured collections that have at least one listing. */
+async function collectionLinks(): Promise<FooterLink[]> {
+  try {
+    const counts = await getCollectionCounts();
+    return COLLECTIONS.filter((c) => (counts[c.tag] ?? 0) > 0)
+      .slice(0, MAX_COLLECTION_LINKS)
+      .map(toLink);
+  } catch (error) {
+    unstable_rethrow(error);
+    // Counts unknown (Convex unreachable): the footer is not worth failing a
+    // page over, so show the first few featured links unfiltered.
+    console.error("Footer collection counts failed:", error);
+    return COLLECTIONS.slice(0, MAX_COLLECTION_LINKS).map(toLink);
+  }
+}
+
+export async function Footer() {
+  const collections = await collectionLinks();
+  const columns = [
+    { title: "Explore", links: EXPLORE },
+    { title: "Collections", links: collections },
+    { title: "Account", links: ACCOUNT },
+  ].filter((col) => col.links.length > 0);
+
   return (
     <footer className="mt-32 border-t border-black/10">
       <div className="container-site grid gap-12 py-16 md:grid-cols-12">
@@ -49,7 +76,7 @@ export function Footer() {
         </div>
 
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 md:col-span-7">
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>
               <p className="eyebrow mb-4">{col.title}</p>
               <ul className="grid gap-2 text-sm">

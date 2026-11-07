@@ -1,17 +1,19 @@
 import type { MetadataRoute } from "next";
+import { absoluteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
-  // Must match the serving host (www); see the canonical-host note in app/layout.tsx.
-  const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
-
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/account", "/submit", "/sign-in", "/sign-up", "/vote/", "/claim/"],
+        // Only the API is blocked. The auth pages (/sign-in, /sign-up) carry
+        // noindex and the signed-in routes (/account, /submit, /vote, /claim)
+        // redirect to them; Google can only honour a noindex it may fetch, and
+        // a blocked URL linked sitewide can still be indexed URL-only.
+        disallow: ["/api/"],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: absoluteUrl("/sitemap.xml"),
   };
 }

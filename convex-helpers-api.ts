@@ -42,6 +42,7 @@ export type PublicListing = {
   coverUrl: string | null; // first screenshot: 16:9, or a full page that scrolls
   galleryUrls: string[]; // up to 4 more screenshots, in order
   videoUrl: string | null; // short muted hover preview
+  juryNote: string | null; // owner-written review (up to ~600 chars), shown on the listing page
 };
 
 /** One of the signed-in user's own listings. */
@@ -133,6 +134,8 @@ export type PublicApiType = {
     /** All public listings (max 200), newest first. */
     listPublic: Q<Empty, PublicListing[]>;
     getPublicBySlug: Q<{ slug: string }, PublicListing | null>;
+    /** Current slug of the public listing that used to have `slug` (renamed in the admin), or null. */
+    resolveSlug: Q<{ slug: string }, string | null>;
     publicSlugs: Q<Empty, { slug: string; updatedAt: number }[]>;
     generateUploadUrl: M<Empty, string>;
     submit: M<SubmitArgs, { slug: string }>;
