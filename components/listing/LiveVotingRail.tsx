@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { PublicListing } from "@/convex-helpers-api";
 import { ArrowIcon } from "@/components/site/ui";
+import { DragRail } from "./DragRail";
 import { ListingCard } from "./ListingCard";
 
 /**
  * Sites in their 7-day voting window, closing soonest first, as a horizontal
- * scroll-snap rail. Hidden when nothing is in voting.
+ * rail you can drag with the mouse or step through with the arrow buttons.
+ * Hidden when nothing is in voting.
  */
 export function LiveVotingRail({ listings }: { listings: PublicListing[] }) {
   const nominees = listings
@@ -35,13 +37,19 @@ export function LiveVotingRail({ listings }: { listings: PublicListing[] }) {
           </Link>
         </div>
 
-        <ul className="-mx-6 mt-10 flex snap-x snap-mandatory scroll-px-6 gap-6 overflow-x-auto px-6 pb-4 md:mt-12 md:gap-8">
-          {nominees.map((listing) => (
-            <li key={listing.slug} className="w-[80vw] shrink-0 snap-start md:w-[45%] lg:w-[32%]">
-              <ListingCard listing={listing} showCountdown />
-            </li>
-          ))}
-        </ul>
+        <div className="-mx-6 mt-10 md:mt-12">
+          <DragRail
+            label="Nominees this week"
+            controlsClassName="px-6"
+            className="flex snap-x snap-mandatory scroll-px-6 gap-6 overflow-x-auto px-6 pb-4 md:gap-8"
+          >
+            {nominees.map((listing) => (
+              <li key={listing.slug} className="w-[80vw] shrink-0 snap-start md:w-[45%] lg:w-[32%]">
+                <ListingCard listing={listing} showCountdown />
+              </li>
+            ))}
+          </DragRail>
+        </div>
       </div>
     </section>
   );
