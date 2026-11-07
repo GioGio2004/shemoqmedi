@@ -447,7 +447,7 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
           )}
           aria-live="polite"
         >
-          <span className="font-mono text-[10px] tracking-[0.08em] text-black/55 tabular-nums">
+          <span className="font-mono text-[11px] tracking-[0.08em] text-black tabular-nums">
             {pad(number)}/{pad(count)}
           </span>
           {interactive && (

@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Authenticated, AuthLoading, Unauthenticated, useMutation, useQuery } from "convex/react";
 import { api, type Pillars } from "@/convex-helpers-api";
-import { PILLARS } from "@/lib/taxonomy";
+import { PILLARS, type PillarKey } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
 import { ArrowIcon } from "@/components/site/ui";
 
@@ -13,6 +13,26 @@ const DEFAULT_SCORES: Pillars = { design: 7, usability: 7, creativity: 7, code: 
 
 const panel = "rounded-3xl border border-black/10 p-6 md:p-8";
 const mono = "font-mono text-[11px] tracking-[0.06em] uppercase tabular-nums";
+
+const TICKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+/** Typed score → 1–10, one decimal; null if it is not a number. */
+function cleanScore(raw: string | undefined): number | null {
+  if (raw === undefined || raw.trim() === "") return null;
+  const n = Number(raw.replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return Math.round(Math.min(10, Math.max(1, n)) * 10) / 10;
+}
+
+/** Scores with any half-typed numbers applied (so a typed value is never lost on submit). */
+function withDrafts(scores: Pillars, drafts: Partial<Record<PillarKey, string>>): Pillars {
+  const out = { ...scores };
+  for (const [key, raw] of Object.entries(drafts) as [PillarKey, string | undefined][]) {
+    const n = cleanScore(raw);
+    if (n !== null) out[key] = n;
+  }
+  return out;
+}
 
 function average(scores: Pillars) {
   return (scores.design + scores.usability + scores.creativity + scores.code) / 4;
@@ -69,6 +89,27 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
   const existing = useQuery(api.votes.mine, { slug });
   const cast = useMutation(api.votes.cast);
   const [scores, setScores] = useState<Pillars>(DEFAULT_SCORES);
+  // Text being typed in a score box, per pillar, until it is committed.
+  const [drafts, setDrafts] = useState<Partial<Record<PillarKey, string>>>({});
+
+  /** Apply a typed score (clamped to 1–10, one decimal); a non-number reverts. */
+  function commit(key: PillarKey) {
+    const raw = drafts[key];
+    if (raw === undefined) return;
+    const n = cleanScore(raw);
+    if (n !== null) setScores((s) => ({ ...s, [key]: n }));
+    dropDraft(key);
+  }
+
+  /** Forget a pillar's typed text (remove the key; never leave it undefined). */
+  function dropDraft(key: PillarKey) {
+    setDrafts((d) => {
+      if (!(key in d)) return d;
+      const next = { ...d };
+      delete next[key];
+      return next;
+    });
+  }
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -105,10 +146,13 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (status !== "idle") return;
+    const final = withDrafts(scores, drafts);
+    setScores(final);
+    setDrafts({});
     setStatus("saving");
     setError(null);
     try {
-      await cast({ slug, scores });
+      await cast({ slug, scores: final });
       setStatus("done");
     } catch (err) {
       setError(friendlyError(err));
@@ -129,9 +173,24 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
                 <label htmlFor={id} className="text-sm font-semibold tracking-[-0.01em]">
                   {p.name}
                 </label>
-                <output htmlFor={id} className={`${mono} text-sm text-black`}>
-                  {value.toFixed(1)}
-                </output>
+                {/* Type an exact score, or drag the slider below. */}
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={1}
+                  max={10}
+                  step={0.1}
+                  aria-label={`${p.name} score, 1 to 10`}
+                  value={drafts[p.key] ?? value.toFixed(1)}
+                  onChange={(e) => setDrafts((d) => ({ ...d, [p.key]: e.target.value }))}
+                  onBlur={() => commit(p.key)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    commit(p.key);
+                  }}
+                  className={`${mono} w-[4.5rem] rounded-lg border border-black/10 px-2 py-1 text-right text-sm text-black outline-none focus:border-black [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                />
               </div>
               <input
                 id={id}
@@ -140,11 +199,25 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
                 max={10}
                 step={0.1}
                 value={value}
-                onChange={(e) =>
-                  setScores((s) => ({ ...s, [p.key]: Math.round(Number(e.target.value) * 10) / 10 }))
-                }
+                onChange={(e) => {
+                  dropDraft(p.key);
+                  setScores((s) => ({ ...s, [p.key]: Math.round(Number(e.target.value) * 10) / 10 }));
+                }}
                 className="w-full cursor-pointer accent-black"
               />
+              {/* 1–10 scale marks, placed along the thumb's travel (thumb ≈ 16px wide). */}
+              <div aria-hidden="true" className="relative -mt-1 h-6">
+                {TICKS.map((n) => (
+                  <span
+                    key={n}
+                    className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-1"
+                    style={{ left: `calc(8px + (100% - 16px) * ${(n - 1) / 9})` }}
+                  >
+                    <span className="h-1.5 w-px bg-black/25" />
+                    <span className="font-mono text-[9px] leading-none text-black/55 tabular-nums">{n}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           );
         })}

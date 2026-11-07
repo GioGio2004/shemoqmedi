@@ -74,16 +74,14 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
                 />
               )}
             </div>
-            <figcaption className="text-xs font-medium">
-              by {listing.creditName} ·{" "}
-              <a
-                href={withRef(listing.url)}
-                target="_blank"
-                rel="noopener"
-                className="underline underline-offset-4"
-              >
-                {hostOf(listing.url)} ↗
-              </a>
+            {/* Judge the live build, not just this screenshot. */}
+            <figcaption className="flex flex-wrap items-center justify-between gap-4 pt-1">
+              <span className="text-xs font-medium">
+                by {listing.creditName} · {hostOf(listing.url)}
+              </span>
+              <PillLink href={withRef(listing.url)} external>
+                Visit live site
+              </PillLink>
             </figcaption>
           </figure>
           <VoteForm slug={listing.slug} title={listing.title} open={open} />

@@ -45,7 +45,9 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    // data-scroll-behavior: Next turns the smooth scrolling from globals.css off
+    // during page changes, so a new page opens at the top instead of gliding up.
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={inter.variable}>
         {children}
         <Analytics />

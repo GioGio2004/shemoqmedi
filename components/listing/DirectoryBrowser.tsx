@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PublicListing } from "@/convex-helpers-api";
 import { PillLink } from "@/components/site/ui";
 import { CATEGORIES, REGIONS, TECHNOLOGIES } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
+import { useDragScroll } from "@/lib/useDragScroll";
 import { ListingCard } from "./ListingCard";
 
 // The home directory: a sticky bar of single-select pill groups (combined with
@@ -21,7 +22,7 @@ const KEYS: Key[] = ["award", "category", "region", "tech"];
 
 const AWARD_OPTIONS: Option[] = [
   { value: "sotd", label: "SOTD" },
-  { value: "bsc", label: "BSC - Solo" },
+  { value: "bsc", label: "BSC (Solo)" },
   { value: "nominees", label: "Nominees" },
 ];
 
@@ -93,6 +94,9 @@ export function DirectoryBrowser({ listings }: { listings: PublicListing[] }) {
   }, [listings]);
 
   const [filters, setFilters] = useState<Filters>(EMPTY);
+  // The pill strip is wider than the screen; let a mouse drag it sideways.
+  const strip = useRef<HTMLDivElement>(null);
+  useDragScroll(strip);
 
   // Initial selection comes from the URL after mount (not searchParams), so
   // the page can stay force-static.
@@ -135,9 +139,10 @@ export function DirectoryBrowser({ listings }: { listings: PublicListing[] }) {
       <div className="sticky top-20 z-30 mt-10 border-y border-black/10 bg-white/90 backdrop-blur md:top-[88px] md:mt-12">
         <div className="container-site flex items-center gap-4 py-3">
           <div
+            ref={strip}
             role="group"
             aria-label="Filter websites"
-            className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] pointer-fine:cursor-grab [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex w-max items-center gap-5">
               {groups.map(({ key, label }, i) => (

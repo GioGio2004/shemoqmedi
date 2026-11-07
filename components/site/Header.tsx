@@ -5,7 +5,7 @@ import { MenuCloser } from "./MenuCloser";
 export const MENU_ITEMS = [
   { label: "Directory", href: "/" },
   { label: "Live voting", href: "/collections/nominees" },
-  { label: "BSC — Solo", href: "/collections/bsc" },
+  { label: "BSC (Solo)", href: "/collections/bsc" },
   { label: "Creators", href: "/creators" },
   { label: "Badges", href: "/badges" },
   { label: "Submit a site", href: "/submit" },
@@ -22,8 +22,10 @@ const INLINE_ITEMS = [
 ] as const;
 
 // Fixed, transparent over the page; turns into white glass on scroll (see
-// .site-header in globals.css). The menu is a native <details>; MenuCloser is
-// the only JavaScript (it closes the menu after client-side navigation).
+// .site-header in globals.css). From lg up every link is inline, so the menu
+// gives way to an Account pill; below lg the menu is a native <details>.
+// MenuCloser is the only JavaScript (closes it on navigation, outside
+// click, Escape and link click).
 export function Header() {
   return (
     <header className="site-header fixed inset-x-0 top-0 z-50">
@@ -50,8 +52,11 @@ export function Header() {
           <PillLink href="/submit" className="hidden sm:inline-flex">
             Submit site
           </PillLink>
+          <PillLink href="/account" variant="outline" className="hidden lg:inline-flex">
+            Account
+          </PillLink>
 
-          <details className="group relative">
+          <details className="group relative lg:hidden">
             <summary className="flex min-h-[46px] cursor-pointer list-none items-center gap-4 rounded-full border border-black/12 bg-white py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] uppercase select-none hover:border-black [&::-webkit-details-marker]:hidden">
               <span className="group-open:hidden">Menu</span>
               <span className="hidden group-open:inline">Close</span>

@@ -180,9 +180,10 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
         {listing.videoUrl && (
           <figure className="mt-6">
-            {/* Plays muted on a loop once it scrolls into view; controls stay for pause/unmute. */}
+            {/* Plays muted on a loop once it scrolls into view; our own play/pause button, no browser bar. */}
             <InViewVideo
-              controls
+              toggle
+              toggleLabel="walkthrough"
               poster={listing.coverUrl ?? undefined}
               src={listing.videoUrl}
               aria-label={`${listing.title} walkthrough`}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { PublicListing } from "@/convex-helpers-api";
 import { PillLink } from "@/components/site/ui";
 import { heroPicks, withRef } from "@/lib/listings";
+import { awardName } from "@/lib/collections";
 import { AwardBadge, ScoreBadge } from "./Badges";
 
 type Frame = { label: string; listing: PublicListing };
@@ -54,6 +55,8 @@ function HeroFrame({
   wide: boolean;
 }) {
   const scoreLabel = listing.status === "in_voting" ? "Live score" : "Score";
+  // The label under the image already names the frame's award; don't say it twice.
+  const badges = listing.awards.filter((a) => !label.includes(awardName(a)));
 
   return (
     <article className="flex flex-col rounded-3xl border border-black/10 p-3 md:p-4">
@@ -71,9 +74,9 @@ function HeroFrame({
           )}
         </Link>
         {/* Outside the link so its aria-label does not hide the awards from screen readers. */}
-        {listing.awards.length > 0 && (
+        {badges.length > 0 && (
           <span className="pointer-events-none absolute top-3 left-3 flex flex-wrap gap-1.5">
-            {listing.awards.map((a) => (
+            {badges.map((a) => (
               <AwardBadge key={a} award={a} full />
             ))}
           </span>
