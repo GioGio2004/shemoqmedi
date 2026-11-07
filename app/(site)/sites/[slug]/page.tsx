@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { PublicListing } from "@/convex-helpers-api";
@@ -7,6 +6,7 @@ import { PageHero } from "@/components/listing/PageHero";
 import { AwardBadge, TierBadge } from "@/components/listing/Badges";
 import { Countdown } from "@/components/listing/Countdown";
 import { InViewVideo } from "@/components/listing/InViewVideo";
+import { ScreenshotGallery } from "@/components/listing/ScreenshotGallery";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
 import { getListing, withRef } from "@/lib/listings";
@@ -170,50 +170,13 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
       {/* Gallery */}
       <section aria-label="Screenshots" className="container-site">
-        <div>
-          {listing.coverUrl && (
-            <a
-              href={liveUrl}
-              target="_blank"
-              rel="noopener"
-              aria-label={`Open ${listing.title} in a new tab`}
-              className="relative block aspect-video overflow-hidden rounded-3xl border border-black/8"
-            >
-              <Image
-                src={listing.coverUrl}
-                alt={`${listing.title} screenshot 1`}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 1100px"
-                className="object-cover object-top"
-              />
-            </a>
-          )}
-        </div>
-
-        {listing.galleryUrls.length > 0 && (
-          <ul className="mt-6 grid gap-6 md:grid-cols-2">
-            {listing.galleryUrls.map((src, i) => (
-              <li key={src}>
-                <a
-                  href={src}
-                  target="_blank"
-                  rel="noopener"
-                  aria-label={`Open screenshot ${i + 2} of ${listing.title} full size`}
-                  className="relative block aspect-video overflow-hidden rounded-3xl border border-black/8"
-                >
-                  <Image
-                    src={src}
-                    alt={`${listing.title} screenshot ${i + 2}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 680px"
-                    className="object-cover object-top"
-                  />
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Click any screenshot to see it whole in a popup (no new tab). */}
+        <ScreenshotGallery
+          title={listing.title}
+          shots={[listing.coverUrl, ...listing.galleryUrls]
+            .filter((src): src is string => !!src)
+            .map((src, i) => ({ src, alt: `${listing.title} screenshot ${i + 1}` }))}
+        />
 
         {listing.videoUrl && (
           <figure className="mt-6">

@@ -82,6 +82,14 @@
     background: var(--black);
     color: var(--white);
   }
+  /* No visible scrollbars anywhere (page, rails, dialogs). Scrolling itself
+     still works with wheel, trackpad, touch, keyboard and drag. */
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
