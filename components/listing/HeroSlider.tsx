@@ -353,7 +353,9 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
     <section
       aria-roledescription="carousel"
       aria-label="Featured websites"
-      className="relative flex w-full flex-col overflow-hidden bg-white px-3 pt-[84px] pb-3 md:h-[100svh] md:min-h-[600px] md:px-4 md:pt-[92px] md:pb-4"
+      // `isolate` keeps the cards' z-index (up to 200) inside this section, so
+      // they can never paint over the fixed header (z-50) or its menu.
+      className="relative isolate flex w-full flex-col overflow-hidden bg-white px-3 pt-[84px] pb-3 md:h-[100svh] md:min-h-[600px] md:px-4 md:pt-[92px] md:pb-4"
       onKeyDown={(e) => {
         if (!interactive) return;
         if (e.key === "ArrowRight") by(1);
