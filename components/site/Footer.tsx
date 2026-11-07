@@ -1,22 +1,29 @@
 import Link from "next/link";
-import { NAV_ITEMS } from "./Navbar";
+import { CATEGORIES } from "@/lib/taxonomy";
 
 export function Footer() {
   return (
-    <footer className="border-t border-line">
-      <div className="container-site grid gap-10 py-14 md:grid-cols-12">
-        <p className="max-w-sm text-ink-soft md:col-span-6">
-          shemoqmedi is a space for creators: a showcase of the web&apos;s finest
-          work, judged by the people who build it.
-        </p>
+    <footer className="mt-32 border-t border-black/10">
+      <div className="container-site grid gap-12 py-16 md:grid-cols-12">
+        <div className="md:col-span-6">
+          <p className="text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.05em]">
+            Built something worth seeing?
+          </p>
+          <Link
+            href="/submit"
+            className="mt-6 inline-block text-sm font-medium underline underline-offset-[5px]"
+          >
+            Submit your site ↗
+          </Link>
+        </div>
 
-        <nav aria-label="Explore" className="md:col-span-3">
-          <p className="label mb-4">Explore</p>
-          <ul className="flex flex-col gap-2 text-sm">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="hover:underline">
-                  {item.label}
+        <nav aria-label="Categories" className="md:col-span-3">
+          <p className="eyebrow mb-4">Categories</p>
+          <ul className="grid gap-2 text-sm">
+            {CATEGORIES.map((c) => (
+              <li key={c.slug}>
+                <Link href={`/category/${c.slug}`} className="hover:underline">
+                  {c.name}
                 </Link>
               </li>
             ))}
@@ -24,36 +31,33 @@ export function Footer() {
         </nav>
 
         <nav aria-label="Account" className="md:col-span-3">
-          <p className="label mb-4">Account</p>
-          <ul className="flex flex-col gap-2 text-sm">
+          <p className="eyebrow mb-4">Account</p>
+          <ul className="grid gap-2 text-sm">
             <li>
-              <Link href="/sign-up" className="hover:underline">
-                Submit work
-              </Link>
+              <Link href="/submit" className="hover:underline">Submit a site</Link>
             </li>
             <li>
-              <Link href="/sign-in" className="hover:underline">
-                Log in
-              </Link>
+              <Link href="/account" className="hover:underline">Your sites</Link>
+            </li>
+            <li>
+              <Link href="/sign-in" className="hover:underline">Log in</Link>
             </li>
           </ul>
         </nav>
       </div>
 
-      {/* Oversized wordmark: the logo, so it is the one place gold appears. */}
       <div className="container-site overflow-hidden">
         <p
-          aria-hidden
-          className="pb-4 text-[clamp(3.5rem,15.5vw,15rem)] leading-[0.9] font-semibold tracking-[-0.07em] text-gold lowercase select-none"
+          aria-hidden="true"
+          className="text-[clamp(3rem,13.6vw,13rem)] leading-[0.82] font-bold tracking-[-0.065em] uppercase select-none"
         >
-          shemoqmedi
+          Shemoqmedi
         </p>
       </div>
 
-      <div className="border-t border-line">
-        <div className="container-site py-6 text-xs text-ink-soft">
-          <p>© {new Date().getFullYear()} shemoqmedi.space · All rights reserved</p>
-        </div>
+      <div className="container-site flex flex-col gap-2 py-8 text-xs text-black/55 sm:flex-row sm:justify-between">
+        <p>© {new Date().getFullYear()} shemoqmedi.space</p>
+        <p>The web&apos;s finest, listed by the people who build it.</p>
       </div>
     </footer>
   );

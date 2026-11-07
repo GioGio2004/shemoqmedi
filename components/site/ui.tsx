@@ -1,81 +1,118 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Small server-only building blocks shared by the landing sections.
+// Server-only building blocks in the Kencho style: uppercase pill buttons,
+// the round arrow badge, the stacked wordmark.
 
-const buttonBase =
-  "inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2";
+export function ArrowIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      fill="none"
+      className={cn("size-[18px]", className)}
+    >
+      <path
+        d="M5 15 15 5M5 5h10v10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
-export function ButtonLink({
+const pillBase =
+  "group inline-flex min-h-[46px] items-center justify-between gap-3.5 rounded-full py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] uppercase transition-[transform,background-color,color] duration-200 active:scale-[0.98]";
+
+/** Kencho's signature pill: label + round arrow badge. */
+export function PillLink({
   href,
   variant = "solid",
+  external,
   className,
   children,
 }: {
   href: string;
   variant?: "solid" | "outline";
+  external?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
-  return (
-    <Link
-      href={href}
+  const classes = cn(
+    pillBase,
+    variant === "solid"
+      ? "bg-black text-white hover:-translate-y-px"
+      : "border border-black/12 bg-white text-black hover:border-black",
+    className,
+  );
+  const badge = (
+    <span
       className={cn(
-        buttonBase,
-        variant === "solid"
-          ? "bg-beige-deep text-ink hover:bg-line"
-          : "border border-line bg-paper text-ink hover:bg-beige",
-        className,
+        "grid size-9 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+        variant === "solid" ? "bg-white text-black" : "bg-black text-white",
       )}
     >
-      {children}
+      <ArrowIcon />
+    </span>
+  );
+
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener" className={classes}>
+        <span>{children}</span>
+        {badge}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={classes}>
+      <span>{children}</span>
+      {badge}
     </Link>
   );
 }
 
-export function SectionHeader({
-  id,
-  label,
-  title,
-  action,
-}: {
-  id?: string;
-  label: string;
-  title: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-4 border-t border-line pt-6 md:flex-row md:items-end md:justify-between">
-      <div className="flex flex-col gap-3">
-        <p className="label">{label}</p>
-        <h2
-          id={id}
-          className="text-3xl font-semibold tracking-[-0.035em] md:text-5xl"
-        >
-          {title}
-        </h2>
-      </div>
-      {action}
-    </div>
-  );
-}
-
-export function ArrowLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
+/** Stacked wordmark, Kencho-style. Placeholder until the real mark exists. */
+export function Wordmark({ className }: { className?: string }) {
   return (
     <Link
-      href={href}
-      className="group inline-flex items-center gap-2 text-sm font-medium underline decoration-line underline-offset-4 hover:decoration-ink"
+      href="/"
+      aria-label="shemoqmedi, home"
+      className={cn("flex flex-col leading-none text-black", className)}
     >
-      {children}
-      <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
-        →
+      <span className="text-[18px] font-bold tracking-[-0.055em] uppercase">
+        Shemoqmedi
+      </span>
+      <span className="mt-[5px] text-[9px] font-semibold tracking-[0.27em] uppercase">
+        Space
       </span>
     </Link>
+  );
+}
+
+/** Small rounded tag, used for categories and technologies. */
+export function Tag({
+  href,
+  active,
+  children,
+}: {
+  href?: string;
+  active?: boolean;
+  children: React.ReactNode;
+}) {
+  const classes = cn(
+    "inline-flex h-8 items-center rounded-full border px-3.5 text-[11px] font-medium tracking-[0.04em] uppercase transition-colors",
+    active
+      ? "border-black bg-black text-white"
+      : "border-black/12 text-black hover:border-black",
+  );
+  return href ? (
+    <Link href={href} className={classes} aria-current={active ? "page" : undefined}>
+      {children}
+    </Link>
+  ) : (
+    <span className={classes}>{children}</span>
   );
 }

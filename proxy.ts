@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 // Pages that need a signed-in user. Everything else is public.
-const isProtectedRoute = createRouteMatcher(["/account(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/account(.*)", "/submit(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isProtectedRoute(req)) return;

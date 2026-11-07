@@ -2,11 +2,39 @@
 //
 // The Convex backend lives in the shemoqmedi-admin repo (convex/). This app
 // has no convex/ folder, so these types are declared here by hand. Keep them
-// in sync with shemoqmedi-admin/convex when you add or change functions
-// (or regenerate with `npx convex-helpers ts-api-spec` from the admin repo).
+// in sync with shemoqmedi-admin/convex/listings.ts and users.ts.
 
-import { type FunctionReference, anyApi } from "convex/server";
+import { type DefaultFunctionArgs, type FunctionReference, anyApi } from "convex/server";
 import { type GenericId as Id } from "convex/values";
+
+export type ListingStatus = "pending" | "approved" | "rejected";
+
+/** An approved listing, as the public sees it. */
+export type PublicListing = {
+  slug: string;
+  title: string;
+  tagline: string;
+  url: string;
+  category: string;
+  technologies: string[];
+  creditName: string;
+  creditUrl: string | null;
+  publishedAt: number;
+  coverUrl: string | null;
+  mobileUrl: string | null;
+};
+
+/** One of the signed-in user's own listings. */
+export type OwnListing = {
+  id: Id<"listings">;
+  slug: string;
+  title: string;
+  url: string;
+  status: ListingStatus;
+  reviewNote: string | null;
+  createdAt: number;
+  coverUrl: string | null;
+};
 
 export type ConvexUser = {
   _id: Id<"users">;
@@ -20,14 +48,38 @@ export type ConvexUser = {
   updatedAt: number;
 };
 
+type Q<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"query", "public", Args, Ret>;
+type M<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"mutation", "public", Args, Ret>;
+
 export type PublicApiType = {
   users: {
-    getCurrentUser: FunctionReference<
-      "query",
-      "public",
+    getCurrentUser: Q<Record<string, never>, ConvexUser | null>;
+  };
+  listings: {
+    listPublished: Q<{ category?: string; limit?: number }, PublicListing[]>;
+    getPublishedBySlug: Q<{ slug: string }, PublicListing | null>;
+    categoryCounts: Q<
       Record<string, never>,
-      ConvexUser | null
+      { total: number; byCategory: Record<string, number> }
     >;
+    publishedSlugs: Q<Record<string, never>, { slug: string; updatedAt: number }[]>;
+    generateUploadUrl: M<Record<string, never>, string>;
+    submit: M<
+      {
+        title: string;
+        tagline: string;
+        url: string;
+        category: string;
+        technologies: string[];
+        creditName: string;
+        creditUrl?: string;
+        coverId: Id<"_storage">;
+        mobileId?: Id<"_storage">;
+      },
+      { slug: string }
+    >;
+    myListings: Q<Record<string, never>, OwnListing[]>;
+    withdraw: M<{ id: Id<"listings"> }, null>;
   };
 };
 

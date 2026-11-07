@@ -5,7 +5,13 @@ export default function robots(): MetadataRoute.Robots {
   const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
 
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/account"] }],
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/account", "/submit", "/sign-in", "/sign-up"],
+      },
+    ],
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

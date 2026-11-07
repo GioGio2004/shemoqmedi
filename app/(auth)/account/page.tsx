@@ -1,27 +1,43 @@
 import type { Metadata } from "next";
 import { UserButton } from "@clerk/nextjs";
-import { CurrentUserCard } from "@/components/auth/CurrentUserCard";
-import { Logo } from "@/components/site/Logo";
+import { Header } from "@/components/site/Header";
+import { PageHero } from "@/components/listing/PageHero";
+import { MyListings } from "@/components/listing/MyListings";
+import { PillLink } from "@/components/site/ui";
 
-export const metadata: Metadata = { title: "Your account", robots: { index: false } };
+export const metadata: Metadata = { title: "Your sites", robots: { index: false } };
 
 // Protected by proxy.ts (requires a Clerk session).
-export default function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ submitted?: string }>;
+}) {
+  const { submitted } = await searchParams;
+
   return (
-    <div className="min-h-dvh">
-      <header className="border-b">
-        <div className="container-site flex h-16 items-center justify-between">
-          <Logo />
-          <UserButton />
+    <>
+      <Header />
+      <main id="main-content">
+        <PageHero
+          prelude="your account"
+          title="Your sites"
+          lede={
+            submitted
+              ? "Thanks, your site is in the review queue. You'll see the decision here."
+              : "Everything you've submitted, and where it stands."
+          }
+          action={
+            <div className="flex items-center gap-4">
+              <UserButton />
+              <PillLink href="/submit">Submit a site</PillLink>
+            </div>
+          }
+        />
+        <div className="container-site pb-24">
+          <MyListings />
         </div>
-      </header>
-      <main className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-12">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Your account</h1>
-          <p className="text-muted-foreground">You are registered. Submissions open soon.</p>
-        </div>
-        <CurrentUserCard />
       </main>
-    </div>
+    </>
   );
 }

@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Log in", robots: { index: false } };
 
 export default function SignInPage() {
   return (
-    <AuthShell>
+    <AuthShell prelude="welcome back" title="Log in">
       <SignIn path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/account" />
     </AuthShell>
   );

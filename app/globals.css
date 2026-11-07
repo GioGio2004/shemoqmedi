@@ -2,51 +2,40 @@
 @import "tw-animate-css";
 
 /*
- * shemoqmedi design tokens
+ * shemoqmedi design system
  * ─────────────────────────────────────────────────────────────────────────
- * White page, beige-white surfaces, black used ONLY for text.
- * Gold is reserved for the logo. No shadows, no glow, no gradients.
+ * White and black only. White is the surface; black is the logo, text,
+ * hairlines (at low opacity) and primary buttons. All colour on the page
+ * comes from the listed websites' screenshots. No shadows, no glow.
+ * Layout language follows the Kencho Group light theme.
  */
 :root {
-  --paper: #ffffff;
-  --beige: #f5f2eb;
-  --beige-deep: #ebe5d8;
-  --line: #e3ddcf;
-  --ink: #0b0b0b;
-  --ink-soft: #6b665d;
-  --gold: #a7843e;
+  --white: #ffffff;
+  --black: #000000;
 
-  /* shadcn / Clerk tokens mapped onto the palette above */
-  --radius: 0.375rem;
-  --background: var(--paper);
-  --foreground: var(--ink);
-  --card: var(--paper);
-  --card-foreground: var(--ink);
-  --popover: var(--paper);
-  --popover-foreground: var(--ink);
-  --primary: var(--beige-deep);
-  --primary-foreground: var(--ink);
-  --secondary: var(--beige);
-  --secondary-foreground: var(--ink);
-  --muted: var(--beige);
-  --muted-foreground: var(--ink-soft);
-  --accent: var(--beige);
-  --accent-foreground: var(--ink);
-  --destructive: #b42318;
-  --border: var(--line);
-  --input: var(--line);
-  --ring: var(--ink-soft);
+  /* shadcn / Clerk tokens */
+  --radius: 0.75rem;
+  --background: var(--white);
+  --foreground: var(--black);
+  --card: var(--white);
+  --card-foreground: var(--black);
+  --popover: var(--white);
+  --popover-foreground: var(--black);
+  --primary: var(--black);
+  --primary-foreground: var(--white);
+  --secondary: var(--white);
+  --secondary-foreground: var(--black);
+  --muted: var(--white);
+  --muted-foreground: rgb(0 0 0 / 0.55);
+  --accent: rgb(0 0 0 / 0.04);
+  --accent-foreground: var(--black);
+  --destructive: var(--black);
+  --border: rgb(0 0 0 / 0.1);
+  --input: rgb(0 0 0 / 0.14);
+  --ring: var(--black);
 }
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-beige: var(--beige);
-  --color-beige-deep: var(--beige-deep);
-  --color-line: var(--line);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-gold: var(--gold);
-
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -66,39 +55,86 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 6px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   html {
     -webkit-text-size-adjust: 100%;
-    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-white font-sans text-black antialiased;
+  }
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    outline: 2px solid var(--black);
+    outline-offset: 3px;
   }
   ::selection {
-    background: var(--beige-deep);
-    color: var(--ink);
+    background: var(--black);
+    color: var(--white);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
-  /* Page gutter + max width shared by every landing section. */
+  /* Page gutter + max width (matches Kencho: 1344px content, 24px minimum gutter). */
   .container-site {
-    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10;
+    @apply mx-auto w-full max-w-[1392px] px-6;
   }
+
   /* Small uppercase label voice. */
-  .label {
-    @apply font-mono text-[11px] tracking-[0.14em] uppercase text-ink-soft;
+  .eyebrow {
+    @apply text-[11px] font-medium tracking-[0.06em] uppercase text-black/55;
+  }
+
+  /*
+   * Transparent header that turns into white glass once the page scrolls.
+   * Pure CSS (scroll-driven animation), so the header ships no JavaScript.
+   */
+  .site-header {
+    background: transparent;
+    border-bottom: 1px solid transparent;
+  }
+  @supports (animation-timeline: scroll()) {
+    .site-header {
+      animation: header-solidify linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 96px;
+    }
+  }
+  @supports not (animation-timeline: scroll()) {
+    .site-header {
+      background: rgb(255 255 255 / 0.86);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
+  }
+}
+
+@keyframes header-solidify {
+  to {
+    background: rgb(255 255 255 / 0.86);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom-color: rgb(0 0 0 / 0.08);
   }
 }
