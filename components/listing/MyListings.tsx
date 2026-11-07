@@ -136,7 +136,7 @@ function List() {
             key={l.id}
             className="grid grid-cols-[96px_1fr] items-center gap-4 rounded-3xl border border-black/10 p-3 sm:grid-cols-[160px_1fr_auto] sm:gap-6 sm:p-4"
           >
-            <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-black/8">
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-black/8">
               {l.coverUrl && (
                 // eslint-disable-next-line @next/next/no-img-element -- private, not worth optimizing
                 <img

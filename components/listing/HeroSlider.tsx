@@ -4,20 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PublicListing } from "@/convex-helpers-api";
-import { categoryName } from "@/lib/collections";
-import { withRefClient } from "@/lib/ref";
 import { cn } from "@/lib/utils";
 import { ArrowIcon } from "@/components/site/ui";
-import { AwardBadge, ScoreBadge } from "./Badges";
-import { Countdown } from "./Countdown";
 
 const INTERVAL_MS = 6000;
 
+/** Frosted glass surface: translucent white, heavy blur, hairline white edge. No shadow. */
+const glass =
+  "border border-white/60 bg-white/35 backdrop-blur-2xl backdrop-saturate-150 [-webkit-backdrop-filter:blur(40px)_saturate(1.5)]";
+
 /**
- * Full-screen header slider: each listing's screenshot fills the viewport
- * under the header and crossfades to the next. A white caption card (black
- * text) names the site. Speed: only slides that have been shown, plus the
- * next one, are mounted, so the page loads one image up front.
+ * Home header: each listing's 16:9 screenshot (1920×1080) sits in a glass
+ * card over a blurred, enlarged copy of itself, so the page takes its colour
+ * from the site on show. The whole card links to the listing page. Speed:
+ * only slides already shown, plus the next one, are mounted; the backdrop is
+ * a tiny image blown up and blurred.
  */
 export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   const slides = listings.filter((l) => l.coverUrl);
@@ -63,12 +64,15 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
   if (count === 0) return null;
   const current = slides[index];
 
+  const fade = (i: number) =>
+    cn("transition-opacity duration-[900ms] ease-out", i === index ? "opacity-100" : "opacity-0");
+
   return (
     <section
       ref={region}
       aria-roledescription="carousel"
       aria-label="Featured websites"
-      className="relative h-[100svh] min-h-[560px] w-full pt-20 md:pt-[88px]"
+      className="relative isolate flex w-full md:min-h-[620px] flex-col items-center justify-center overflow-hidden px-4 pt-24 pb-10 md:h-[100svh] md:px-6 md:pt-[104px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -80,124 +84,107 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
         if (e.key === "ArrowLeft") go(index - 1);
       }}
     >
-      <div className="relative h-full w-full overflow-hidden border-y border-black/8 bg-white">
+      {/* Backdrop: the current screenshot, tiny, enlarged and blurred. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-white">
         {slides.map((slide, i) =>
           mounted.has(i) ? (
-            <div
+            <Image
               key={slide.slug}
-              role="group"
-              aria-roledescription="slide"
-              aria-label={`${i + 1} of ${count}: ${slide.title}`}
-              aria-hidden={i !== index}
-              className={cn(
-                "absolute inset-0 transition-opacity duration-[900ms] ease-out",
-                i === index ? "opacity-100" : "opacity-0",
-              )}
-            >
-              <Image
-                src={slide.coverUrl!}
-                alt={`${slide.title} website screenshot`}
-                fill
-                sizes="100vw"
-                priority={i === 0}
-                className={cn(
-                  "object-cover object-top transition-transform ease-linear motion-reduce:transition-none",
-                  i === index ? "scale-[1.04] duration-[7000ms]" : "scale-100 duration-0",
-                )}
-              />
-            </div>
+              src={slide.coverUrl!}
+              alt=""
+              fill
+              sizes="96px"
+              className={cn("scale-125 object-cover blur-3xl saturate-150", fade(i))}
+            />
           ) : null,
         )}
+        <div className="absolute inset-0 bg-white/45" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-white" />
+      </div>
 
-        {/* Caption: white card, black text. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 pb-5 md:pb-8">
-          <div className="container-site flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div
-              className="pointer-events-auto w-full max-w-md rounded-3xl border border-black/10 bg-white p-5 md:p-6"
-              aria-live={paused ? "polite" : "off"}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-mono text-[10px] tracking-[0.08em] text-black/55 uppercase tabular-nums">
-                  {String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
-                </p>
-                <div className="flex flex-wrap items-center justify-end gap-1.5">
-                  {current.awards.map((a) => (
-                    <AwardBadge key={a} award={a} />
-                  ))}
-                  {current.status === "in_voting" && <Countdown endsAt={current.votingEndsAt} />}
-                </div>
-              </div>
-              <h2 className="mt-3 line-clamp-2 text-[clamp(1.6rem,3vw,2.4rem)] leading-[1.02] font-semibold tracking-[-0.045em]">
-                <Link href={`/sites/${current.slug}`} className="hover:underline hover:underline-offset-4">
-                  {current.title}
-                </Link>
-              </h2>
-              <p className="mt-1.5 truncate text-sm text-black/55">
-                by {current.creditName} · {categoryName(current.category)}
-              </p>
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <ScoreBadge score={current.finalScore} outOf className="text-[11px]" />
-                <div className="flex items-center gap-2">
-                  <a
-                    href={withRefClient(current.url)}
-                    target="_blank"
-                    rel="noopener"
-                    className="text-xs font-medium underline underline-offset-4"
-                  >
-                    Live site ↗
-                  </a>
-                  <Link
-                    href={`/sites/${current.slug}`}
-                    className="inline-flex min-h-10 items-center gap-2.5 rounded-full bg-black py-1 pr-1 pl-4 text-[11px] font-semibold tracking-[0.05em] text-white uppercase"
-                  >
-                    View
-                    <span className="grid size-8 place-items-center rounded-full bg-white text-black">
-                      <ArrowIcon className="size-4" />
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
+      {/* The card: glass frame around a 16:9 screenshot; the whole card is the link. */}
+      <Link
+        href={`/sites/${current.slug}`}
+        aria-label={`${current.title}, by ${current.creditName}. Open the listing`}
+        className={cn(
+          "group relative block w-[min(100%,1280px,calc((100svh-15rem)*16/9))] min-w-[min(100%,560px)] rounded-[28px] p-2 md:rounded-[36px] md:p-3",
+          glass,
+        )}
+      >
+        <div className="relative aspect-video overflow-hidden rounded-[20px] bg-white/40 md:rounded-[26px]">
+          {slides.map((slide, i) =>
+            mounted.has(i) ? (
+              <Image
+                key={slide.slug}
+                src={slide.coverUrl!}
+                alt={i === index ? `${slide.title} website screenshot` : ""}
+                aria-hidden={i !== index}
+                fill
+                sizes="(min-width: 1360px) 1280px, 94vw"
+                priority={i === 0}
+                className={cn(
+                  "object-cover object-top transition-[opacity,transform] duration-[900ms] ease-out group-hover:scale-[1.015]",
+                  i === index ? "opacity-100" : "opacity-0",
+                )}
+              />
+            ) : null,
+          )}
 
-            {count > 1 && (
-              <div className="pointer-events-auto flex items-center gap-2 self-start rounded-full border border-black/10 bg-white p-1.5 md:self-auto">
-                <button
-                  type="button"
-                  onClick={() => go(index - 1)}
-                  aria-label="Previous website"
-                  className="grid size-9 place-items-center rounded-full hover:bg-black hover:text-white"
-                >
-                  <ArrowIcon className="size-4 -rotate-[135deg]" />
-                </button>
-                <div className="flex items-center gap-1 px-1" role="tablist" aria-label="Choose a website">
-                  {slides.map((slide, i) => (
-                    <button
-                      key={slide.slug}
-                      type="button"
-                      role="tab"
-                      aria-selected={i === index}
-                      aria-label={`Show ${slide.title}`}
-                      onClick={() => go(i)}
-                      className={cn(
-                        "h-1.5 rounded-full transition-all duration-300",
-                        i === index ? "w-6 bg-black" : "w-1.5 bg-black/20 hover:bg-black/50",
-                      )}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => go(index + 1)}
-                  aria-label="Next website"
-                  className="grid size-9 place-items-center rounded-full hover:bg-black hover:text-white"
-                >
-                  <ArrowIcon className="size-4 rotate-45" />
-                </button>
-              </div>
+          {/* Name tag: glass pill, bottom left. */}
+          <div
+            className={cn(
+              "absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-3 rounded-full py-1.5 pr-1.5 pl-4 md:bottom-5 md:left-5",
+              glass,
             )}
+            aria-live={paused ? "polite" : "off"}
+          >
+            <span className="min-w-0 truncate text-sm font-semibold tracking-[-0.02em] md:text-base">
+              {current.title}
+              <span className="hidden font-normal text-black/55 sm:inline"> · {current.creditName}</span>
+            </span>
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-black text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 md:size-9">
+              <ArrowIcon className="size-4" />
+            </span>
           </div>
         </div>
-      </div>
+      </Link>
+
+      {count > 1 && (
+        <div className={cn("mt-5 flex items-center gap-2 rounded-full p-1.5", glass)}>
+          <button
+            type="button"
+            onClick={() => go(index - 1)}
+            aria-label="Previous website"
+            className="grid size-9 place-items-center rounded-full transition-colors hover:bg-black hover:text-white"
+          >
+            <ArrowIcon className="size-4 -rotate-[135deg]" />
+          </button>
+          <div className="flex items-center gap-1 px-1" role="tablist" aria-label="Choose a website">
+            {slides.map((slide, i) => (
+              <button
+                key={slide.slug}
+                type="button"
+                role="tab"
+                aria-selected={i === index}
+                aria-label={`Show ${slide.title}`}
+                onClick={() => go(i)}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  i === index ? "w-6 bg-black" : "w-1.5 bg-black/25 hover:bg-black/50",
+                )}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => go(index + 1)}
+            aria-label="Next website"
+            className="grid size-9 place-items-center rounded-full transition-colors hover:bg-black hover:text-white"
+          >
+            <ArrowIcon className="size-4 rotate-45" />
+          </button>
+        </div>
+      )}
     </section>
   );
 }

@@ -546,10 +546,10 @@ export function ListingForm() {
         <MediaPicker
           id="cover"
           label="Desktop screenshot"
-          hint="16:10, e.g. 1600 × 1000. PNG, JPG or WebP, up to 5 MB."
+          hint="16:9, ideally 1920 × 1080. PNG, JPG or WebP, up to 5 MB."
           file={cover}
           onChange={setCover}
-          aspect="aspect-[16/10]"
+          aspect="aspect-video"
         />
         <MediaPicker
           id="mobile"
@@ -566,7 +566,7 @@ export function ListingForm() {
           hint="A short, silent clip that plays on hover. MP4 or WebM, up to 10 MB."
           file={video}
           onChange={setVideo}
-          aspect="aspect-[16/10]"
+          aspect="aspect-video"
         />
       </div>
 

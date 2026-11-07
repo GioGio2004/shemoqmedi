@@ -24,7 +24,7 @@ export function AuthShell({
             {title}
           </h1>
         </div>
-        <div className="justify-self-start lg:justify-self-end">{children}</div>
+        <div className="w-full max-w-[420px] justify-self-start lg:w-[420px] lg:justify-self-end">{children}</div>
       </main>
     </div>
   );

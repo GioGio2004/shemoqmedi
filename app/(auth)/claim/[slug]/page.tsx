@@ -86,7 +86,7 @@ export default async function ClaimPage({
         />
         <div className="container-site grid gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <figure className="grid content-start gap-3">
-            <div className="relative aspect-[16/10] overflow-hidden rounded-3xl border border-black/8">
+            <div className="relative aspect-video overflow-hidden rounded-3xl border border-black/8">
               {target.coverUrl && (
                 <Image
                   src={target.coverUrl}

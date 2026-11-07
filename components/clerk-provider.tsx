@@ -8,6 +8,8 @@ type ClerkProviderProps = React.ComponentProps<typeof ClerkNextJSProvider>;
 export function ClerkProvider({ children, appearance, ...props }: ClerkProviderProps) {
   return (
     <ClerkNextJSProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
       appearance={{
         theme: shadcn,
         variables: {

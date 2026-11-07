@@ -182,7 +182,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
               target="_blank"
               rel="noopener"
               aria-label={`Open ${listing.title} in a new tab`}
-              className="relative block aspect-[16/10] overflow-hidden rounded-3xl border border-black/8"
+              className="relative block aspect-video overflow-hidden rounded-3xl border border-black/8"
             >
               <Image
                 src={listing.coverUrl}
@@ -217,7 +217,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
               poster={listing.coverUrl ?? undefined}
               src={listing.videoUrl}
               aria-label={`${listing.title} walkthrough`}
-              className="aspect-[16/10] w-full rounded-3xl border border-black/8 bg-white object-cover"
+              className="aspect-video w-full rounded-3xl border border-black/8 bg-white object-cover"
             />
             <figcaption className="eyebrow mt-3">Walkthrough</figcaption>
           </figure>

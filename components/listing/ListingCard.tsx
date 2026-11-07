@@ -12,7 +12,7 @@ import { Countdown } from "./Countdown";
 import { ArrowIcon } from "@/components/site/ui";
 
 /**
- * Directory card. Static 16:10 screenshot at rest; on hover: slow zoom, the
+ * Directory card. Static 16:9 screenshot at rest; on hover: slow zoom, the
  * muted preview video (if any) fades in, and a floating "Visit site" pill.
  * The video uses preload="none", so it costs nothing until someone hovers.
  */
@@ -37,7 +37,7 @@ export function ListingCard({
 
   return (
     <article className="group relative" onMouseEnter={play} onMouseLeave={stop} onFocus={play} onBlur={stop}>
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-black/8 bg-white">
+      <div className="relative aspect-video overflow-hidden rounded-2xl border border-black/8 bg-white">
         <Link href={`/sites/${listing.slug}`} aria-label={listing.title} className="absolute inset-0 block">
           {listing.coverUrl && (
             <Image

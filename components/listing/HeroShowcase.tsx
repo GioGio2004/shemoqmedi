@@ -57,7 +57,7 @@ function HeroFrame({
 
   return (
     <article className="flex flex-col rounded-3xl border border-black/10 p-3 md:p-4">
-      <div className="group relative aspect-[16/10] overflow-hidden rounded-2xl border border-black/8 bg-white">
+      <div className="group relative aspect-video overflow-hidden rounded-2xl border border-black/8 bg-white">
         <Link href={`/sites/${listing.slug}`} aria-label={listing.title} className="absolute inset-0 block">
           {listing.coverUrl && (
             <Image
