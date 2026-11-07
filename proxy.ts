@@ -1,10 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEFAULT_LOCALE, LOCALES } from "@/lib/i18n";
 
 const intlMiddleware = createMiddleware({
-  locales: ["en", "ka", "ru"],
-  defaultLocale: "ka",
+  locales: [...LOCALES],
+  defaultLocale: DEFAULT_LOCALE,
 });
 
 // Pages that need a signed-in user. Everything else is public.

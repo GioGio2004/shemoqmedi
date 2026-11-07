@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Logo } from "@/components/site/Logo";
 
 /** Centered frame shared by the sign-in and sign-up pages. */
 export function AuthShell({
@@ -9,13 +9,8 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4 py-10">
-      <Link
-        href={`/${locale}`}
-        className="font-mono text-xs tracking-widest text-muted-foreground uppercase hover:text-foreground"
-      >
-        shemoqmedi.space
-      </Link>
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-beige px-4 py-10">
+      <Logo locale={locale} className="text-2xl" />
       {children}
     </main>
   );

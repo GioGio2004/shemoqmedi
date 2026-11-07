@@ -1,20 +1,12 @@
-import { getRequestConfig } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-
-// Define your locales here
-const locales = ['en', 'ru', 'ka'];
+import { getRequestConfig } from "next-intl/server";
+import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n";
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // Validate that the incoming `locale` parameter is valid
-  const locale = await requestLocale;
-
-  if (!locale || !locales.includes(locale)) {
-    notFound();
-  }
+  const requested = await requestLocale;
+  const locale = requested && isLocale(requested) ? requested : DEFAULT_LOCALE;
 
   return {
     locale,
-    // Fix: Path goes up one level (..) to root, then into messages
-    messages: (await import(`./messages/${locale}.json`)).default
+    messages: (await import(`./messages/${locale}.json`)).default,
   };
 });

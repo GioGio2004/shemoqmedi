@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { UserButton } from "@clerk/nextjs";
 import { CurrentUserCard } from "@/components/auth/CurrentUserCard";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Logo } from "@/components/site/Logo";
 
 export const metadata: Metadata = { robots: { index: false } };
 
@@ -18,21 +17,15 @@ export default async function AccountPage({
 
   return (
     <div className="min-h-dvh">
-      <header className="flex items-center justify-between border-b px-6 py-4">
-        <Link
-          href={`/${locale}`}
-          className="font-mono text-xs tracking-widest uppercase"
-        >
-          shemoqmedi.space
-        </Link>
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher />
+      <header className="border-b">
+        <div className="container-site flex h-16 items-center justify-between">
+          <Logo locale={locale} />
           <UserButton />
         </div>
       </header>
       <main className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-12">
         <div>
-          <h1 className="text-2xl font-semibold">{t("title")}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">{t("description")}</p>
         </div>
         <CurrentUserCard />

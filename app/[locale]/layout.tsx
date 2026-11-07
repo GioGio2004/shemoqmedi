@@ -1,24 +1,30 @@
 import type { Metadata, Viewport } from "next";
+import { notFound } from "next/navigation";
 import { Geist, Geist_Mono, Noto_Sans_Georgian } from "next/font/google";
 import Script from "next/script";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Analytics } from "@vercel/analytics/next";
 import "../globals.css";
-import { ClerkProvider } from "@/components/clerk-provider";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { LOCALES, isLocale } from "@/lib/i18n";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Only needed on /ka pages, so it is not preloaded everywhere.
 const georgian = Noto_Sans_Georgian({
   variable: "--font-ka",
   subsets: ["georgian"],
   weight: "variable",
+  preload: false,
 });
 
 // Canonical host: Vercel redirects apex → www, so www is the origin that
 // serves 200s. Keep NEXT_PUBLIC_URL=https://www.shemoqmedi.space in Vercel.
 const baseUrl = process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space";
+
+// Pre-render every locale at build time (the landing page is fully static).
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
+}
 
 export async function generateMetadata({
   params,
@@ -52,10 +58,12 @@ export async function generateMetadata({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0a0a0a",
+  themeColor: "#ffffff",
 };
 
-export default async function RootLayout({
+// No auth or data providers here: the public pages ship no client JS of
+// their own. Clerk + Convex are mounted only in the (auth) route group.
+export default async function LocaleLayout({
   children,
   params,
 }: Readonly<{
@@ -63,24 +71,21 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
-  const messages = await getMessages();
+  if (!isLocale(locale)) notFound();
+  setRequestLocale(locale);
 
   return (
-    <html lang={locale} className="dark">
+    <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${georgian.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${georgian.variable}`}
       >
-        <ClerkProvider>
-          <NextIntlClientProvider messages={messages}>
-            <ConvexClientProvider>{children}</ConvexClientProvider>
-          </NextIntlClientProvider>
-        </ClerkProvider>
+        {children}
         <Analytics />
         {/* Ahrefs Web Analytics: cookieless, no personal data */}
         <Script
           src="https://analytics.ahrefs.com/analytics.js"
           data-key="RO+0sybyEvM/+UpADUCBDA"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
       </body>
     </html>
