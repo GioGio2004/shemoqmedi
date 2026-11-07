@@ -11,6 +11,7 @@ export function PageHero({
   meta,
   action,
   titleClassName,
+  afterHero,
 }: {
   prelude: string;
   title: string;
@@ -18,9 +19,16 @@ export function PageHero({
   meta?: React.ReactNode;
   action?: React.ReactNode;
   titleClassName?: string;
+  /** Set when a full-screen hero sits above, so there's no header offset. */
+  afterHero?: boolean;
 }) {
   return (
-    <header className="container-site pt-32 pb-12 md:pt-40 md:pb-16">
+    <header
+      className={cn(
+        "container-site pb-12 md:pb-16",
+        afterHero ? "pt-16 md:pt-24" : "pt-32 md:pt-40",
+      )}
+    >
       <p className="text-[clamp(1.75rem,4vw,3.5rem)] leading-none font-medium tracking-[-0.045em] lowercase">
         {prelude}
       </p>
