@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { PublicListing } from "@/convex-helpers-api";
 import { PageHero } from "@/components/listing/PageHero";
+import { AwardBadge, TierBadge } from "@/components/listing/Badges";
+import { Countdown } from "@/components/listing/Countdown";
+import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
 import { getListing, withRef } from "@/lib/listings";
-import { categoryName } from "@/lib/taxonomy";
+import { categoryName, regionName, technologySlug } from "@/lib/collections";
+import { formatDate, hostOf } from "@/lib/format";
 
-const BASE_URL = process.env.NEXT_PUBLIC_URL ?? "https://www.shemoqmedi.space";
+const BASE_URL = (process.env.NEXT_PUBLIC_URL || "https://www.shemoqmedi.space").replace(/\/+$/, "");
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -43,20 +48,17 @@ export async function generateMetadata({
   };
 }
 
-function formatDate(ms: number) {
-  return new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric" }).format(
-    ms,
-  );
-}
+// Small outline pill matching the badge row height. Mono only for the
+// countdown slot (dates); region uses the sans face.
+const pill =
+  "inline-flex h-6 items-center rounded-full border border-black/15 px-2.5 text-[10px] font-medium tracking-[0.08em] text-black uppercase";
+const monoPill = `${pill} font-mono tabular-nums`;
 
-export default async function SitePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const listing = await getListing(slug);
-  if (!listing) notFound();
-
-  const liveUrl = withRef(listing.url);
-  const host = new URL(listing.url).host.replace(/^www\./, "");
-  const jsonLd = {
+function buildJsonLd(listing: PublicListing) {
+  const pageUrl = `${BASE_URL}/sites/${listing.slug}`;
+  const category = categoryName(listing.category);
+  const rated = listing.communityVotesCount > 0 && listing.finalScore !== null;
+  return {
     "@context": "https://schema.org",
     "@graph": [
       {
@@ -65,15 +67,26 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         description: listing.tagline,
         url: listing.url,
         image: listing.coverUrl ?? undefined,
-        genre: categoryName(listing.category),
+        genre: category,
         keywords: listing.technologies.join(", "),
         datePublished: new Date(listing.publishedAt).toISOString(),
         creator: {
-          "@type": "Organization",
+          "@type": listing.creatorTier === "solo" ? "Person" : "Organization",
           name: listing.creditName,
           url: listing.creditUrl ?? undefined,
         },
-        mainEntityOfPage: `${BASE_URL}/sites/${listing.slug}`,
+        mainEntityOfPage: pageUrl,
+        ...(rated
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: Number(listing.finalScore!.toFixed(2)),
+                bestRating: 10,
+                worstRating: 1,
+                ratingCount: listing.communityVotesCount,
+              },
+            }
+          : {}),
       },
       {
         "@type": "BreadcrumbList",
@@ -82,14 +95,32 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           {
             "@type": "ListItem",
             position: 2,
-            name: categoryName(listing.category),
-            item: `${BASE_URL}/category/${listing.category}`,
+            name: category,
+            item: `${BASE_URL}/collections/${listing.category}`,
           },
-          { "@type": "ListItem", position: 3, name: listing.title },
+          { "@type": "ListItem", position: 3, name: listing.title, item: pageUrl },
         ],
       },
     ],
   };
+}
+
+/** "Voting closed" line for listings outside their window. */
+function closedLabel(listing: PublicListing) {
+  if (listing.status === "awarded" && listing.awardedAt) {
+    return `Awarded ${formatDate(listing.awardedAt)}`;
+  }
+  return `Voting closed ${formatDate(listing.votingEndsAt)}`;
+}
+
+export default async function SitePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const listing = await getListing(slug);
+  if (!listing) notFound();
+
+  const liveUrl = withRef(listing.url);
+  const inVoting = listing.status === "in_voting";
+  const jsonLd = buildJsonLd(listing);
 
   return (
     <>
@@ -102,21 +133,55 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         title={listing.title}
         titleClassName="text-[clamp(3rem,9vw,9rem)]"
         lede={listing.tagline}
-        meta={host}
+        meta={hostOf(listing.url)}
         action={
           <PillLink href={liveUrl} external>
-            Visit site
+            Visit live site
           </PillLink>
         }
       />
 
+      {/* Facts row: awards, tier, region, voting state */}
+      <section aria-label="Status" className="container-site pb-8">
+        <ul className="flex flex-wrap items-center gap-2">
+          {listing.awards.map((award) => (
+            <li key={award}>
+              <AwardBadge award={award} full />
+            </li>
+          ))}
+          <li>
+            <TierBadge tier={listing.creatorTier} />
+          </li>
+          <li>
+            <Link href={`/collections/${listing.region}`} className={`${pill} transition-colors hover:border-black`}>
+              {regionName(listing.region)}
+            </Link>
+          </li>
+          <li>
+            {inVoting ? (
+              <Countdown endsAt={listing.votingEndsAt} />
+            ) : (
+              <span className={monoPill}>{closedLabel(listing)}</span>
+            )}
+          </li>
+        </ul>
+      </section>
+
+      {/* Gallery */}
       <section aria-label="Screenshots" className="container-site">
-        <div className={listing.mobileUrl ? "grid gap-6 lg:grid-cols-[1fr_minmax(0,300px)]" : ""}>
+        <div
+          className={
+            listing.coverUrl && listing.mobileUrl
+              ? "grid gap-6 lg:grid-cols-[1fr_minmax(0,300px)]"
+              : ""
+          }
+        >
           {listing.coverUrl && (
             <a
               href={liveUrl}
               target="_blank"
               rel="noopener"
+              aria-label={`Open ${listing.title} in a new tab`}
               className="relative block aspect-[16/10] overflow-hidden rounded-3xl border border-black/8"
             >
               <Image
@@ -141,33 +206,69 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
             </div>
           )}
         </div>
+
+        {listing.videoUrl && (
+          <figure className="mt-6">
+            <video
+              controls
+              muted
+              playsInline
+              preload="none"
+              poster={listing.coverUrl ?? undefined}
+              src={listing.videoUrl}
+              aria-label={`${listing.title} walkthrough`}
+              className="aspect-[16/10] w-full rounded-3xl border border-black/8 bg-white object-cover"
+            />
+            <figcaption className="eyebrow mt-3">Walkthrough</figcaption>
+          </figure>
+        )}
       </section>
 
+      {/* Details */}
       <section aria-label="Details" className="container-site mt-12">
         <dl className="grid gap-px overflow-hidden rounded-3xl border border-black/10 bg-black/10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-white p-6">
             <dt className="eyebrow">Category</dt>
             <dd className="mt-3">
-              <Tag href={`/category/${listing.category}`}>{categoryName(listing.category)}</Tag>
+              <Tag href={`/collections/${listing.category}`}>{categoryName(listing.category)}</Tag>
             </dd>
           </div>
           <div className="bg-white p-6">
             <dt className="eyebrow">Built with</dt>
             <dd className="mt-3 flex flex-wrap gap-2">
-              {listing.technologies.map((t) => (
-                <Tag key={t}>{t}</Tag>
-              ))}
+              {listing.technologies.length === 0 && <span className="text-sm text-black/55">—</span>}
+              {listing.technologies.map((name) => {
+                const tag = technologySlug(name);
+                return (
+                  <span key={name} className="font-mono">
+                    <Tag href={tag ? `/collections/${tag}` : undefined}>{name}</Tag>
+                  </span>
+                );
+              })}
             </dd>
           </div>
           <div className="bg-white p-6">
             <dt className="eyebrow">Made by</dt>
-            <dd className="mt-3 text-base font-semibold tracking-[-0.02em]">
-              {listing.creditUrl ? (
-                <a href={listing.creditUrl} target="_blank" rel="noopener" className="underline underline-offset-4">
-                  {listing.creditName} ↗
-                </a>
+            <dd className="mt-3 grid gap-1 text-base font-semibold tracking-[-0.02em]">
+              {listing.creator ? (
+                <Link
+                  href={`/creators/${listing.creator.slug}`}
+                  className="underline underline-offset-4"
+                >
+                  {listing.creator.name}
+                </Link>
               ) : (
-                listing.creditName
+                <span>{listing.creditName}</span>
+              )}
+              {listing.creditUrl && (
+                <a
+                  href={withRef(listing.creditUrl)}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-sm font-medium text-black/55 hover:text-black"
+                >
+                  {hostOf(listing.creditUrl)} ↗
+                </a>
               )}
             </dd>
           </div>
@@ -178,7 +279,62 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
             </dd>
           </div>
         </dl>
-        <Link href="/" className="mt-10 inline-block text-sm font-medium underline underline-offset-[5px]">
+      </section>
+
+      {/* Scores + voting */}
+      <section aria-label="Scores" className="container-site mt-12 pb-24">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+          <ScoreBreakdown listing={listing} />
+
+          <div className="grid content-start gap-6">
+            {inVoting ? (
+              <div className="rounded-3xl border border-black/10 p-6 md:p-8">
+                <p className="eyebrow">Community vote · 40%</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em]">Cast your vote</h2>
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-black/60">
+                  Score Design, Usability, Creativity and Code from 1 to 10. One vote per account.
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <PillLink href={`/vote/${listing.slug}`}>Vote on this site</PillLink>
+                  <Countdown endsAt={listing.votingEndsAt} />
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-black/10 p-6 md:p-8">
+                <p className="eyebrow">Community vote</p>
+                <p className="mt-3 text-sm leading-relaxed">
+                  Voting has closed for this site. {closedLabel(listing)}.
+                </p>
+              </div>
+            )}
+
+            {!listing.isClaimed && (
+              <div className="rounded-3xl border border-black/10 p-6 md:p-8">
+                <p className="eyebrow">Unclaimed nominee</p>
+                <p className="mt-3 text-base leading-relaxed font-medium tracking-[-0.01em]">
+                  Are you the creator of {listing.title}? Claim this project to verify your profile,
+                  add team credits, and unlock your official nominee badge.
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+                  <PillLink href={`/claim/${listing.slug}`} variant="outline">
+                    Claim this project
+                  </PillLink>
+                  <Link
+                    href={`/claim/${listing.slug}?intent=removal`}
+                    className="text-xs font-medium text-black/55 underline underline-offset-4 hover:text-black"
+                  >
+                    Request removal
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Link
+          href="/"
+          className="mt-10 inline-block text-sm font-medium underline underline-offset-[5px]"
+        >
           ← All websites
         </Link>
       </section>

@@ -1,0 +1,115 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useRef } from "react";
+import type { PublicListing } from "@/convex-helpers-api";
+import { categoryName } from "@/lib/collections";
+import { withRefClient } from "@/lib/ref";
+import { cn } from "@/lib/utils";
+import { AwardBadge, ScoreBadge } from "./Badges";
+import { Countdown } from "./Countdown";
+import { ArrowIcon } from "@/components/site/ui";
+
+/**
+ * Directory card. Static 16:10 screenshot at rest; on hover: slow zoom, the
+ * muted preview video (if any) fades in, and a floating "Visit site" pill.
+ * The video uses preload="none", so it costs nothing until someone hovers.
+ */
+export function ListingCard({
+  listing,
+  priority = false,
+  showCountdown,
+}: {
+  listing: PublicListing;
+  priority?: boolean;
+  showCountdown?: boolean;
+}) {
+  const video = useRef<HTMLVideoElement>(null);
+  const play = () => {
+    const el = video.current;
+    if (!el) return;
+    el.currentTime = 0;
+    void el.play().catch(() => {});
+  };
+  const stop = () => video.current?.pause();
+  const countdown = showCountdown ?? listing.status === "in_voting";
+
+  return (
+    <article className="group relative" onMouseEnter={play} onMouseLeave={stop} onFocus={play} onBlur={stop}>
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-black/8 bg-white">
+        <Link href={`/sites/${listing.slug}`} aria-label={listing.title} className="absolute inset-0 block">
+          {listing.coverUrl && (
+            <Image
+              src={listing.coverUrl}
+              alt={`${listing.title} website screenshot`}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              priority={priority}
+              className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+            />
+          )}
+          {listing.videoUrl && (
+            <video
+              ref={video}
+              src={listing.videoUrl}
+              muted
+              loop
+              playsInline
+              preload="none"
+              aria-hidden="true"
+              className="absolute inset-0 size-full object-cover object-top opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            />
+          )}
+        </Link>
+
+        <div className="pointer-events-none absolute top-3 left-3 flex flex-wrap gap-1.5">
+          {listing.awards.map((a) => (
+            <AwardBadge key={a} award={a} />
+          ))}
+          {countdown && <Countdown endsAt={listing.votingEndsAt} />}
+        </div>
+
+        <a
+          href={withRefClient(listing.url)}
+          target="_blank"
+          rel="noopener"
+          className={cn(
+            "absolute right-3 bottom-3 inline-flex min-h-9 items-center gap-2 rounded-full bg-black py-1 pr-1 pl-3.5 text-[10.5px] font-semibold tracking-[0.05em] text-white uppercase",
+            "translate-y-2 opacity-0 transition-[opacity,transform] duration-300 group-hover:translate-y-0 group-hover:opacity-100 focus-visible:translate-y-0 focus-visible:opacity-100",
+          )}
+        >
+          Visit site
+          <span className="grid size-7 place-items-center rounded-full bg-white text-black">
+            <ArrowIcon className="size-3.5" />
+          </span>
+        </a>
+      </div>
+
+      <div className="mt-4 flex items-baseline justify-between gap-4">
+        <h3 className="truncate text-base font-semibold tracking-[-0.02em]">
+          <Link href={`/sites/${listing.slug}`} className="hover:underline hover:underline-offset-4">
+            {listing.title}
+          </Link>
+        </h3>
+        <ScoreBadge score={listing.finalScore} className="shrink-0 text-[11px]" />
+      </div>
+      <p className="mt-1 truncate text-sm text-black/55">
+        {listing.creator ? (
+          <Link href={`/creators/${listing.creator.slug}`} className="hover:text-black">
+            {listing.creditName}
+          </Link>
+        ) : (
+          listing.creditName
+        )}
+        {" · "}
+        {categoryName(listing.category)}
+      </p>
+      {listing.technologies.length > 0 && (
+        <p className="mt-2 font-mono text-[10px] tracking-[0.08em] text-black/55 uppercase">
+          {listing.technologies.slice(0, 2).join(" · ")}
+        </p>
+      )}
+    </article>
+  );
+}

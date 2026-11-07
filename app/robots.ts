@@ -1,4 +1,4 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   // Must match the serving host (www); see the canonical-host note in app/layout.tsx.
@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/account", "/submit", "/sign-in", "/sign-up"],
+        disallow: ["/api/", "/account", "/submit", "/sign-in", "/sign-up", "/vote/", "/claim/"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

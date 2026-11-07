@@ -5,15 +5,102 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useUser } from "@clerk/nextjs";
+import { z } from "zod";
 import { api } from "@/convex-helpers-api";
 import type { GenericId as Id } from "convex/values";
-import { CATEGORIES, LIMITS, TECHNOLOGIES } from "@/lib/taxonomy";
+import {
+  CATEGORIES,
+  CREATOR_TIERS,
+  LIMITS,
+  REGIONS,
+  TECHNOLOGIES,
+  type CreatorTier,
+  type RegionSlug,
+  isCategory,
+  isTechnology,
+} from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
 
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const VIDEO_TYPES = ["video/mp4", "video/webm"];
 
 const input =
   "w-full min-h-[46px] rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none transition-colors placeholder:text-black/35 focus:border-black";
+
+// ── Client-side validation (mirrors the backend limits) ─────────────────────
+
+/** Same rules as normalizeUrl() in the backend, minus the normalizing. */
+function isPublicUrl(raw: string) {
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    const host = url.hostname.toLowerCase();
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      host.includes(".") &&
+      host !== "localhost" &&
+      !/^[\d.]+$/.test(host) &&
+      !host.includes(":")
+    );
+  } catch {
+    return false;
+  }
+}
+
+const isFile = (value: unknown): value is File =>
+  typeof File !== "undefined" && value instanceof File;
+
+function mediaFile(label: string, types: string[], maxBytes: number, typeLabel: string) {
+  return z
+    .custom<File>(isFile, `${label} is required.`)
+    .refine((f) => !isFile(f) || types.includes(f.type), `${label} must be ${typeLabel}.`)
+    .refine((f) => !isFile(f) || f.size <= maxBytes, `${label} must be ${maxBytes / 1024 / 1024} MB or less.`);
+}
+
+const schema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Site title is required.")
+    .max(LIMITS.title, `Site title must be ${LIMITS.title} characters or less.`),
+  url: z
+    .string()
+    .trim()
+    .min(1, "Website URL is required.")
+    .max(LIMITS.url, "Website URL is too long.")
+    .refine(isPublicUrl, "Website URL must be a public website address."),
+  tagline: z
+    .string()
+    .trim()
+    .min(1, "Short description is required.")
+    .max(LIMITS.tagline, `Short description must be ${LIMITS.tagline} characters or less.`),
+  category: z.string().refine(isCategory, "Choose a category."),
+  technologies: z
+    .array(z.string().refine(isTechnology, "Unknown technology selected."))
+    .min(1, "Choose at least one technology.")
+    .max(LIMITS.technologies, `Choose up to ${LIMITS.technologies} technologies.`),
+  creatorTier: z.enum(["solo", "agency"], "Tell us whether you work solo or as a team."),
+  region: z.enum(["georgia", "global"], "Choose a region."),
+  creditName: z
+    .string()
+    .trim()
+    .min(1, "Tell us who made it.")
+    .max(LIMITS.creditName, `Made by must be ${LIMITS.creditName} characters or less.`),
+  creditUrl: z
+    .string()
+    .trim()
+    .max(LIMITS.url, "Creator website is too long.")
+    .refine((v) => v === "" || isPublicUrl(v), "Creator website must be a public website address."),
+  cover: mediaFile("Desktop screenshot", IMAGE_TYPES, LIMITS.imageBytes, "a PNG, JPG or WebP image"),
+  mobile: mediaFile(
+    "Mobile screenshot",
+    IMAGE_TYPES,
+    LIMITS.imageBytes,
+    "a PNG, JPG or WebP image",
+  ).nullable(),
+  video: mediaFile("Preview video", VIDEO_TYPES, LIMITS.videoBytes, "an MP4 or WebM file").nullable(),
+});
+
+// ── Building blocks ─────────────────────────────────────────────────────────
 
 function Field({
   label,
@@ -37,20 +124,25 @@ function Field({
   );
 }
 
-function checkImage(file: File | null, label: string, required: boolean) {
-  if (!file) return required ? `${label} is required.` : null;
-  if (!IMAGE_TYPES.includes(file.type)) return `${label} must be a PNG, JPG or WebP image.`;
-  if (file.size > LIMITS.imageBytes) return `${label} must be 5 MB or less.`;
-  return null;
+function useObjectUrl(file: File | null) {
+  const url = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(
+    () => () => {
+      if (url) URL.revokeObjectURL(url);
+    },
+    [url],
+  );
+  return url;
 }
 
-function ImagePicker({
+function MediaPicker({
   id,
   label,
   hint,
   file,
   onChange,
   aspect,
+  kind = "image",
 }: {
   id: string;
   label: string;
@@ -58,21 +150,17 @@ function ImagePicker({
   file: File | null;
   onChange: (file: File | null) => void;
   aspect: string;
+  kind?: "image" | "video";
 }) {
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-  useEffect(
-    () => () => {
-      if (preview) URL.revokeObjectURL(preview);
-    },
-    [preview],
-  );
+  const preview = useObjectUrl(file);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   return (
     <Field label={label} hint={hint} htmlFor={id}>
       <label
         htmlFor={id}
         className={cn(
-          "relative flex cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-black/25 text-center transition-colors hover:border-black",
+          "relative flex cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-black/25 text-center transition-colors hover:border-black has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black",
           aspect,
         )}
         onDragOver={(e) => e.preventDefault()}
@@ -80,19 +168,40 @@ function ImagePicker({
           e.preventDefault();
           onChange(e.dataTransfer.files?.[0] ?? null);
         }}
+        onMouseEnter={() => void videoRef.current?.play().catch(() => {})}
+        onMouseLeave={() => {
+          const v = videoRef.current;
+          if (v) {
+            v.pause();
+            v.currentTime = 0;
+          }
+        }}
       >
-        {preview ? (
+        {preview && kind === "image" && (
           // eslint-disable-next-line @next/next/no-img-element -- local blob preview
           <img src={preview} alt="" className="absolute inset-0 size-full object-cover object-top" />
-        ) : (
+        )}
+        {preview && kind === "video" && (
+          <video
+            ref={videoRef}
+            src={preview}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 size-full object-cover object-top"
+          />
+        )}
+        {!preview && (
           <span className="px-6 text-sm text-black/55">
-            Drop an image here or <span className="text-black underline underline-offset-4">browse</span>
+            Drop {kind === "video" ? "a video" : "an image"} here or{" "}
+            <span className="text-black underline underline-offset-4">browse</span>
           </span>
         )}
         <input
           id={id}
           type="file"
-          accept={IMAGE_TYPES.join(",")}
+          accept={(kind === "video" ? VIDEO_TYPES : IMAGE_TYPES).join(",")}
           className="sr-only"
           onChange={(e) => onChange(e.target.files?.[0] ?? null)}
         />
@@ -103,12 +212,78 @@ function ImagePicker({
           onClick={() => onChange(null)}
           className="justify-self-start text-xs underline underline-offset-4"
         >
-          Remove image
+          Remove {kind === "video" ? "video" : "image"}
         </button>
       )}
     </Field>
   );
 }
+
+/** A large selectable card backed by a native radio input. */
+function OptionCard({
+  name,
+  value,
+  checked,
+  disabled,
+  onSelect,
+  title,
+  aside,
+  children,
+}: {
+  name: string;
+  value: string;
+  checked: boolean;
+  disabled?: boolean;
+  onSelect?: () => void;
+  title: string;
+  aside?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return (
+    <label
+      className={cn(
+        "relative grid content-start gap-2 rounded-2xl border p-5 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black",
+        checked ? "border-black" : "border-black/14",
+        disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer hover:border-black",
+      )}
+    >
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        disabled={disabled}
+        onChange={onSelect}
+        readOnly={!onSelect}
+        className="sr-only"
+      />
+      <span className="flex items-start justify-between gap-3">
+        <span className="flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "grid size-4 shrink-0 place-items-center rounded-full border",
+              checked ? "border-black" : "border-black/30",
+            )}
+          >
+            {checked && <span className="size-2 rounded-full bg-black" />}
+          </span>
+          <span className="text-base font-semibold tracking-[-0.02em]">{title}</span>
+        </span>
+        {aside}
+      </span>
+      {children && <span className="pl-7 text-sm leading-relaxed text-black/60">{children}</span>}
+    </label>
+  );
+}
+
+const pill = (on: boolean) =>
+  cn(
+    "h-9 rounded-full border px-4 text-[11px] font-medium tracking-[0.04em] uppercase transition-colors",
+    on ? "border-black bg-black text-white" : "border-black/14 hover:border-black",
+  );
+
+// ── Form ────────────────────────────────────────────────────────────────────
 
 export function ListingForm() {
   const router = useRouter();
@@ -121,11 +296,14 @@ export function ListingForm() {
   const [tagline, setTagline] = useState("");
   const [category, setCategory] = useState("");
   const [technologies, setTechnologies] = useState<string[]>([]);
+  const [creatorTier, setCreatorTier] = useState<CreatorTier | "">("");
+  const [region, setRegion] = useState<RegionSlug | "">("");
   const [creditName, setCreditName] = useState("");
   const [creditTouched, setCreditTouched] = useState(false);
   const [creditUrl, setCreditUrl] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [mobile, setMobile] = useState<File | null>(null);
+  const [video, setVideo] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">("idle");
   const busy = useRef(false);
@@ -133,13 +311,13 @@ export function ListingForm() {
   // Prefill "Made by" with the account name until the user edits it.
   const displayCredit = creditTouched ? creditName : creditName || user?.fullName || "";
 
-  const toggleTech = (tech: string) =>
+  const toggleTech = (name: string) =>
     setTechnologies((current) =>
-      current.includes(tech)
-        ? current.filter((t) => t !== tech)
+      current.includes(name)
+        ? current.filter((t) => t !== name)
         : current.length >= LIMITS.technologies
           ? current
-          : [...current, tech],
+          : [...current, name],
     );
 
   async function upload(file: File): Promise<Id<"_storage">> {
@@ -158,37 +336,49 @@ export function ListingForm() {
     e.preventDefault();
     if (busy.current) return;
 
-    const problem =
-      (!title.trim() && "Site title is required.") ||
-      (!url.trim() && "Website URL is required.") ||
-      (!tagline.trim() && "Short description is required.") ||
-      (!category && "Choose a category.") ||
-      (technologies.length === 0 && "Choose at least one technology.") ||
-      (!displayCredit.trim() && "Tell us who made it.") ||
-      checkImage(cover, "Desktop screenshot", true) ||
-      checkImage(mobile, "Mobile screenshot", false);
-    if (problem) {
-      setError(problem);
+    const parsed = schema.safeParse({
+      title,
+      url,
+      tagline,
+      category,
+      technologies,
+      creatorTier,
+      region,
+      creditName: displayCredit,
+      creditUrl,
+      cover,
+      mobile,
+      video,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Please check the form.");
       return;
     }
+    const data = parsed.data;
 
     busy.current = true;
     setError(null);
     try {
       setStatus("uploading");
-      const coverId = await upload(cover!);
-      const mobileId = mobile ? await upload(mobile) : undefined;
+      const coverId = await upload(data.cover);
+      const mobileId = data.mobile ? await upload(data.mobile) : undefined;
+      const videoId = data.video ? await upload(data.video) : undefined;
       setStatus("saving");
       await submit({
-        title,
-        url,
-        tagline,
-        category,
-        technologies,
-        creditName: displayCredit,
-        creditUrl: creditUrl.trim() || undefined,
+        title: data.title,
+        url: data.url,
+        tagline: data.tagline,
+        category: data.category,
+        technologies: data.technologies,
+        creatorTier: data.creatorTier,
+        region: data.region,
+        creditName: data.creditName,
+        creditUrl: data.creditUrl || undefined,
+        // Express Fast-Track is not open yet; the backend rejects it.
+        submissionTier: "standard",
         coverId,
         mobileId,
+        videoId,
       });
       router.push("/account?submitted=1");
     } catch (err) {
@@ -225,6 +415,7 @@ export function ListingForm() {
             inputMode="url"
             className={input}
             value={url}
+            maxLength={LIMITS.url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://paperweather.studio"
           />
@@ -254,12 +445,7 @@ export function ListingForm() {
                 type="button"
                 aria-pressed={category === c.slug}
                 onClick={() => setCategory(c.slug)}
-                className={cn(
-                  "h-9 rounded-full border px-4 text-[11px] font-medium tracking-[0.04em] uppercase transition-colors",
-                  category === c.slug
-                    ? "border-black bg-black text-white"
-                    : "border-black/14 hover:border-black",
-                )}
+                className={pill(category === c.slug)}
               >
                 {c.name}
               </button>
@@ -273,23 +459,58 @@ export function ListingForm() {
           </legend>
           <div className="flex flex-wrap gap-2">
             {TECHNOLOGIES.map((tech) => {
-              const on = technologies.includes(tech);
+              const on = technologies.includes(tech.name);
               return (
                 <button
-                  key={tech}
+                  key={tech.slug}
                   type="button"
                   aria-pressed={on}
-                  onClick={() => toggleTech(tech)}
+                  onClick={() => toggleTech(tech.name)}
                   disabled={!on && technologies.length >= LIMITS.technologies}
-                  className={cn(
-                    "h-9 rounded-full border px-4 text-[11px] font-medium tracking-[0.04em] uppercase transition-colors disabled:opacity-35",
-                    on ? "border-black bg-black text-white" : "border-black/14 hover:border-black",
-                  )}
+                  className={cn(pill(on), "disabled:opacity-35")}
                 >
-                  {tech}
+                  {tech.name}
                 </button>
               );
             })}
+          </div>
+        </fieldset>
+
+        <fieldset className="grid gap-3">
+          <legend className="eyebrow mb-1 text-black">Who made it</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {CREATOR_TIERS.map((t) => (
+              <OptionCard
+                key={t.slug}
+                name="creatorTier"
+                value={t.slug}
+                checked={creatorTier === t.slug}
+                onSelect={() => setCreatorTier(t.slug)}
+                title={t.name}
+              >
+                {t.slug === "solo"
+                  ? "One person, start to finish. Eligible for Best Solo Creation."
+                  : "A studio, agency or team of two or more."}
+              </OptionCard>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="grid gap-3">
+          <legend className="eyebrow mb-1 text-black">Region</legend>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Region">
+            {REGIONS.map((r) => (
+              <button
+                key={r.slug}
+                type="button"
+                role="radio"
+                aria-checked={region === r.slug}
+                onClick={() => setRegion(r.slug)}
+                className={pill(region === r.slug)}
+              >
+                {r.name}
+              </button>
+            ))}
           </div>
         </fieldset>
 
@@ -313,6 +534,7 @@ export function ListingForm() {
               inputMode="url"
               className={input}
               value={creditUrl}
+              maxLength={LIMITS.url}
               onChange={(e) => setCreditUrl(e.target.value)}
               placeholder="https://studio.example"
             />
@@ -321,7 +543,7 @@ export function ListingForm() {
       </div>
 
       <div className="grid content-start gap-6 lg:col-span-5">
-        <ImagePicker
+        <MediaPicker
           id="cover"
           label="Desktop screenshot"
           hint="16:10, e.g. 1600 × 1000. PNG, JPG or WebP, up to 5 MB."
@@ -329,7 +551,7 @@ export function ListingForm() {
           onChange={setCover}
           aspect="aspect-[16/10]"
         />
-        <ImagePicker
+        <MediaPicker
           id="mobile"
           label="Mobile screenshot (optional)"
           hint="Portrait, e.g. 390 × 844."
@@ -337,7 +559,53 @@ export function ListingForm() {
           onChange={setMobile}
           aspect="aspect-[9/12] max-w-[260px]"
         />
+        <MediaPicker
+          id="video"
+          kind="video"
+          label="Preview video (optional)"
+          hint="A short, silent clip that plays on hover. MP4 or WebM, up to 10 MB."
+          file={video}
+          onChange={setVideo}
+          aspect="aspect-[16/10]"
+        />
       </div>
+
+      <fieldset className="grid gap-3 lg:col-span-12">
+        <legend className="eyebrow mb-1 text-black">Submission</legend>
+        <div className="grid gap-3 md:grid-cols-2">
+          <OptionCard
+            name="submissionTier"
+            value="standard"
+            checked
+            title="Standard community queue"
+            aside={<span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">Free</span>}
+          >
+            Reviewed by hand, usually within 14–30 days. Accepted sites enter the 7-day live
+            voting window. Founding 100: the first hundred accepted creators get honorary
+            supporter status.
+          </OptionCard>
+          <OptionCard
+            name="submissionTier"
+            value="express"
+            checked={false}
+            disabled
+            title="Express Fast-Track"
+            aside={
+              <span className="flex flex-col items-end gap-1.5">
+                <span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">
+                  $25 / 65 GEL
+                </span>
+                <span className="inline-flex h-6 items-center rounded-full border border-black/15 px-2.5 font-mono text-[10px] font-medium tracking-[0.08em] uppercase">
+                  Coming soon
+                </span>
+              </span>
+            }
+          >
+            Guaranteed 48-hour review, immediate entry into the 7-day live voting window, a
+            permanent indexed page and a backlink to your site.
+          </OptionCard>
+        </div>
+      </fieldset>
 
       <div className="flex flex-col gap-4 border-t border-black/10 pt-8 lg:col-span-12 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-md text-xs text-black/55">

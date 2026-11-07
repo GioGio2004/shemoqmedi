@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
       // English-only now; send old links (and search results) to the clean paths.
       { source: "/:locale(en|ka|ru)", destination: "/", permanent: true },
       { source: "/:locale(en|ka|ru)/:path*", destination: "/:path*", permanent: true },
+      // Category pages became programmatic collections.
+      { source: "/category/:slug", destination: "/collections/:slug", permanent: true },
+      // Old Voloo restaurant NFC menu routes.
+      { source: "/menu", destination: "/", permanent: true },
+      { source: "/menu/:path*", destination: "/", permanent: true },
+      { source: "/t/:path*", destination: "/", permanent: true },
     ];
   },
   async headers() {

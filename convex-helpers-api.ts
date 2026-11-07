@@ -2,26 +2,45 @@
 //
 // The Convex backend lives in the shemoqmedi-admin repo (convex/). This app
 // has no convex/ folder, so these types are declared here by hand. Keep them
-// in sync with shemoqmedi-admin/convex/listings.ts and users.ts.
+// in sync with shemoqmedi-admin/convex/{listings,votes,creators,claims,users}.ts.
 
 import { type DefaultFunctionArgs, type FunctionReference, anyApi } from "convex/server";
 import { type GenericId as Id } from "convex/values";
+import type { AwardSlug, CreatorTier, RegionSlug } from "@/lib/taxonomy";
 
-export type ListingStatus = "pending" | "approved" | "rejected";
+export type Pillars = { design: number; usability: number; creativity: number; code: number };
 
-/** An approved listing, as the public sees it. */
+export type ListingStatus = "pending" | "in_voting" | "awarded" | "archived" | "rejected";
+export type PublicStatus = "in_voting" | "awarded" | "archived";
+
+/** A public listing (in voting, awarded or archived). */
 export type PublicListing = {
   slug: string;
   title: string;
   tagline: string;
   url: string;
-  category: string;
-  technologies: string[];
+  category: string; // CATEGORIES slug
+  technologies: string[]; // TECHNOLOGIES names
+  region: RegionSlug;
+  creatorTier: CreatorTier;
   creditName: string;
   creditUrl: string | null;
+  creator: { slug: string; name: string } | null;
+  status: PublicStatus;
+  awards: AwardSlug[];
+  editorialScores: Pillars | null; // jury, per pillar
+  communityScores: Pillars | null; // community average, per pillar
+  communityVotesCount: number;
+  editorialAverage: number | null;
+  communityAverage: number | null;
+  finalScore: number | null; // 60% jury + 40% community
   publishedAt: number;
-  coverUrl: string | null;
+  votingEndsAt: number;
+  awardedAt: number | null;
+  isClaimed: boolean;
+  coverUrl: string | null; // 16:10 desktop screenshot
   mobileUrl: string | null;
+  videoUrl: string | null; // short muted hover preview
 };
 
 /** One of the signed-in user's own listings. */
@@ -32,8 +51,35 @@ export type OwnListing = {
   url: string;
   status: ListingStatus;
   reviewNote: string | null;
+  awards: AwardSlug[];
+  finalScore: number | null;
+  votingEndsAt: number | null;
   createdAt: number;
   coverUrl: string | null;
+};
+
+export type PublicCreator = {
+  slug: string;
+  name: string;
+  tier: CreatorTier;
+  region: RegionSlug;
+  location: string | null;
+  website: string | null;
+  bio: string | null;
+  isClaimed: boolean;
+  awards: { SOTD: number; BSC: number; HM: number };
+  nominations: number;
+};
+
+export type CreatorSummary = {
+  slug: string;
+  name: string;
+  tier: CreatorTier;
+  region: RegionSlug;
+  location: string | null;
+  nominations: number;
+  awards: number;
+  updatedAt: number;
 };
 
 export type ConvexUser = {
@@ -50,36 +96,52 @@ export type ConvexUser = {
 
 type Q<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"query", "public", Args, Ret>;
 type M<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"mutation", "public", Args, Ret>;
+type Empty = Record<string, never>;
+
+export type SubmitArgs = {
+  title: string;
+  tagline: string;
+  url: string;
+  category: string;
+  technologies: string[];
+  creatorTier: CreatorTier;
+  region: RegionSlug;
+  creditName: string;
+  creditUrl?: string;
+  submissionTier: "standard" | "express";
+  coverId: Id<"_storage">;
+  mobileId?: Id<"_storage">;
+  videoId?: Id<"_storage">;
+};
 
 export type PublicApiType = {
   users: {
-    getCurrentUser: Q<Record<string, never>, ConvexUser | null>;
+    getCurrentUser: Q<Empty, ConvexUser | null>;
   };
   listings: {
-    listPublished: Q<{ category?: string; limit?: number }, PublicListing[]>;
-    getPublishedBySlug: Q<{ slug: string }, PublicListing | null>;
-    categoryCounts: Q<
-      Record<string, never>,
-      { total: number; byCategory: Record<string, number> }
-    >;
-    publishedSlugs: Q<Record<string, never>, { slug: string; updatedAt: number }[]>;
-    generateUploadUrl: M<Record<string, never>, string>;
-    submit: M<
-      {
-        title: string;
-        tagline: string;
-        url: string;
-        category: string;
-        technologies: string[];
-        creditName: string;
-        creditUrl?: string;
-        coverId: Id<"_storage">;
-        mobileId?: Id<"_storage">;
-      },
-      { slug: string }
-    >;
-    myListings: Q<Record<string, never>, OwnListing[]>;
+    /** All public listings (max 200), newest first. */
+    listPublic: Q<Empty, PublicListing[]>;
+    getPublicBySlug: Q<{ slug: string }, PublicListing | null>;
+    publicSlugs: Q<Empty, { slug: string; updatedAt: number }[]>;
+    generateUploadUrl: M<Empty, string>;
+    submit: M<SubmitArgs, { slug: string }>;
+    myListings: Q<Empty, OwnListing[]>;
     withdraw: M<{ id: Id<"listings"> }, null>;
+  };
+  votes: {
+    /** One vote per user while in_voting; throws ConvexError with a readable message. */
+    cast: M<{ slug: string; scores: Pillars }, null>;
+    mine: Q<{ slug: string }, { scores: Pillars; createdAt: number } | null>;
+  };
+  creators: {
+    getBySlug: Q<{ slug: string }, { creator: PublicCreator; listings: PublicListing[] } | null>;
+    listPublic: Q<Empty, CreatorSummary[]>;
+  };
+  claims: {
+    submit: M<
+      { targetType: "listing" | "creator"; slug: string; message: string; proofUrl?: string },
+      null
+    >;
   };
 };
 
