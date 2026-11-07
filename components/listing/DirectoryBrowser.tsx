@@ -132,8 +132,11 @@ export function DirectoryBrowser({ listings }: { listings: PublicListing[] }) {
         </h2>
       </div>
 
-      <div className="sticky top-20 z-30 mt-10 border-y border-black/10 bg-white/90 backdrop-blur md:top-[88px] md:mt-12">
-        <div className="container-site flex items-center gap-4 py-3">
+      {/* Sticks to the very top once the header has scrolled away. Its height
+          matches the crow's band and the left padding leaves room for the
+          floating crow (CrowNav), so the crow sits at the bar's left end. */}
+      <div className="sticky top-0 z-30 mt-10 border-y border-black/10 bg-white/90 backdrop-blur md:mt-12">
+        <div className="container-site flex min-h-20 items-center gap-4 py-3 pl-[6rem] md:min-h-[88px]">
           <div
             role="group"
             aria-label="Filter websites"

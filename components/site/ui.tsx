@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -80,13 +81,12 @@ export function Wordmark({ className }: { className?: string }) {
     <Link
       href="/"
       aria-label="shemoqmedi, home"
-      className={cn("flex flex-col leading-none text-black", className)}
+      className={cn("flex items-center gap-3 text-black", className)}
     >
-      <span className="text-[18px] font-bold tracking-[-0.055em] uppercase">
-        Shemoqmedi
-      </span>
-      <span className="mt-[5px] text-[9px] font-semibold tracking-[0.27em] uppercase">
-        Space
+      <Image src="/brand/crow.png" alt="" width={179} height={200} className="h-auto w-[34px]" />
+      <span className="flex flex-col leading-none">
+        <span className="text-[18px] font-bold tracking-[-0.055em] uppercase">Shemoqmedi</span>
+        <span className="mt-[5px] text-[9px] font-semibold tracking-[0.27em] uppercase">Space</span>
       </span>
     </Link>
   );
