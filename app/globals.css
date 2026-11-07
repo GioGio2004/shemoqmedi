@@ -138,6 +138,33 @@
   }
 }
 
+/*
+ * Score squares on a listing page: strong translucent blue glass that
+ * floats gently (each square out of step with the next). The one place the
+ * site uses a colour of its own.
+ */
+.score-tile {
+  background: rgb(0 64 255 / 0.78);
+  border: 1px solid rgb(255 255 255 / 0.28);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  animation: score-float 5.6s ease-in-out infinite;
+}
+@keyframes score-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .score-tile {
+    animation: none;
+  }
+}
+
 @keyframes header-solidify {
   to {
     background: rgb(255 255 255 / 0.55);
