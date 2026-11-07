@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { MediaImage as Image } from "@/components/site/MediaImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/site/Header";
