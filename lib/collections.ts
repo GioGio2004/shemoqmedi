@@ -52,8 +52,27 @@ function bestTitle(name: string) {
 }
 
 /** Mid-sentence form: "portfolio", "e-commerce", but "AI" and "SaaS". */
-const CATEGORY_PHRASE: Record<string, string> = { ai: "AI", saas: "SaaS" };
-const categoryPhrase = (slug: string, name: string) => CATEGORY_PHRASE[slug] ?? name.toLowerCase();
+/** Category in running text ("the best … websites"), where the lowercased name reads badly. */
+const CATEGORY_PHRASE: Record<string, string> = {
+  ai: "AI",
+  saas: "SaaS",
+  illustration: "illustration and art",
+  film: "film and video",
+  "3d-motion": "3D and motion",
+  interior: "interior design",
+  web3: "crypto and Web3",
+  "dev-tools": "developer tool",
+  apps: "mobile app",
+  hardware: "hardware",
+  corporate: "corporate",
+  beauty: "beauty",
+  "home-living": "furniture and home",
+  sports: "sports and fitness",
+  events: "event and festival",
+  institutions: "museum and institution",
+  nonprofit: "non-profit",
+};
+export const categoryPhrase = (slug: string, name: string) => CATEGORY_PHRASE[slug] ?? name.toLowerCase();
 
 /** "built with …": "a custom CMS" reads better than "Custom CMS". */
 const TECH_PHRASE: Record<string, string> = {

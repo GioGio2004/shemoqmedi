@@ -174,6 +174,59 @@
   }
 }
 
+/*
+ * Mega menu (components/site/MegaMenu.tsx): a translucent curtain that drops
+ * from the top; its contents follow a beat later, one column after the
+ * other (--i). Closed, it is hidden (visibility) and inert, but stays in the
+ * HTML so its links are crawlable. The header gives up its own glass while
+ * the menu is open, so header and curtain read as one surface.
+ */
+.mega-curtain {
+  background: rgb(255 255 255 / 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition:
+    transform 0.6s cubic-bezier(0.76, 0, 0.24, 1),
+    visibility 0s linear 0.6s;
+}
+.mega-curtain[data-open="true"] {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.mega-curtain [data-reveal] {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.mega-curtain[data-open="true"] [data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.45s ease calc(0.28s + var(--i, 0) * 0.07s),
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.28s + var(--i, 0) * 0.07s);
+}
+.mega-scrim {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.mega-scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+html[data-menu-open] .site-header {
+  animation: none;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
 /* InViewVideo full screen: the box fills the screen in black, the video is
    letterboxed (never cropped), no rounded frame. Unlayered, so it beats the
    page's utility classes (rounded-3xl, border, object-cover, aspect-video).

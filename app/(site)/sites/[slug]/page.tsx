@@ -15,7 +15,7 @@ import { outboundRel } from "@/lib/ref";
 import { JuryLauncher } from "@/components/jury/JuryLauncher";
 import { JuryReviews } from "@/components/jury/JuryReviews";
 import { resolveListingSlug } from "@/lib/slugRedirect";
-import { categoryName, regionName, technologySlug } from "@/lib/collections";
+import { categoryName, categoryPhrase, regionName, technologySlug } from "@/lib/collections";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
@@ -50,10 +50,9 @@ function rankedAwards(listing: PublicListing) {
 }
 
 /** Category for running text: "architecture", "AI", "SaaS"; null for "other". */
-function categoryPhrase(slug: string) {
+function listingCategoryPhrase(slug: string) {
   if (slug === "other") return null;
-  const name = categoryName(slug);
-  return /^(AI|SaaS)$/.test(name) ? name : name.toLowerCase();
+  return categoryPhrase(slug, categoryName(slug));
 }
 
 /**
@@ -399,7 +398,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         <ScreenshotGallery
           title={listing.title}
           credit={listing.creditName}
-          category={categoryPhrase(listing.category)}
+          category={listingCategoryPhrase(listing.category)}
           srcs={[listing.coverUrl, ...listing.galleryUrls].filter((src): src is string => !!src)}
         />
 
