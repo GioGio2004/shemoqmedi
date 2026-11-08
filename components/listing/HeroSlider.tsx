@@ -15,10 +15,6 @@ const INTERVAL = 6;
 const frame =
   "border border-black/[0.07] bg-black/[0.035] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)]";
 
-/** Frosted glass for the small tags that sit on the screenshot. */
-const glass =
-  "border border-white/60 bg-white/60 backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)_saturate(1.5)]";
-
 type Card = { listing: PublicListing; key: string };
 
 /** Signed distance from `d` to 0 on a loop of length n, in [-n/2, n/2). */
@@ -479,19 +475,30 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
           );
         })}
 
-        {/* Small caption: counter, name and the autoplay line, bottom left. */}
+        {/* Cursor follower: View / Drag. */}
         <div
-          className={cn(
-            "pointer-events-none absolute bottom-4 left-4 z-[150] flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-full py-2 pr-4 pl-3.5 md:bottom-6 md:left-6",
-            glass,
-          )}
+          ref={cursorRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 left-0 z-[200] hidden size-[88px] scale-0 place-items-center rounded-full bg-black text-white pointer-fine:grid"
+        >
+          <span ref={cursorLabelRef} className="text-[11px] font-semibold tracking-[0.08em] uppercase">
+            {interactive ? "Drag" : "View"}
+          </span>
+        </div>
+      </div>
+
+      {/* Under the screenshot: counter, autoplay line and name on the left,
+          arrows on the right (never over the site itself). */}
+      <div className="mt-3 flex items-center justify-between gap-3 md:mt-4">
+        <div
+          className="flex min-w-0 items-center gap-3 rounded-full border border-black/[0.08] bg-white py-2.5 pr-4 pl-3.5"
           aria-live="polite"
         >
           <span className="font-mono text-[11px] tracking-[0.08em] text-black tabular-nums">
             {pad(number)}/{pad(count)}
           </span>
           {interactive && (
-            <span aria-hidden="true" className="h-[2px] w-8 overflow-hidden rounded-full bg-black/15 md:w-12">
+            <span aria-hidden="true" className="h-[2px] w-8 shrink-0 overflow-hidden rounded-full bg-black/15 md:w-12">
               <span ref={barRef} className="block h-full origin-left scale-x-0 bg-black" />
             </span>
           )}
@@ -503,7 +510,7 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
         </div>
 
         {interactive && (
-          <div className={cn("absolute right-4 bottom-4 z-[150] flex items-center gap-1 rounded-full p-1 md:right-6 md:bottom-6", glass)}>
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-black/[0.08] bg-white p-1">
             <button
               type="button"
               onClick={() => by(-1)}
@@ -522,17 +529,6 @@ export function HeroSlider({ listings }: { listings: PublicListing[] }) {
             </button>
           </div>
         )}
-
-        {/* Cursor follower: View / Drag. */}
-        <div
-          ref={cursorRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-0 z-[200] hidden size-[88px] scale-0 place-items-center rounded-full bg-black text-white pointer-fine:grid"
-        >
-          <span ref={cursorLabelRef} className="text-[11px] font-semibold tracking-[0.08em] uppercase">
-            {interactive ? "Drag" : "View"}
-          </span>
-        </div>
       </div>
     </section>
   );

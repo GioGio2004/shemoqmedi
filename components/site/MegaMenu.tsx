@@ -319,19 +319,20 @@ function search(query: string, data: MenuData | null): Results {
 
 // ── Curtain ──────────────────────────────────────────────────────────────────
 
-/** White pill link: the menu's button style. */
+/** The menu's button: black glass, white text. */
 const chip =
-  "inline-flex min-h-9 items-center gap-2 rounded-full border border-black/[0.06] bg-white px-3.5 py-1.5 text-[13px] font-medium text-black transition-[border-color,transform] hover:border-black active:scale-[0.98]";
+  "inline-flex min-h-9 items-center gap-1.5 rounded-full bg-black/75 px-3.5 py-1 text-[13px] font-medium text-white backdrop-blur-sm transition-[background-color,transform] hover:bg-black active:scale-[0.98] lg:min-h-8 lg:px-3 lg:text-[12.5px]";
 
 function Count({ n }: { n: number | undefined }) {
   if (!n) return null;
-  return <span className="font-mono text-[10.5px] text-black/45">{n}</span>;
+  return <span className="font-mono text-[10px] text-white/55">{n}</span>;
 }
 
+/** Cover with the title under it (no card frame). */
 function SiteCard({ site, sizes }: { site: MenuSite; sizes: string }) {
   return (
-    <Link href={`/sites/${site.slug}`} className="group block rounded-[20px] border border-black/[0.06] bg-white p-1.5">
-      <span className="relative block aspect-video overflow-hidden rounded-[14px] bg-black/5">
+    <Link href={`/sites/${site.slug}`} className="group block">
+      <span className="relative block aspect-video overflow-hidden rounded-2xl bg-black/10">
         {site.cover && (
           <Image
             src={site.cover}
@@ -342,12 +343,12 @@ function SiteCard({ site, sizes }: { site: MenuSite; sizes: string }) {
           />
         )}
       </span>
-      <span className="flex items-center justify-between gap-3 px-2 pt-2.5 pb-1.5">
+      <span className="mt-2 flex items-start justify-between gap-3 px-0.5">
         <span className="min-w-0">
-          <span className="block truncate text-[14px] font-semibold tracking-[-0.02em]">{site.title}</span>
-          <span className="block truncate text-[12px] text-black/55">by {site.credit}</span>
+          <span className="block truncate text-[13.5px] font-semibold tracking-[-0.02em]">{site.title}</span>
+          <span className="block truncate text-[11.5px] text-black/55">by {site.credit}</span>
         </span>
-        <ArrowIcon className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        <ArrowIcon className="mt-0.5 size-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </span>
     </Link>
   );
@@ -357,10 +358,68 @@ function Eyebrow({ children, className }: { children: React.ReactNode; className
   return <p className={cn("eyebrow mb-3", className)}>{children}</p>;
 }
 
+function ChipList({
+  items,
+  counts,
+}: {
+  items: { key: string; label: string; href: string }[];
+  counts?: Record<string, number>;
+}) {
+  return (
+    <ul className="flex flex-wrap gap-1.5">
+      {items.map((item) => (
+        <li key={item.key}>
+          <Link href={item.href} className={chip}>
+            {item.label}
+            <Count n={counts?.[item.key]} />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * One category group as a dropdown. Native <details> with a shared `name`:
+ * opening one closes the others (no JavaScript), and the links stay in the
+ * HTML while closed.
+ */
+function Dropdown({
+  title,
+  total,
+  open,
+  children,
+}: {
+  title: string;
+  total: number;
+  open?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details name="menu-collections" open={open} className="group border-b border-black/10 first:border-t">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-2 select-none [&::-webkit-details-marker]:hidden">
+        <span className="text-[16px] font-semibold tracking-[-0.02em] lg:text-[15px]">
+          {title}
+          <span className="ml-2 font-mono text-[10.5px] font-normal text-black/45">{total}</span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-black/75 text-white transition-transform duration-300 group-open:rotate-180"
+        >
+          <svg viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="m3 4.5 3 3 3-3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </summary>
+      <div className="pt-1 pb-4">{children}</div>
+    </details>
+  );
+}
+
 function Browse({ data }: { data: MenuData | null }) {
   const counts = data?.counts;
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,2.4fr)_minmax(0,1.1fr)] lg:gap-8">
+    <div className="grid gap-9 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:gap-10 xl:grid-cols-[220px_minmax(0,1fr)_300px] xl:gap-14">
       <nav aria-label="Explore" data-reveal style={{ "--i": 0 } as React.CSSProperties}>
         <Eyebrow>Explore</Eyebrow>
         <ul className="grid grid-cols-2 gap-1.5 lg:grid-cols-1">
@@ -368,55 +427,42 @@ function Browse({ data }: { data: MenuData | null }) {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="group flex min-h-11 items-center justify-between rounded-2xl border border-black/[0.06] bg-white px-3.5 text-[13px] font-semibold tracking-[-0.01em] hover:border-black sm:px-4 sm:text-[14px]"
+                className="group flex min-h-10 items-center justify-between gap-2 rounded-full bg-black/75 pr-2 pl-4 text-[13px] leading-tight font-semibold tracking-[-0.01em] text-white backdrop-blur-sm transition-colors hover:bg-black lg:min-h-9 lg:text-[12.5px]"
               >
                 {item.label}
-                <ArrowIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                <ArrowIcon className="hidden size-3.5 shrink-0 opacity-50 transition-opacity group-hover:opacity-100 lg:block" />
               </Link>
             </li>
           ))}
         </ul>
       </nav>
 
-      <div data-reveal style={{ "--i": 1 } as React.CSSProperties}>
-        <nav aria-label="Categories" className="grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-3">
-          {CATEGORY_GROUPS.map((group) => (
-            <div key={group.name}>
-              <Eyebrow>{group.name}</Eyebrow>
-              <ul className="flex flex-wrap gap-1.5">
-                {group.slugs.map((slug) => (
-                  <li key={slug}>
-                    <Link href={`/collections/${slug}`} className={chip}>
-                      {categoryName(slug)}
-                      <Count n={counts?.[slug]} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <div>
-            <Eyebrow>Built with</Eyebrow>
-            <ul className="flex flex-wrap gap-1.5">
-              {TECH_IN_MENU.map((t) => (
-                <li key={t.slug}>
-                  <Link href={`/collections/${t.slug}`} className={chip}>
-                    {t.name}
-                    <Count n={counts?.[t.slug]} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </nav>
-      </div>
+      <nav aria-label="Collections" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+        <Eyebrow>Collections</Eyebrow>
+        {CATEGORY_GROUPS.map((group, i) => (
+          <Dropdown key={group.name} title={group.name} total={group.slugs.length} open={i === 0}>
+            <ChipList
+              counts={counts}
+              items={group.slugs.map((slug) => ({ key: slug, label: categoryName(slug), href: `/collections/${slug}` }))}
+            />
+          </Dropdown>
+        ))}
+        <Dropdown title="Built with" total={TECH_IN_MENU.length}>
+          <ChipList
+            counts={counts}
+            items={TECH_IN_MENU.map((t) => ({ key: t.slug, label: t.name, href: `/collections/${t.slug}` }))}
+          />
+        </Dropdown>
+      </nav>
 
       <div data-reveal style={{ "--i": 2 } as React.CSSProperties}>
         <Eyebrow>In the spotlight</Eyebrow>
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-5 lg:grid-cols-1">
           {data
-            ? data.spotlight.slice(0, 2).map((s) => <SiteCard key={s.slug} site={s} sizes="(max-width: 1024px) 50vw, 360px" />)
-            : [0, 1].map((i) => <div key={i} className="aspect-[16/11] rounded-[20px] border border-black/[0.06] bg-white/70" />)}
+            ? data.spotlight
+                .slice(0, 2)
+                .map((s) => <SiteCard key={s.slug} site={s} sizes="(max-width: 1024px) 50vw, 300px" />)
+            : [0, 1].map((i) => <div key={i} className="aspect-video rounded-2xl bg-black/10" />)}
         </div>
       </div>
     </div>
@@ -427,7 +473,7 @@ function SearchResults({ query, data }: { query: string; data: MenuData | null }
   const r = search(query, data);
   const none = data && r.sites.length === 0 && r.creators.length === 0 && r.tags.length === 0;
   return (
-    <div className="grid gap-8" aria-live="polite">
+    <div className="grid gap-7" aria-live="polite">
       {none && (
         <p className="text-2xl font-semibold tracking-[-0.03em]">
           No results for “{query.trim()}”. <span className="text-black/45">Try a site, a creator or a category.</span>
@@ -436,43 +482,27 @@ function SearchResults({ query, data }: { query: string; data: MenuData | null }
       {r.sites.length > 0 && (
         <section>
           <Eyebrow>Websites</Eyebrow>
-          <ul className="grid grid-cols-2 gap-2 md:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-3 xl:grid-cols-4">
             {r.sites.map((s) => (
               <li key={s.slug}>
-                <SiteCard site={s} sizes="(max-width: 768px) 50vw, 360px" />
+                <SiteCard site={s} sizes="(max-width: 768px) 50vw, 320px" />
               </li>
             ))}
           </ul>
         </section>
       )}
       {(r.creators.length > 0 || r.tags.length > 0) && (
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-7 md:grid-cols-2">
           {r.creators.length > 0 && (
             <section>
               <Eyebrow>Creators</Eyebrow>
-              <ul className="flex flex-wrap gap-1.5">
-                {r.creators.map((c) => (
-                  <li key={c.slug}>
-                    <Link href={`/creators/${c.slug}`} className={chip}>
-                      {c.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <ChipList items={r.creators.map((c) => ({ key: c.slug, label: c.name, href: `/creators/${c.slug}` }))} />
             </section>
           )}
           {r.tags.length > 0 && (
             <section>
               <Eyebrow>Categories and technologies</Eyebrow>
-              <ul className="flex flex-wrap gap-1.5">
-                {r.tags.map((t) => (
-                  <li key={t.href}>
-                    <Link href={t.href} className={chip}>
-                      {t.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <ChipList items={r.tags.map((t) => ({ key: t.href, label: t.label, href: t.href }))} />
             </section>
           )}
         </div>
@@ -482,18 +512,25 @@ function SearchResults({ query, data }: { query: string; data: MenuData | null }
   );
 }
 
-/** The curtain itself. Sits beside the <header> (the header's glass would trap a fixed child). */
+const EASE = "cubic-bezier(0.76, 0, 0.24, 1)";
+const CLOSED = "inset(0 0 100% 0)";
+const OPENED = "inset(0 0 0 0)";
+
+/**
+ * The curtain itself. It hangs from the bottom of the navbar (80 px, 88 px
+ * from md) and unrolls down to the bottom of the screen, so nothing ever
+ * slides or scrolls under the bar; it scrolls inside if its content is
+ * taller. Full screen on purpose: room for more (animations) later.
+ * Closes with the Close button, Escape or any link. Sits beside the <header> (the header's glass would
+ * trap a fixed child). Its glass, position and unroll are inline styles, so
+ * opening and closing never depend on the global stylesheet (a stale dev
+ * stylesheet once left it stuck open).
+ */
 export function MenuCurtain() {
   const { open, setOpen, query, setQuery, data, mobileField } = useMenu();
   const submit = useSubmit();
   return (
     <>
-      <div
-        aria-hidden="true"
-        data-open={open}
-        onClick={() => setOpen(false)}
-        className="mega-scrim fixed inset-0 z-40 bg-black/15"
-      />
       <div
         id="site-menu"
         role="dialog"
@@ -505,12 +542,20 @@ export function MenuCurtain() {
           // Any link closes the menu, including one to the page already open.
           if ((e.target as Element).closest("a")) setOpen(false);
         }}
-        className="mega-curtain fixed inset-x-0 top-0 z-40 max-h-dvh overflow-y-auto rounded-b-[32px] border-b border-black/[0.06]"
+        className="mega-curtain fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto overscroll-contain md:top-[88px]"
+        style={{
+          background: "rgb(255 255 255 / 0.6)",
+          WebkitBackdropFilter: "blur(20px) saturate(1.5)",
+          backdropFilter: "blur(20px) saturate(1.5)",
+          clipPath: open ? OPENED : CLOSED,
+          visibility: open ? "visible" : "hidden",
+          transition: open ? `clip-path 0.7s ${EASE}` : `clip-path 0.5s ${EASE}, visibility 0s linear 0.5s`,
+        }}
       >
-        <div className="container-site pt-24 pb-10 md:pt-[112px] md:pb-12">
+        <div className="container-site pt-6 pb-10 md:pt-10 lg:pb-12">
           <form
             role="search"
-            className="relative mb-8 lg:hidden"
+            className="relative mb-7 lg:hidden"
             data-reveal
             onSubmit={(e) => {
               e.preventDefault();
@@ -527,18 +572,24 @@ export function MenuCurtain() {
               aria-label="Search the site"
               autoComplete="off"
               enterKeyHint="search"
-              className="h-[52px] w-full rounded-full border border-black/[0.08] bg-white pr-4 pl-11 text-[16px] outline-none placeholder:text-black/45 focus:border-black [&::-webkit-search-cancel-button]:hidden"
+              className="h-[50px] w-full rounded-full border border-black/[0.08] bg-white pr-4 pl-11 text-[16px] outline-none placeholder:text-black/45 focus:border-black [&::-webkit-search-cancel-button]:hidden"
             />
           </form>
 
           {query.trim() ? <SearchResults query={query} data={data} /> : <Browse data={data} />}
 
           {/* The header shows these pills from sm (submit) and lg (account) up. */}
-          <div data-reveal style={{ "--i": 3 } as React.CSSProperties} className="mt-10 flex flex-wrap gap-2 lg:hidden">
-            <Link href="/submit" className="inline-flex sm:hidden min-h-[46px] items-center rounded-full bg-black px-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase">
+          <div data-reveal style={{ "--i": 3 } as React.CSSProperties} className="mt-8 flex flex-wrap gap-2 lg:hidden">
+            <Link
+              href="/submit"
+              className="inline-flex min-h-[46px] items-center rounded-full bg-black px-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase sm:hidden"
+            >
               Submit a site
             </Link>
-            <Link href="/account" className="inline-flex min-h-[46px] items-center rounded-full border border-black/12 bg-white px-5 text-[11.5px] font-semibold tracking-[0.05em] uppercase">
+            <Link
+              href="/account"
+              className="inline-flex min-h-[46px] items-center rounded-full border border-black/12 bg-white px-5 text-[11.5px] font-semibold tracking-[0.05em] uppercase"
+            >
               Your account
             </Link>
           </div>
