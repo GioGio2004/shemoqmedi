@@ -233,7 +233,10 @@ export type PublicApiType = {
     listPublic: Q<Empty, (JurorPublic & { evaluations: number })[]>;
     reviewsForListing: Q<{ slug: string }, JuryReview[]>;
     /** The signed-in user's jury profile, or null if they are not on the jury. */
-    me: Q<Empty, JurorPublic | null>;
+    /** hasPresetPhoto: the photo prepared with the invitation is still the one shown. */
+    me: Q<Empty, (JurorPublic & { hasPresetPhoto: boolean }) | null>;
+    /** The juror changed/removed their photo: drop the invitation's preset photo. */
+    dropPresetPhoto: M<Empty, null>;
     myEvaluation: Q<
       { slug: string },
       {

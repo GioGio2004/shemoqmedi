@@ -18,26 +18,38 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMAGE = 10 * 1024 * 1024; // Clerk's limit for profile images
 
 /**
- * Profile photo, stored on the user's Clerk account (not ImageKit). The site
- * picks it up through the Clerk webhook; without one the jury pages show the
- * photo we added for the profile (`fallback`), else a grey placeholder.
+ * Profile photo. `current` is what the jury pages show right now: the photo
+ * prepared with the invitation (`preset`) while the juror keeps it, else their
+ * account (Clerk) photo, else a grey placeholder. Changing or removing it
+ * saves to the Clerk account and drops the preset, so the juror's own choice
+ * shows from then on.
  */
-function PhotoField({ fallback }: { fallback: string | null }) {
+function PhotoField({ current, preset }: { current: string | null; preset: boolean }) {
   const { user } = useUser();
+  const dropPreset = useMutation(api.jury.dropPresetPhoto);
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const photo = user?.hasImage ? user.imageUrl : null;
+  // After a change, show it right away: the server learns about a new Clerk
+  // photo through the webhook a moment later. undefined: nothing changed yet.
+  const [local, setLocal] = useState<string | null | undefined>(undefined);
+  const shown = local !== undefined ? local : current;
 
-  async function upload(file: File | null) {
+  async function change(file: File | null) {
     if (!user) return;
     setError(null);
     if (file && !IMAGE_TYPES.includes(file.type)) return setError("Use a JPG, PNG, WebP or GIF image.");
     if (file && file.size > MAX_IMAGE) return setError("The photo must be 10 MB or less.");
     setBusy(true);
     try {
-      await user.setProfileImage({ file });
-      await user.reload();
+      // Removing the preset only drops it (the account photo, if any, shows
+      // next); a new file, or removing the account photo, goes to Clerk.
+      if (file || !preset) {
+        await user.setProfileImage({ file });
+        await user.reload();
+      }
+      if (preset) await dropPreset({});
+      setLocal(user.hasImage ? user.imageUrl : null);
     } catch {
       setError("The photo could not be saved. Please try another image.");
     } finally {
@@ -50,7 +62,7 @@ function PhotoField({ fallback }: { fallback: string | null }) {
     <div className="grid gap-3">
       <p className={label}>Photo</p>
       <div className="flex flex-wrap items-center gap-5">
-        <JurorAvatar url={photo ?? fallback} size={88} />
+        <JurorAvatar url={shown} size={88} />
         <div className="grid gap-2">
           <div className="flex flex-wrap gap-3 text-sm">
             <button
@@ -59,13 +71,13 @@ function PhotoField({ fallback }: { fallback: string | null }) {
               onClick={() => fileRef.current?.click()}
               className="rounded-full border border-black/14 px-4 py-2 font-medium hover:border-black disabled:opacity-50"
             >
-              {busy ? "Saving…" : photo ? "Change photo" : "Upload photo"}
+              {busy ? "Saving…" : shown ? "Change photo" : "Upload photo"}
             </button>
-            {photo && (
+            {shown && (
               <button
                 type="button"
-                disabled={busy}
-                onClick={() => void upload(null)}
+                disabled={busy || !user}
+                onClick={() => void change(null)}
                 className="text-black/55 underline underline-offset-4 hover:text-black disabled:opacity-50"
               >
                 Remove
@@ -73,7 +85,9 @@ function PhotoField({ fallback }: { fallback: string | null }) {
             )}
           </div>
           <p className="text-xs text-black/55">
-            Square works best. Saved to your account; it can take a minute to appear on the site.
+            {preset && local === undefined
+              ? "This is the photo prepared for your jury profile. Change it any time."
+              : "Square works best. Saved to your account; it can take a minute to appear on the site."}
           </p>
           {error && (
             <p role="alert" className="text-xs font-medium">
@@ -86,7 +100,7 @@ function PhotoField({ fallback }: { fallback: string | null }) {
           type="file"
           accept={IMAGE_TYPES.join(",")}
           className="hidden"
-          onChange={(e) => void upload(e.target.files?.[0] ?? null)}
+          onChange={(e) => void change(e.target.files?.[0] ?? null)}
         />
       </div>
     </div>
@@ -95,12 +109,12 @@ function PhotoField({ fallback }: { fallback: string | null }) {
 
 function ProfileFields({
   initial,
-  photoFallback,
+  photo,
   submitLabel,
   onSave,
 }: {
   initial: JurorProfileArgs;
-  photoFallback: string | null;
+  photo: { current: string | null; preset: boolean };
   submitLabel: string;
   onSave: (profile: JurorProfileArgs) => Promise<void>;
 }) {
@@ -138,7 +152,7 @@ function ProfileFields({
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6">
-      <PhotoField fallback={photoFallback} />
+      <PhotoField current={photo.current} preset={photo.preset} />
       <div className="grid gap-6 md:grid-cols-2">
         <label className="grid gap-2">
           <span className={label}>Name</span>
@@ -235,7 +249,7 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
         linkedinUrl: me.linkedinUrl ?? undefined,
         bio: me.bio ?? undefined,
       }}
-      photoFallback={me.imageUrl}
+      photo={{ current: me.imageUrl, preset: me.hasPresetPhoto }}
       submitLabel="Save profile"
       onSave={async (profile) => {
         await update(profile);
