@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction, useMutation } from "convex/react";
 import { MAX_IMAGE_INPUT_BYTES, uploadToImageKit } from "@/lib/imagekitUpload";
+import { uploadVideoToR2 } from "@/lib/videoUpload";
 import { useUser } from "@clerk/nextjs";
 import { z } from "zod";
 import { api } from "@/convex-helpers-api";
@@ -23,7 +24,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
-const VIDEO_TYPES = ["video/mp4", "video/webm"];
+// MOV (QuickTime) too: videos are re-encoded to MP4 before upload.
+const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 
 const input =
   "w-full min-h-[46px] rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none transition-colors placeholder:text-black/35 focus:border-black";
@@ -99,7 +101,8 @@ const schema = z.object({
   extras: z
     .array(mediaFile("Each extra screenshot", IMAGE_TYPES, MAX_IMAGE_INPUT_BYTES, "a PNG, JPG or WebP image"))
     .max(LIMITS.gallery, `Add up to ${LIMITS.gallery} more screenshots.`),
-  video: mediaFile("Preview video", VIDEO_TYPES, LIMITS.videoBytes, "an MP4 or WebM file").nullable(),
+  // Compressed before upload; its length and the stored 15 MB limit are checked then.
+  video: mediaFile("Preview video", VIDEO_TYPES, LIMITS.videoInputBytes, "an MP4, WebM or MOV file").nullable(),
 });
 
 // ── Building blocks ─────────────────────────────────────────────────────────
@@ -351,6 +354,8 @@ export function ListingForm() {
   const { user } = useUser();
   const getUploadAuth = useAction(api.media.uploadAuth);
   const registerMedia = useMutation(api.media.register);
+  const getVideoUploadUrl = useAction(api.media.videoUploadUrl);
+  const registerVideo = useMutation(api.media.registerVideo);
   const submit = useMutation(api.listings.submit);
 
   const [title, setTitle] = useState("");
@@ -369,6 +374,7 @@ export function ListingForm() {
   const [video, setVideo] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">("idle");
+  const [progress, setProgress] = useState<number | null>(null); // video compression, 0–1
   const busy = useRef(false);
 
   // Prefill "Made by" with the account name until the user edits it.
@@ -392,8 +398,16 @@ export function ListingForm() {
           : [...current, name],
     );
 
-  /** WebP-converted, SEO-named upload to ImageKit (lib/imagekitUpload.ts). */
+  /**
+   * SEO-named upload: screenshots → WebP on ImageKit (lib/imagekitUpload.ts),
+   * the video → compressed MP4 on Cloudflare R2 (lib/videoUpload.ts).
+   */
   async function upload(file: File, label: string): Promise<Id<"media">> {
+    if (file.type.startsWith("video/")) {
+      return await registerVideo(
+        await uploadVideoToR2(file, { site: title, label }, (args) => getVideoUploadUrl(args), setProgress),
+      );
+    }
     const args = await uploadToImageKit(file, { site: title, label }, () => getUploadAuth({}));
     return await registerMedia(args);
   }
@@ -426,6 +440,7 @@ export function ListingForm() {
     setError(null);
     try {
       setStatus("uploading");
+      setProgress(null);
       const coverId = await upload(data.cover, "cover");
       const galleryIds: Id<"media">[] = [];
       for (const [i, file] of data.extras.entries()) galleryIds.push(await upload(file, `screenshot-${i + 2}`));
@@ -639,7 +654,7 @@ export function ListingForm() {
           id="video"
           kind="video"
           label="Preview video (optional)"
-          hint="A short, silent clip that plays on hover. MP4 or WebM, up to 15 MB."
+          hint="A silent clip of the site, up to 60 seconds, that plays on a loop. MP4, WebM or MOV. We compress it to 720p before upload."
           file={video}
           onChange={setVideo}
           aspect="aspect-video"
@@ -698,7 +713,13 @@ export function ListingForm() {
             disabled={status !== "idle"}
             className="inline-flex min-h-[46px] items-center gap-3.5 rounded-full bg-black py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
           >
-            {status === "uploading" ? "Uploading…" : status === "saving" ? "Submitting…" : "Submit for review"}
+            {status === "uploading"
+              ? progress !== null && progress < 1
+                ? `Compressing video ${Math.round(progress * 100)}%`
+                : "Uploading…"
+              : status === "saving"
+                ? "Submitting…"
+                : "Submit for review"}
             <span className="grid size-9 place-items-center rounded-full bg-white text-black" aria-hidden="true">
               ↗
             </span>

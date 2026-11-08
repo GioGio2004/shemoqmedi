@@ -8,6 +8,7 @@ import { type DefaultFunctionArgs, type FunctionReference, anyApi } from "convex
 import { type GenericId as Id } from "convex/values";
 import type { AwardSlug, CreatorTier, JuryCategory, RegionSlug } from "@/lib/taxonomy";
 import type { RegisterArgs, UploadAuth } from "@/lib/imagekitUpload";
+import type { RegisterVideoArgs } from "@/lib/videoUpload";
 
 export type Pillars = { design: number; usability: number; creativity: number; code: number };
 
@@ -213,8 +214,15 @@ export type PublicApiType = {
   media: {
     /** Signed parameters for one browser → ImageKit upload (signed-in users). */
     uploadAuth: A<Empty, UploadAuth>;
-    /** Record a finished ImageKit upload; returns the id submit takes. */
+    /** Record a finished ImageKit upload (screenshots only); returns the id submit takes. */
     register: M<RegisterArgs, Id<"media">>;
+    /** Presigned URL for one browser → Cloudflare R2 video upload (signed-in users). */
+    videoUploadUrl: A<
+      { site: string; label: string; contentType: string; size: number },
+      { uploadUrl: string; key: string }
+    >;
+    /** Record a finished R2 video upload; returns the id submit takes. */
+    registerVideo: M<RegisterVideoArgs, Id<"media">>;
   };
   users: {
     getCurrentUser: Q<Empty, ConvexUser | null>;

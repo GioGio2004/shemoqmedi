@@ -123,7 +123,8 @@ const sections: InfoSection[] = [
           <li>Vercel: hosting and aggregated, cookieless visit statistics;</li>
           <li>Clerk: accounts and sign-in (and Google, if you choose to sign in with Google);</li>
           <li>Convex: the database that stores accounts, listings, votes, claims and jury data;</li>
-          <li>ImageKit: storage and delivery of screenshots, videos and photos;</li>
+          <li>ImageKit: storage and delivery of screenshots and photos;</li>
+          <li>Cloudflare R2: storage and delivery of preview videos;</li>
           <li>Resend: sending emails such as jury claim links;</li>
           <li>Ahrefs: aggregated, cookieless visit statistics.</li>
         </ul>
