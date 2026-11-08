@@ -8,3 +8,11 @@ export function withRefClient(url: string) {
     return url;
   }
 }
+
+/**
+ * rel for links out to a listed site or its creator. Unclaimed listings stay
+ * nofollow until the owner claims them; claiming turns the link dofollow.
+ */
+export function outboundRel(listing: { isDoFollow?: boolean; isClaimed: boolean }) {
+  return (listing.isDoFollow ?? listing.isClaimed) ? "noopener" : "nofollow noopener";
+}

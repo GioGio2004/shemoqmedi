@@ -195,4 +195,8 @@ export const COLLECTION_ABOUT: Record<string, string[]> = {
     "Nominees are websites in their seven-day public voting window right now. Every site here has been reviewed and approved by the jury before going live.",
     "Anyone with an account can score a nominee once, from 1 to 10, on design, usability, creativity and code. When voting closes, the community average is combined with the jury's score (40% community, 60% jury) to decide the awards: Site of the Day, Best Solo Creation and Honorable Mention. Sign in, open a site and cast your vote.",
   ],
+  startups: [
+    "A startup website often has to explain a product that did not exist a year ago, to investors, early customers and future hires at the same time.",
+    "The best ones say what the company does in one sentence, show the real product early and make the next step obvious, whether that is a waitlist, a demo or a sign-up. The jury, including the Venture & Startups panel, looks for a clear story, honest claims, a brand that feels considered rather than templated, and a site that stays fast as the company grows.",
+  ],
 };

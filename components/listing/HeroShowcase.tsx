@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { PublicListing } from "@/convex-helpers-api";
 import { PillLink } from "@/components/site/ui";
 import { heroPicks, withRef } from "@/lib/listings";
+import { outboundRel } from "@/lib/ref";
 import { awardName } from "@/lib/collections";
 import { AwardBadge, ScoreBadge } from "./Badges";
 
@@ -125,7 +126,7 @@ function HeroFrame({
           ) : (
             <span />
           )}
-          <PillLink href={withRef(listing.url)} external variant="outline" className="shrink-0 self-start sm:self-auto">
+          <PillLink href={withRef(listing.url)} external rel={outboundRel(listing)} variant="outline" className="shrink-0 self-start sm:self-auto">
             Visit live site
           </PillLink>
         </div>

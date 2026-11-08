@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { JuryReview } from "@/convex-helpers-api";
 import { PILLARS } from "@/lib/taxonomy";
 import { formatDate, formatScore } from "@/lib/format";
@@ -12,9 +13,9 @@ export function JuryReviews({ reviews }: { reviews: JuryReview[] }) {
         <h2 id="jury-reviews-title" className="text-3xl font-semibold tracking-[-0.045em]">
           Jury reviews
         </h2>
-        <a href="/jury" className="text-sm underline decoration-black/25 underline-offset-4 hover:decoration-black">
+        <Link href="/jury" className="text-sm underline decoration-black/25 underline-offset-4 hover:decoration-black">
           About the jury
-        </a>
+        </Link>
       </div>
       <ul className="mt-6 grid gap-px overflow-hidden rounded-3xl border border-black/10 bg-black/10 md:grid-cols-2">
         {reviews.map((r) => (
@@ -23,9 +24,9 @@ export function JuryReviews({ reviews }: { reviews: JuryReview[] }) {
               <JurorAvatar url={r.juror.imageUrl} size={44} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold tracking-[-0.02em]">
-                  <a href={`/jury#${r.juror.slug}`} className="hover:underline">
+                  <Link href={`/jury#${r.juror.slug}`} className="hover:underline">
                     {r.juror.name}
-                  </a>
+                  </Link>
                 </p>
                 <p className="truncate text-xs text-black/55">{r.juror.title}</p>
               </div>

@@ -11,6 +11,7 @@ import { ScreenshotGallery } from "@/components/listing/ScreenshotGallery";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
 import { getJuryReviews, getListing, getPublicSlugs, withRef } from "@/lib/listings";
+import { outboundRel } from "@/lib/ref";
 import { JuryLauncher } from "@/components/jury/JuryLauncher";
 import { JuryReviews } from "@/components/jury/JuryReviews";
 import { resolveListingSlug } from "@/lib/slugRedirect";
@@ -314,6 +315,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
   }
 
   const liveUrl = withRef(listing.url);
+  const rel = outboundRel(listing);
   const juryReviews = await getJuryReviews(listing.slug);
   const categories = listingCategories(listing);
   const inVoting = listing.status === "in_voting";
@@ -333,9 +335,26 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         title={listing.title}
         titleClassName="text-[clamp(3rem,9vw,9rem)]"
         lede={listing.tagline}
-        meta={hostOf(listing.url)}
+        meta={
+          listing.isClaimed ? (
+            hostOf(listing.url)
+          ) : (
+            <>
+              {hostOf(listing.url)}
+              <span className="text-black/55">
+                {" · Is this your website? "}
+                <Link
+                  href={`/claim/${listing.slug}`}
+                  className="underline underline-offset-4 hover:text-black"
+                >
+                  Claim it
+                </Link>
+              </span>
+            </>
+          )
+        }
         action={
-          <PillLink href={liveUrl} external>
+          <PillLink href={liveUrl} external rel={rel}>
             Visit live site
           </PillLink>
         }
@@ -451,7 +470,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
                 <a
                   href={withRef(listing.creditUrl)}
                   target="_blank"
-                  rel="noopener"
+                  rel={rel}
                   className="text-sm font-medium text-black/55 hover:text-black"
                 >
                   {hostOf(listing.creditUrl)} ↗
@@ -511,14 +530,14 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
             {!listing.isClaimed && (
               <div className="rounded-3xl border border-black/10 p-6 md:p-8">
-                <p className="eyebrow">Unclaimed nominee</p>
+                <p className="eyebrow">Is this your website?</p>
                 <p className="mt-3 text-base leading-relaxed font-medium tracking-[-0.01em]">
-                  Are you the creator of {listing.title}? Claim this project to verify your profile,
-                  add team credits, and unlock your official nominee badge.
+                  Claim ownership of {listing.title} to unlock a followed (dofollow) link to your
+                  site, edit its details and see the jury&apos;s scores.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
                   <PillLink href={`/claim/${listing.slug}`} variant="outline">
-                    Claim this project
+                    Claim ownership
                   </PillLink>
                   <Link
                     href={`/claim/${listing.slug}?intent=removal`}

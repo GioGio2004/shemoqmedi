@@ -11,7 +11,8 @@ import { ListingCard } from "./ListingCard";
 // The home directory: a sticky bar of single-select pill groups (combined with
 // AND) over the full listing grid. Filtering happens in memory; the selection
 // is mirrored to ?award=&category=&region=&tech= with history.replaceState so
-// links are shareable while the page itself stays static.
+// links are shareable while the page itself stays static. The region group
+// also holds "Startups" (?region=startups), a flag rather than a region.
 
 type Key = "award" | "category" | "region" | "tech";
 type Filters = Record<Key, string | null>;
@@ -27,6 +28,7 @@ const AWARD_OPTIONS: Option[] = [
 ];
 
 const REGION_OPTIONS: Option[] = REGIONS.map((r) => ({ value: r.slug, label: r.name }));
+const STARTUPS = "startups";
 
 /** Always offered, in this order; other technologies follow when present. */
 const CORE_TECH = ["nextjs", "webgl", "threejs", "tailwind", "convex"];
@@ -45,7 +47,7 @@ function techName(slug: string) {
 function matches(listing: PublicListing, f: Filters) {
   if (f.award && !matchAward(listing, f.award)) return false;
   if (f.category && !listingCategories(listing).includes(f.category)) return false;
-  if (f.region && listing.region !== f.region) return false;
+  if (f.region && (f.region === STARTUPS ? !listing.isStartup : listing.region !== f.region)) return false;
   if (f.tech) {
     const name = techName(f.tech);
     if (!name || !listing.technologies.includes(name)) return false;
@@ -83,7 +85,10 @@ export function DirectoryBrowser({ listings }: { listings: PublicListing[] }) {
         value: c.slug,
         label: c.name,
       })),
-      region: REGION_OPTIONS,
+      // Startups only once there is one to show.
+      region: listings.some((l) => l.isStartup)
+        ? [...REGION_OPTIONS, { value: STARTUPS, label: "Startups" }]
+        : REGION_OPTIONS,
       tech: [
         ...CORE_TECH.map((slug) => TECHNOLOGIES.find((t) => t.slug === slug)),
         ...TECHNOLOGIES.filter((t) => !CORE_TECH.includes(t.slug) && techs.has(t.name)),

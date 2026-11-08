@@ -4,7 +4,7 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import Link from "next/link";
 import type { PublicListing } from "@/convex-helpers-api";
 import { categoryName } from "@/lib/collections";
-import { withRefClient } from "@/lib/ref";
+import { outboundRel, withRefClient } from "@/lib/ref";
 import { cn } from "@/lib/utils";
 import { AwardBadge, ScoreBadge } from "./Badges";
 import { Countdown } from "./Countdown";
@@ -62,7 +62,7 @@ export function ListingCard({
         <a
           href={withRefClient(listing.url)}
           target="_blank"
-          rel="noopener"
+          rel={outboundRel(listing)}
           className={cn(
             "absolute right-3 bottom-3 inline-flex min-h-9 items-center gap-2 rounded-full bg-black py-1 pr-1 pl-3.5 text-[10.5px] font-semibold tracking-[0.05em] text-white uppercase",
             "translate-y-2 opacity-0 transition-[opacity,transform] duration-300 group-hover:translate-y-0 group-hover:opacity-100 focus-visible:translate-y-0 focus-visible:opacity-100",

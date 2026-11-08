@@ -363,6 +363,7 @@ export function ListingForm() {
   const [creditName, setCreditName] = useState("");
   const [creditTouched, setCreditTouched] = useState(false);
   const [creditUrl, setCreditUrl] = useState("");
+  const [isStartup, setIsStartup] = useState(false);
   const [cover, setCover] = useState<File | null>(null);
   const [extras, setExtras] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
@@ -440,6 +441,7 @@ export function ListingForm() {
         region: data.region,
         creditName: data.creditName,
         creditUrl: data.creditUrl || undefined,
+        isStartup,
         // Express Fast-Track is not open yet; the backend rejects it.
         submissionTier: "standard",
         coverId,
@@ -577,6 +579,21 @@ export function ListingForm() {
                 {r.name}
               </button>
             ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="grid gap-3">
+          <legend className="eyebrow mb-1 text-black">Startup</legend>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button
+              type="button"
+              aria-pressed={isStartup}
+              onClick={() => setIsStartup((on) => !on)}
+              className={pill(isStartup)}
+            >
+              This is a startup
+            </button>
+            <p className="text-xs text-black/55">Listed in the Startups collection too.</p>
           </div>
         </fieldset>
 

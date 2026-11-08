@@ -6,7 +6,7 @@
 
 import { type DefaultFunctionArgs, type FunctionReference, anyApi } from "convex/server";
 import { type GenericId as Id } from "convex/values";
-import type { AwardSlug, CreatorTier, RegionSlug } from "@/lib/taxonomy";
+import type { AwardSlug, CreatorTier, JuryCategory, RegionSlug } from "@/lib/taxonomy";
 import type { RegisterArgs, UploadAuth } from "@/lib/imagekitUpload";
 
 export type Pillars = { design: number; usability: number; creativity: number; code: number };
@@ -40,6 +40,10 @@ export type PublicListing = {
   votingEndsAt: number;
   awardedAt: number | null;
   isClaimed: boolean;
+  /** Shown in the Startups collection and filter. */
+  isStartup: boolean;
+  /** false: outbound links to the site (and its creator) get rel="nofollow noopener". Optional until the backend with it is deployed. */
+  isDoFollow?: boolean;
   coverUrl: string | null; // first screenshot: 16:9, or a full page that scrolls
   galleryUrls: string[]; // up to 4 more screenshots, in order
   videoUrl: string | null; // short muted hover preview
@@ -92,10 +96,50 @@ export type JurorPublic = {
   slug: string;
   name: string;
   title: string;
+  category: JuryCategory | null; // jury panel
   location: string | null;
-  website: string | null;
+  website: string | null; // null: render no website link at all
+  linkedinUrl: string | null;
   bio: string | null;
+  isFounding: boolean; // "Founding Jury" badge
+  imageUrl: string | null; // null: grey placeholder
+};
+
+/** What /claim/<token> shows before claiming. */
+export type ClaimJurorPreview = {
+  name: string;
+  title: string;
+  category: JuryCategory | null;
+  location: string | null;
+  bio: string | null;
+  website: string | null;
+  linkedinUrl: string | null;
+  isFounding: boolean;
   imageUrl: string | null;
+};
+
+export type ClaimListingPreview = {
+  slug: string;
+  title: string;
+  tagline: string;
+  url: string;
+  creditName: string;
+  coverUrl: string | null;
+  isPublic: boolean; // has a /sites/<slug> page yet
+  isStartup: boolean;
+};
+
+export type ClaimResolution = {
+  state: "open" | "claimed" | "invalid";
+  kind: "juror" | "bundle" | "listing" | null;
+  juror: ClaimJurorPreview | null;
+  listings: ClaimListingPreview[];
+  redirect: string | null; // state "claimed": where the claimed profile/listing lives
+};
+
+export type JurorPage = {
+  juror: JurorPublic & { joinedAt: number };
+  reviews: { listing: { slug: string; title: string; coverUrl: string | null }; average: number; comment: string; updatedAt: number }[];
 };
 
 export type JuryReview = {
@@ -111,7 +155,8 @@ export type JurorProfileArgs = {
   name: string;
   title: string;
   location?: string;
-  website?: string;
+  website?: string; // "" clears
+  linkedinUrl?: string; // "" clears
   bio?: string;
 };
 
@@ -146,6 +191,7 @@ export type SubmitArgs = {
   creditName: string;
   creditUrl?: string;
   submissionTier: "standard" | "express";
+  isStartup?: boolean;
   coverId: MediaId;
   galleryIds?: MediaId[];
   videoId?: MediaId;
@@ -197,12 +243,17 @@ export type PublicApiType = {
       } | null
     >;
     evaluate: M<{ slug: string; scores: Pillars; comment: string }, null>;
-    updateProfile: M<JurorProfileArgs, null>;
-    inviteByToken: Q<
-      { token: string },
-      { status: "valid" | "accepted" | "revoked" | "expired" | "unknown"; name: string | null; email: string | null }
-    >;
-    acceptInvite: M<{ token: string } & JurorProfileArgs, null>;
+    /** Returns the (possibly new) slug: renaming changes /jury/<slug>. */
+    updateProfile: M<JurorProfileArgs, { slug: string }>;
+    /** Public jurors: claimed and on the jury (sitemap, static params). */
+    publicSlugs: Q<Empty, { slug: string; updatedAt: number }[]>;
+    /** /jury/<slug>; null for unclaimed or removed jurors. */
+    getBySlug: Q<{ slug: string }, JurorPage | null>;
+  };
+  claimLinks: {
+    /** Anyone can preview a link; claiming needs a signed-in user. */
+    resolve: Q<{ token: string }, ClaimResolution>;
+    claim: M<{ token: string }, { kind: "juror" | "bundle" | "listing"; redirect: string }>;
   };
   claims: {
     submit: M<

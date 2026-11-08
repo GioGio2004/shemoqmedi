@@ -73,6 +73,15 @@ export const PILLARS = [
   { key: "code", name: "Code" },
 ] as const;
 
+/** Jury panels (mirrors the backend's JURY_CATEGORIES). */
+export const JURY_CATEGORIES = [
+  { slug: "design", name: "Design & UI" },
+  { slug: "engineering", name: "Engineering & Performance" },
+  { slug: "venture", name: "Venture & Startups" },
+  { slug: "academic", name: "Academic, SEO & Content" },
+] as const;
+export type JuryCategory = (typeof JURY_CATEGORIES)[number]["slug"];
+
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
 export type TechnologyName = (typeof TECHNOLOGIES)[number]["name"];
 export type RegionSlug = (typeof REGIONS)[number]["slug"];

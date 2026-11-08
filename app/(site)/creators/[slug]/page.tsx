@@ -119,6 +119,8 @@ export default async function CreatorPage({ params }: Params) {
   if (!data) notFound();
   const { creator, listings } = data;
   const website = safeWebsite(creator.website);
+  // Same rule as listing pages: followed once the creator or one of their listings is claimed.
+  const rel = creator.isClaimed || listings.some((l) => l.isDoFollow ?? l.isClaimed) ? "noopener" : "nofollow noopener";
   const links = (creator.links ?? []).map(safeWebsite).filter((l): l is string => l !== null && l !== website);
   // Website + profiles: tells Google these accounts are the same person or studio.
   const sameAs = [...(website ? [website] : []), ...links];
@@ -212,7 +214,7 @@ export default async function CreatorPage({ params }: Params) {
                 <a
                   href={website}
                   target="_blank"
-                  rel="noopener"
+                  rel={rel}
                   className="text-sm underline decoration-black/20 underline-offset-4 hover:decoration-black"
                 >
                   {hostOf(website)}
@@ -229,7 +231,7 @@ export default async function CreatorPage({ params }: Params) {
                     key={href}
                     href={href}
                     target="_blank"
-                    rel="noopener"
+                    rel={rel}
                     className="text-sm underline decoration-black/20 underline-offset-4 hover:decoration-black"
                   >
                     {linkLabel(href)}

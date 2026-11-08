@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { JurorPublic } from "@/convex-helpers-api";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
-import { JurorAvatar } from "@/components/jury/JurorAvatar";
+import { JuryCard } from "@/components/jury/JuryCard";
+import { safeUrl } from "@/components/jury/jurorInfo";
 import { getJurors } from "@/lib/listings";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
-import { hostOf } from "@/lib/format";
+import { JURY_CATEGORIES } from "@/lib/taxonomy";
 
 const title = "The Jury: Who Reviews and Scores Websites";
 const description =
@@ -20,49 +21,46 @@ export const metadata: Metadata = {
 
 // Members come from Convex (jury.listPublic); refreshed in the background.
 export const dynamic = "force-static";
-export const revalidate = 300;
+export const revalidate = 60;
 
-function safeUrl(raw: string | null) {
-  if (!raw) return null;
-  try {
-    const u = new URL(raw);
-    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
-  } catch {
-    return null;
-  }
+type Member = JurorPublic & { evaluations: number };
+
+/** Members by panel, in JURY_CATEGORIES order; jurors without a panel last, under "Jury". */
+function byPanel(jurors: Member[]) {
+  const panels: { key: string; name: string; members: Member[] }[] = JURY_CATEGORIES.map((c) => ({
+    key: c.slug,
+    name: c.name,
+    members: jurors.filter((j) => j.category === c.slug),
+  }));
+  panels.push({ key: "jury", name: "Jury", members: jurors.filter((j) => j.category === null) });
+  return panels.filter((p) => p.members.length > 0);
 }
 
-function Members({ jurors }: { jurors: (JurorPublic & { evaluations: number })[] }) {
+function Members({ jurors }: { jurors: Member[] }) {
   return (
-    <ul className="grid gap-8 sm:grid-cols-2">
-      {jurors.map((j) => {
-        const url = safeUrl(j.website);
-        return (
-          <li key={j.slug} id={j.slug} className="grid scroll-mt-32 content-start gap-3">
-            <JurorAvatar url={j.imageUrl} size={72} />
-            <div>
-              <p className="text-lg font-semibold tracking-[-0.02em] text-black">{j.name}</p>
-              <p className="text-sm">
-                {j.title}
-                {j.location ? `, ${j.location}` : ""}
-              </p>
-            </div>
-            {j.bio && <p className="text-sm">{j.bio}</p>}
-            <p className="text-xs text-black/55">
-              {j.evaluations} {j.evaluations === 1 ? "evaluation" : "evaluations"}
-              {url && (
-                <>
-                  {" · "}
-                  <a href={url} target="_blank" rel="noopener">
-                    {hostOf(url)}
-                  </a>
-                </>
-              )}
-            </p>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="grid gap-10">
+      {byPanel(jurors).map((panel) => (
+        <div key={panel.key} className="grid gap-4">
+          <h3 className="eyebrow">{panel.name}</h3>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {panel.members.map((j) => (
+              // id: older links point at /jury#<slug>.
+              <li key={j.slug} id={j.slug} className="grid scroll-mt-32">
+                <JuryCard
+                  juror={j}
+                  href={`/jury/${j.slug}`}
+                  meta={
+                    <p className="text-xs text-black/55">
+                      {j.evaluations} {j.evaluations === 1 ? "evaluation" : "evaluations"}
+                    </p>
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -116,14 +114,19 @@ export default async function JuryPage() {
     inLanguage: "en",
     ...(jurors.length > 0
       ? {
-          mentions: jurors.map((j) => ({
-            "@type": "Person",
-            "@id": `${absoluteUrl("/jury")}#${j.slug}`,
-            name: j.name,
-            jobTitle: j.title,
-            url: safeUrl(j.website) ?? undefined,
-            image: j.imageUrl ?? undefined,
-          })),
+          // Same @id as the Person on each member's /jury/<slug> page.
+          mentions: jurors.map((j) => {
+            const sameAs = [safeUrl(j.website), safeUrl(j.linkedinUrl)].filter((l): l is string => l !== null);
+            return {
+              "@type": "Person",
+              "@id": `${absoluteUrl(`/jury/${j.slug}`)}#person`,
+              name: j.name,
+              jobTitle: j.title,
+              url: absoluteUrl(`/jury/${j.slug}`),
+              image: j.imageUrl ?? undefined,
+              sameAs: sameAs.length > 0 ? sameAs : undefined,
+            };
+          }),
         }
       : {}),
   };

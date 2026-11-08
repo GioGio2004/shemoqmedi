@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api, type JurorProfileArgs } from "@/convex-helpers-api";
@@ -9,6 +8,8 @@ import { friendlyError } from "@/lib/errors";
 import { LIMITS } from "@/lib/taxonomy";
 import { ArrowIcon } from "@/components/site/ui";
 import { JurorAvatar } from "./JurorAvatar";
+import { JuryCard } from "./JuryCard";
+import { JuryShare } from "./JuryShare";
 
 const input =
   "w-full min-h-[46px] rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none transition-colors placeholder:text-black/35 focus:border-black";
@@ -18,10 +19,10 @@ const MAX_IMAGE = 10 * 1024 * 1024; // Clerk's limit for profile images
 
 /**
  * Profile photo, stored on the user's Clerk account (not ImageKit). The site
- * picks it up through the Clerk webhook; without one the jury pages show a
- * grey placeholder.
+ * picks it up through the Clerk webhook; without one the jury pages show the
+ * photo we added for the profile (`fallback`), else a grey placeholder.
  */
-function PhotoField() {
+function PhotoField({ fallback }: { fallback: string | null }) {
   const { user } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -49,7 +50,7 @@ function PhotoField() {
     <div className="grid gap-3">
       <p className={label}>Photo</p>
       <div className="flex flex-wrap items-center gap-5">
-        <JurorAvatar url={photo} size={88} />
+        <JurorAvatar url={photo ?? fallback} size={88} />
         <div className="grid gap-2">
           <div className="flex flex-wrap gap-3 text-sm">
             <button
@@ -94,10 +95,12 @@ function PhotoField() {
 
 function ProfileFields({
   initial,
+  photoFallback,
   submitLabel,
   onSave,
 }: {
   initial: JurorProfileArgs;
+  photoFallback: string | null;
   submitLabel: string;
   onSave: (profile: JurorProfileArgs) => Promise<void>;
 }) {
@@ -120,7 +123,9 @@ function ProfileFields({
         name: form.name.trim(),
         title: form.title.trim(),
         location: form.location?.trim() || undefined,
-        website: form.website?.trim() || undefined,
+        // "" clears a link that was set before.
+        website: form.website?.trim() ?? "",
+        linkedinUrl: form.linkedinUrl?.trim() ?? "",
         bio: form.bio?.trim() || undefined,
       });
       setSaved(true);
@@ -133,7 +138,7 @@ function ProfileFields({
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6">
-      <PhotoField />
+      <PhotoField fallback={photoFallback} />
       <div className="grid gap-6 md:grid-cols-2">
         <label className="grid gap-2">
           <span className={label}>Name</span>
@@ -163,6 +168,18 @@ function ProfileFields({
             onChange={set("website")}
             className={input}
             placeholder="https://your-portfolio.com"
+            spellCheck={false}
+          />
+        </label>
+        <label className="grid gap-2 md:col-span-2">
+          <span className={label}>LinkedIn (optional)</span>
+          <input
+            inputMode="url"
+            maxLength={LIMITS.url}
+            value={form.linkedinUrl ?? ""}
+            onChange={set("linkedinUrl")}
+            className={input}
+            placeholder="https://www.linkedin.com/in/your-name"
             spellCheck={false}
           />
         </label>
@@ -199,73 +216,48 @@ function ProfileFields({
   );
 }
 
-/** /jury/join?token=…: accept an invitation and set up the jury profile. */
-export function JuryJoin({ token }: { token: string }) {
-  const router = useRouter();
-  const { user } = useUser();
-  const invite = useQuery(api.jury.inviteByToken, { token });
-  const me = useQuery(api.jury.me, {});
-  const accept = useMutation(api.jury.acceptInvite);
-
-  if (invite === undefined || me === undefined) return <p className="text-sm text-black/55">Loading…</p>;
-  if (me && invite.status !== "valid") {
-    return (
-      <p className="text-sm">
-        You&apos;re already on the jury. <a href="/jury/profile" className="underline underline-offset-4">Edit your profile</a>.
-      </p>
-    );
-  }
-  if (invite.status !== "valid") {
-    const why = {
-      accepted: "This invitation has already been used.",
-      revoked: "This invitation was withdrawn.",
-      expired: "This invitation has expired. Ask us for a new one.",
-      unknown: "This invitation link is not valid. Check that you opened the full link from the email.",
-    }[invite.status];
-    return <p className="text-sm">{why}</p>;
-  }
-  const signedInAs = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  return (
-    <div className="grid max-w-3xl gap-8">
-      <p className="text-sm leading-relaxed text-black/70">
-        This invitation is for <strong className="text-black">{invite.email}</strong>.
-        {signedInAs && signedInAs !== invite.email
-          ? ` You're signed in as ${signedInAs}: sign out and sign in with ${invite.email} to accept it.`
-          : " Set up your jury profile below. Your name, role and photo appear with your evaluations."}
-      </p>
-      <ProfileFields
-        initial={{ name: invite.name ?? user?.fullName ?? "", title: "" }}
-        submitLabel="Join the jury"
-        onSave={async (profile) => {
-          await accept({ token, ...profile });
-          router.replace("/jury/profile?joined=1");
-        }}
-      />
-    </div>
-  );
-}
-
-/** /jury/profile: a juror edits their profile and photo. */
-export function JuryProfile() {
+/**
+ * /jury/profile: a juror edits their profile and photo. With `claimed` (just
+ * claimed from a claim link) their badge and share links come first.
+ */
+export function JuryProfile({ claimed }: { claimed?: boolean }) {
   const me = useQuery(api.jury.me, {});
   const update = useMutation(api.jury.updateProfile);
   if (me === undefined) return <p className="text-sm text-black/55">Loading…</p>;
   if (me === null) return <p className="text-sm">This account is not on the jury. Jury membership is by invitation.</p>;
+  const form = (
+    <ProfileFields
+      initial={{
+        name: me.name,
+        title: me.title,
+        location: me.location ?? undefined,
+        website: me.website ?? undefined,
+        linkedinUrl: me.linkedinUrl ?? undefined,
+        bio: me.bio ?? undefined,
+      }}
+      photoFallback={me.imageUrl}
+      submitLabel="Save profile"
+      onSave={async (profile) => {
+        await update(profile);
+      }}
+    />
+  );
+  if (!claimed) return <div className="grid max-w-3xl gap-8">{form}</div>;
   return (
-    <div className="grid max-w-3xl gap-8">
-      <ProfileFields
-        initial={{
-          name: me.name,
-          title: me.title,
-          location: me.location ?? undefined,
-          website: me.website ?? undefined,
-          bio: me.bio ?? undefined,
-        }}
-        submitLabel="Save profile"
-        onSave={async (profile) => {
-          await update(profile);
-        }}
-      />
+    <div className="grid gap-16">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <JuryCard juror={me} href={`/jury/${me.slug}`} branded />
+        <JuryShare slug={me.slug} />
+      </div>
+      <section aria-labelledby="edit-profile-title" className="grid max-w-3xl gap-8 border-t border-black/10 pt-12">
+        <div className="grid gap-2">
+          <h2 id="edit-profile-title" className="text-3xl font-semibold tracking-[-0.045em]">
+            Your profile
+          </h2>
+          <p className="text-sm text-black/60">Check your details. Changes show on your jury page within a few minutes.</p>
+        </div>
+        {form}
+      </section>
     </div>
   );
 }

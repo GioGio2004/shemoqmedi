@@ -222,6 +222,17 @@ export function SignUpForm() {
           Continue
         </SubmitButton>
       </form>
+      <p className="text-xs leading-relaxed text-black/55">
+        By creating an account you agree to the{" "}
+        <Link href="/terms" className="text-black underline underline-offset-4">
+          Terms
+        </Link>{" "}
+        and the{" "}
+        <Link href="/privacy" className="text-black underline underline-offset-4">
+          Privacy Policy
+        </Link>
+        .
+      </p>
       <p className="border-t border-black/10 pt-6 text-sm text-black/60">
         Already have an account?{" "}
         <Link

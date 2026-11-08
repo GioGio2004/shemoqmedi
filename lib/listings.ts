@@ -6,6 +6,7 @@ import { unstable_rethrow } from "next/navigation";
 import {
   api,
   type CreatorSummary,
+  type JurorPage,
   type JurorPublic,
   type JuryReview,
   type PublicCreator,
@@ -69,6 +70,16 @@ export const getJuryReviews = cache(async (slug: string): Promise<JuryReview[]> 
 export function getJurors(): Promise<(JurorPublic & { evaluations: number })[]> {
   return safe("jury.listPublic", () => fetchQuery(api.jury.listPublic, {}), []);
 }
+
+/** Public jurors (claimed and on the jury), for static params and the sitemap. */
+export function getJurorSlugs(): Promise<{ slug: string; updatedAt: number }[]> {
+  return safe("jury.publicSlugs", () => fetchQuery(api.jury.publicSlugs, {}), []);
+}
+
+/** /jury/<slug>; null for unclaimed or removed jurors. */
+export const getJurorPage = cache((slug: string): Promise<JurorPage | null> =>
+  safe("jury.getBySlug", () => fetchQuery(api.jury.getBySlug, { slug }), null),
+);
 
 export const getCreator = cache(
   (slug: string): Promise<{ creator: PublicCreator; listings: PublicListing[] } | null> =>

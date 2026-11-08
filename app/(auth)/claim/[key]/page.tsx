@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
 import { MediaImage as Image } from "@/components/site/MediaImage";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { ClaimForm } from "@/components/listing/ClaimForm";
+import { ClaimToken } from "@/components/claim/ClaimToken";
 import { PillLink } from "@/components/site/ui";
 import { getCreator, getListing } from "@/lib/listings";
 import { hostOf } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Claim", robots: { index: false } };
+// The URL can hold a secret claim token: never indexed, and never sent as a
+// Referer to other sites (photos, LinkedIn).
+export const metadata: Metadata = { title: "Claim", robots: { index: false }, referrer: "same-origin" };
 
-// Protected by proxy.ts (requires a Clerk session). Rendered per request so
-// the claimed state is always current.
+// Rendered per request so the claimed state is always current.
 export const dynamic = "force-dynamic";
+
+/** A secret claim link: 64 hex characters (listing slugs are at most 60). Mirrors convex/claimLinks.ts. */
+const CLAIM_TOKEN = /^[a-f0-9]{64}$/;
 
 type Target = {
   targetType: "listing" | "creator";
@@ -56,10 +62,37 @@ export default async function ClaimPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ type?: string; intent?: string }>;
+  params: Promise<{ key: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ slug }, { type, intent }] = await Promise.all([params, searchParams]);
+  const [{ key }, query] = await Promise.all([params, searchParams]);
+
+  // /claim/<token>: anyone may preview the link; claiming asks for an account.
+  if (CLAIM_TOKEN.test(key)) {
+    return (
+      <>
+        <Header />
+        <main id="main-content">
+          <ClaimToken token={key} auto={query.auto === "1"} />
+        </main>
+      </>
+    );
+  }
+
+  // /claim/<slug>: a claim (or removal) request, for signed-in users only.
+  // proxy.ts leaves /claim open for token links, so the check is here.
+  const slug = key;
+  const type = typeof query.type === "string" ? query.type : undefined;
+  const intent = typeof query.intent === "string" ? query.intent : undefined;
+  const { userId } = await auth();
+  if (!userId) {
+    const back = new URLSearchParams();
+    if (type) back.set("type", type);
+    if (intent) back.set("intent", intent);
+    const path = `/claim/${encodeURIComponent(slug)}${back.size ? `?${back}` : ""}`;
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(path)}`);
+  }
+
   const target = await loadTarget(slug, type);
   if (!target) notFound();
 

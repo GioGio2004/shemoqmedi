@@ -16,6 +16,7 @@ const COLLECTIONS: { tag: string; label: string }[] = [
   { tag: "sotd", label: "Site of the Day" },
   { tag: "bsc", label: "Best Solo Creation" },
   { tag: "georgia", label: "Georgia" },
+  { tag: "startups", label: "Startups" },
   { tag: "nextjs", label: "Next.js" },
   { tag: "webgl", label: "WebGL" },
   { tag: "portfolio", label: "Portfolio" },
@@ -124,7 +125,17 @@ export async function Footer() {
       </div>
 
       <div className="container-site flex flex-col gap-2 py-8 text-xs text-black/55 sm:flex-row sm:justify-between">
-        <p>© {new Date().getFullYear()} shemoqmedi.space</p>
+        <p>
+          © {new Date().getFullYear()} shemoqmedi.space
+          <span aria-hidden="true"> · </span>
+          <Link href="/privacy" className="hover:text-black hover:underline">
+            Privacy
+          </Link>
+          <span aria-hidden="true"> · </span>
+          <Link href="/terms" className="hover:text-black hover:underline">
+            Terms
+          </Link>
+        </p>
         <p>The web&apos;s finest, listed by the people who build it.</p>
       </div>
     </footer>

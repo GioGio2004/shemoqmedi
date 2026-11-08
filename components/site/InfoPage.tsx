@@ -27,7 +27,8 @@ export function InfoPage({
   title: string;
   lede: string;
   sections: InfoSection[];
-  current: (typeof INFO_PAGES)[number]["href"];
+  /** This page's path, left out of the "More" links at the end. */
+  current: string;
 }) {
   return (
     <>

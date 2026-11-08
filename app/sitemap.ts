@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import type { PublicListing } from "@/convex-helpers-api";
 import { allCollections, MIN_INDEXABLE } from "@/lib/collections";
-import { getCreators, getPublicListings, getPublicSlugs } from "@/lib/listings";
+import { getCreators, getJurorSlugs, getPublicListings, getPublicSlugs } from "@/lib/listings";
 import { listingImageUrls } from "@/lib/imageSeo";
 import { absoluteUrl } from "@/lib/site";
 
@@ -11,10 +11,11 @@ export const dynamic = "force-static";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [sites, creators, listings] = await Promise.all([
+  const [sites, creators, listings, jurors] = await Promise.all([
     getPublicSlugs(),
     getCreators(),
     getPublicListings(),
+    getJurorSlugs(),
   ]);
 
   // PublicListing has no updatedAt; publicSlugs carries it.
@@ -50,6 +51,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/about"), changeFrequency: "monthly", priority: 0.4 },
     { url: absoluteUrl("/how-we-score"), changeFrequency: "monthly", priority: 0.4 },
     { url: absoluteUrl("/jury"), changeFrequency: "monthly", priority: 0.4 },
+    { url: absoluteUrl("/privacy"), changeFrequency: "yearly", priority: 0.1 },
+    { url: absoluteUrl("/terms"), changeFrequency: "yearly", priority: 0.1 },
     {
       url: absoluteUrl("/ka"),
       lastModified: newest(listings.filter((l) => l.region === "georgia")),
@@ -89,6 +92,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.5,
       images: creatorCovers(c.slug),
+    })),
+    // Public (claimed) jurors only; unclaimed profiles have no page.
+    ...jurors.map((j) => ({
+      url: absoluteUrl(`/jury/${j.slug}`),
+      lastModified: new Date(j.updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.4,
     })),
   ];
 }

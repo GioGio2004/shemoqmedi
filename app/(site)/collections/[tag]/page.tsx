@@ -69,6 +69,11 @@ const PRELUDE: Record<Collection["kind"], string> = {
   status: "voting now",
 };
 
+/** Startups share the "status" kind with the nominees but are not a live vote. */
+function preludeFor(collection: Collection) {
+  return collection.tag === "startups" ? "the best" : PRELUDE[collection.kind];
+}
+
 /** Awards and the live nominees list browse as one group. */
 function group(kind: Collection["kind"]) {
   return kind === "status" ? "award" : kind;
@@ -135,7 +140,7 @@ export default async function CollectionPage({ params }: Params) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <PageHero
-        prelude={PRELUDE[collection.kind]}
+        prelude={preludeFor(collection)}
         title={collection.heading}
         titleClassName={headingSize(collection.heading)}
         lede={collection.intro}

@@ -10,7 +10,7 @@ import {
 } from "@/lib/taxonomy";
 
 // Programmatic SEO collections: one static page per category, technology,
-// region and award at /collections/<tag>. Tags are unique across kinds.
+// region and award (plus nominees and startups) at /collections/<tag>. Tags are unique across kinds.
 
 export type CollectionKind = "category" | "technology" | "region" | "award" | "status";
 
@@ -154,6 +154,19 @@ function build(): Collection[] {
     description: `Websites in their ${VOTING_DAYS}-day voting window right now. Sign in and score them.`,
     summarize: null, // changes every week; the fixed line stays accurate
     match: (l) => l.status === "in_voting",
+  });
+  // Kind "status": it browses alongside the awards and nominees.
+  out.push({
+    tag: "startups",
+    kind: "status",
+    name: "Startups",
+    heading: "Startup websites",
+    intro: `Websites of early-stage companies and new products, scored on ${PILLARS_LINE}.`,
+    title: `Best Startup Websites & Web Design Inspiration (${year()})`,
+    description:
+      "The best startup websites for web design inspiration, hand-reviewed and scored by an independent jury and the community.",
+    summarize: (n, list) => `${n} hand-picked startup websites: ${list}. ${SCORED_BY}`,
+    match: (l) => l.isStartup,
   });
   return out;
 }

@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -57,13 +55,6 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth">
       <body className={inter.variable}>
         {children}
-        <Analytics />
-        {/* Ahrefs Web Analytics: cookieless, no personal data */}
-        <Script
-          src="https://analytics.ahrefs.com/analytics.js"
-          data-key="RO+0sybyEvM/+UpADUCBDA"
-          strategy="lazyOnload"
-        />
       </body>
     </html>
   );

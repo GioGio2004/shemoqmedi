@@ -11,9 +11,9 @@ export const metadata: Metadata = { title: "Your sites", robots: { index: false 
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ submitted?: string }>;
+  searchParams: Promise<{ submitted?: string; claimed?: string }>;
 }) {
-  const { submitted } = await searchParams;
+  const { submitted, claimed } = await searchParams;
 
   return (
     <>
@@ -23,9 +23,11 @@ export default async function AccountPage({
           prelude="your account"
           title="Your sites"
           lede={
-            submitted
-              ? "Thanks, your site is in the review queue. You'll see the decision here."
-              : "Everything you've submitted, and where it stands."
+            claimed
+              ? "Done, the site is yours. Its public page updates within a minute, with a followed link to your site."
+              : submitted
+                ? "Thanks, your site is in the review queue. You'll see the decision here."
+                : "Everything you've submitted, and where it stands."
           }
           action={
             <div className="flex items-center gap-4">

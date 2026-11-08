@@ -32,12 +32,15 @@ export function PillLink({
   href,
   variant = "solid",
   external,
+  rel = "noopener",
   className,
   children,
 }: {
   href: string;
   variant?: "solid" | "outline";
   external?: boolean;
+  /** External links only; pass "nofollow noopener" for unclaimed listings. */
+  rel?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -61,7 +64,7 @@ export function PillLink({
 
   if (external) {
     return (
-      <a href={href} target="_blank" rel="noopener" className={classes}>
+      <a href={href} target="_blank" rel={rel} className={classes}>
         <span>{children}</span>
         {badge}
       </a>

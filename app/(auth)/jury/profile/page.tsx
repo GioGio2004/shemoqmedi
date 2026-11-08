@@ -6,30 +6,33 @@ import { JuryProfile } from "@/components/jury/JurorProfileForm";
 
 export const metadata: Metadata = { title: "Your jury profile", robots: { index: false } };
 
-// Protected by proxy.ts (requires a Clerk session).
-export default async function JuryProfilePage({ searchParams }: { searchParams: Promise<{ joined?: string }> }) {
-  const { joined } = await searchParams;
+// Protected by proxy.ts (requires a Clerk session). ?claimed=1: just claimed
+// from a claim link (convex/claimLinks.ts sends people here).
+export default async function JuryProfilePage({ searchParams }: { searchParams: Promise<{ claimed?: string }> }) {
+  const { claimed } = await searchParams;
   return (
     <>
       <Header />
       <main id="main-content">
         <PageHero
-          prelude={joined ? "welcome to the" : "your"}
-          title={joined ? "Jury" : "Jury profile"}
-          titleClassName={joined ? undefined : "text-[clamp(3rem,9vw,9rem)] leading-[0.88]"}
+          prelude={claimed ? "welcome to the" : "your"}
+          title={claimed ? "Jury" : "Jury profile"}
+          titleClassName={claimed ? undefined : "text-[clamp(3rem,9vw,9rem)] leading-[0.88]"}
           lede={
-            joined
-              ? "You're on the jury. Open any site in live voting and use the Evaluate button in the bottom-right corner to score it."
+            claimed
+              ? "Your jury spot is claimed and your profile is public. Share your badge, then score your first website."
               : "How you appear next to your evaluations and on the jury page."
           }
           action={
-            <PillLink href="/collections/nominees" variant={joined ? "solid" : "outline"}>
-              Sites in voting
-            </PillLink>
+            claimed ? undefined : (
+              <PillLink href="/collections/nominees" variant="outline">
+                Sites in voting
+              </PillLink>
+            )
           }
         />
         <div className="container-site pb-24">
-          <JuryProfile />
+          <JuryProfile claimed={!!claimed} />
         </div>
       </main>
     </>

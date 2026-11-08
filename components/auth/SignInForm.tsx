@@ -197,7 +197,11 @@ export function SignInForm() {
 
   return (
     <div className="grid gap-6">
-      <GoogleOneTap signInForceRedirectUrl={redirect} signUpForceRedirectUrl="/submit" />
+      <GoogleOneTap
+        signInForceRedirectUrl={redirect}
+        // New accounts go to /submit, unless they came from a page (e.g. a claim link) that wants them back.
+        signUpForceRedirectUrl={redirect === "/account" ? "/submit" : redirect}
+      />
       <GoogleButton onClick={onGoogle} pending={pending === "google"} disabled={!ready || pending !== null} />
       <Divider />
       <form onSubmit={onPassword} noValidate className="grid gap-5">

@@ -8,6 +8,7 @@ import { Countdown } from "@/components/listing/Countdown";
 import { VoteForm } from "@/components/listing/VoteForm";
 import { PillLink } from "@/components/site/ui";
 import { getListing, withRef } from "@/lib/listings";
+import { outboundRel } from "@/lib/ref";
 import { formatDate, hostOf } from "@/lib/format";
 
 // Protected by proxy.ts (requires a Clerk session). Rendered per request so
@@ -79,7 +80,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
               <span className="text-xs font-medium">
                 by {listing.creditName} · {hostOf(listing.url)}
               </span>
-              <PillLink href={withRef(listing.url)} external>
+              <PillLink href={withRef(listing.url)} external rel={outboundRel(listing)}>
                 Visit live site
               </PillLink>
             </figcaption>
