@@ -1,5 +1,5 @@
 import type { PublicListing } from "@/convex-helpers-api";
-import { PILLARS } from "@/lib/taxonomy";
+import { LIMITS, PILLARS, VOTING_DAYS } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
 
 // Same weighting the backend uses for the final score (convex/lib/scoring.ts
@@ -87,7 +87,8 @@ export function ScoreBreakdown({ listing }: { listing: PublicListing }) {
 
       {listing.finalScore === null && (
         <p className="mt-6 text-sm text-black/55">
-          Not scored yet. The jury and the community score every nominee during its 7-day window.
+          Not scored yet. The jury and the community score every nominee during its {VOTING_DAYS}-day window,
+          extended to {VOTING_DAYS + LIMITS.votingExtensionDays} days if the jury needs more time.
         </p>
       )}
     </div>

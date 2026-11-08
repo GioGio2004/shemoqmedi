@@ -41,7 +41,9 @@ function average(scores: Pillars) {
 
 /**
  * Community vote: four 1–10 sliders (Design, Usability, Creativity, Code).
- * One vote per account while the listing is in its 7-day voting window.
+ * One vote per voter while the listing is in its voting window, open only to
+ * creators with a Shemoqmedi badge and never on their own site (the backend
+ * enforces the same rules).
  */
 export function VoteForm({
   slug,
@@ -87,6 +89,7 @@ export function VoteForm({
 
 function Ballot({ slug, title }: { slug: string; title: string }) {
   const existing = useQuery(api.votes.mine, { slug });
+  const eligibility = useQuery(api.votes.eligibility, { slug });
   const cast = useMutation(api.votes.cast);
   const [scores, setScores] = useState<Pillars>(DEFAULT_SCORES);
   // Text being typed in a score box, per pillar, until it is committed.
@@ -128,7 +131,9 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
     );
   }
 
-  if (existing === undefined) return <p className="text-sm text-black/55">Loading…</p>;
+  if (existing === undefined || eligibility === undefined) {
+    return <p className="text-sm text-black/55">Loading…</p>;
+  }
 
   if (existing) {
     return (
@@ -141,6 +146,19 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
         <BackLink slug={slug} />
       </div>
     );
+  }
+
+  // null: the account is still syncing with the database.
+  if (eligibility === null) {
+    return (
+      <div className={panel}>
+        <p className="text-sm text-black/55">Setting up your account. Reload the page in a moment.</p>
+      </div>
+    );
+  }
+
+  if (!eligibility.canVote) {
+    return <NotEligible kind={eligibility.kind} reason={eligibility.reason} slug={slug} title={title} />;
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -250,9 +268,77 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
         </div>
       </div>
       <p className="mt-6 text-xs text-black/55">
-        One vote per account. Votes can&apos;t be changed, and you can&apos;t vote on your own site.
+        One vote per site. Votes can&apos;t be changed.
       </p>
     </form>
+  );
+}
+
+/** Why this account can't vote (already-voted is handled by the ballot itself). */
+function NotEligible({
+  kind,
+  reason,
+  slug,
+  title,
+}: {
+  kind: "ok" | "closed" | "own" | "badge" | "voted";
+  reason: string | null;
+  slug: string;
+  title: string;
+}) {
+  if (kind === "badge") {
+    return (
+      <div className={panel}>
+        <p className="eyebrow">Badge holders vote</p>
+        <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
+          Voting is open to creators with a Shemoqmedi badge.
+        </p>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-black/60">
+          Get one by having a site of your own listed here: an Official Nominee badge or any award
+          counts.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Link
+            href="/submit"
+            className="inline-flex min-h-[46px] items-center gap-3.5 rounded-full bg-black py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase"
+          >
+            Submit your site
+            <span className="grid size-9 place-items-center rounded-full bg-white text-black">
+              <ArrowIcon />
+            </span>
+          </Link>
+        </div>
+        <BackLink slug={slug} />
+      </div>
+    );
+  }
+  if (kind === "own") {
+    return (
+      <div className={panel}>
+        <p className="eyebrow">Your site</p>
+        <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
+          You can&apos;t vote on your own site.
+        </p>
+        <BackLink slug={slug} />
+      </div>
+    );
+  }
+  if (kind === "closed") {
+    return (
+      <div className={panel}>
+        <p className="eyebrow">Voting closed</p>
+        <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
+          Voting has closed for {title}.
+        </p>
+        <BackLink slug={slug} />
+      </div>
+    );
+  }
+  return (
+    <div className={panel}>
+      <p className="text-sm">{reason ?? "You can't vote on this site."}</p>
+      <BackLink slug={slug} />
+    </div>
   );
 }
 

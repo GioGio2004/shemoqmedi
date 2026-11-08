@@ -14,7 +14,7 @@ export default function SubmitPage() {
         <PageHero
           prelude="list your work"
           title="Submit"
-          lede="Show us a site you built. Once it's accepted it gets its own page, a link back to you and a 7-day live voting window."
+          lede="Show us a site you built. Once it's accepted it gets its own page, a link back to you and a 7-day voting window, extended to 14 days if the jury needs more time."
         />
         <div className="container-site pb-24">
           <ListingForm />

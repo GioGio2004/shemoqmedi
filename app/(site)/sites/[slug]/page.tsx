@@ -385,6 +385,11 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
               <span className={monoPill}>{closedLabel(listing)}</span>
             )}
           </li>
+          {inVoting && listing.votingExtended && (
+            <li>
+              <span className={monoPill}>Extended a week for the jury</span>
+            </li>
+          )}
         </ul>
       </section>
 
@@ -498,12 +503,16 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
                 <p className="eyebrow">Community vote · 40%</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em]">Cast your vote</h2>
                 <p className="mt-3 max-w-sm text-sm leading-relaxed text-black/60">
-                  Score Design, Usability, Creativity and Code from 1 to 10. One vote per account.
+                  Score Design, Usability, Creativity and Code from 1 to 10. Open to creators with a
+                  Shemoqmedi badge: one vote each, never on your own site.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <PillLink href={`/vote/${listing.slug}`}>Vote on this site</PillLink>
                   <Countdown endsAt={listing.votingEndsAt} />
                 </div>
+                {listing.votingExtended && (
+                  <p className="mt-4 text-xs text-black/55">Voting was extended a week to give the jury time.</p>
+                )}
               </div>
             ) : (
               <div className="rounded-3xl border border-black/10 p-6 md:p-8">

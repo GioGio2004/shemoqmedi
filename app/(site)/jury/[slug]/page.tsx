@@ -67,6 +67,8 @@ export default async function JurorPage({ params }: Params) {
   const website = safeUrl(juror.website);
   const linkedin = safeUrl(juror.linkedinUrl);
   const sameAs = [website, linkedin].filter((l): l is string => l !== null);
+  const experience = juror.experience ?? [];
+  const work = juror.work ?? [];
 
   // The Person's @id is the one /jury uses for this member.
   const url = absoluteUrl(`/jury/${juror.slug}`);
@@ -130,7 +132,7 @@ export default async function JurorPage({ params }: Params) {
               </div>
             ))}
             <div className="bg-white p-6 text-sm text-black/60">
-              Jurors score each site in its voting week. The jury&apos;s average counts for 60% of the final result.{" "}
+              Jurors score each site in its voting window. The jury&apos;s average counts for 60% of the final result.{" "}
               <Link href="/how-we-score" className="text-black underline decoration-black/25 underline-offset-4 hover:decoration-black">
                 How we score
               </Link>
@@ -138,6 +140,59 @@ export default async function JurorPage({ params }: Params) {
           </dl>
         </div>
       </section>
+
+      {(experience.length > 0 || work.length > 0) && (
+        <section aria-label={`${juror.name}, experience and work`} className="container-site pb-16">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {experience.length > 0 && (
+              <div className="rounded-3xl border border-black/10 p-6 md:p-8">
+                <h2 className="text-3xl font-semibold tracking-[-0.045em]">Experience</h2>
+                <ul className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-black/10 bg-black/10">
+                  {experience.map((e, i) => (
+                    <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-white p-5">
+                      <p className="text-sm">
+                        <span className="font-semibold">{e.title}</span>
+                        <span className="text-black/60">, {e.organization}</span>
+                      </p>
+                      {e.period && <p className={`${mono} text-black/45`}>{e.period}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {work.length > 0 && (
+              <div className="rounded-3xl border border-black/10 p-6 md:p-8">
+                <h2 className="text-3xl font-semibold tracking-[-0.045em]">Work</h2>
+                <ul className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-black/10 bg-black/10">
+                  {work.map((w, i) => {
+                    const link = safeUrl(w.url);
+                    return (
+                      <li key={i} className="grid gap-1.5 bg-white p-5">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                          {link ? (
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener"
+                              className="text-sm font-semibold underline decoration-black/25 underline-offset-4 hover:decoration-black"
+                            >
+                              {w.title}
+                            </a>
+                          ) : (
+                            <p className="text-sm font-semibold">{w.title}</p>
+                          )}
+                          {w.year && <p className={`${mono} text-black/45`}>{w.year}</p>}
+                        </div>
+                        {w.description && <p className="text-sm leading-relaxed text-black/60">{w.description}</p>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="juror-reviews-title" className="container-site pb-24">
         <h2 id="juror-reviews-title" className="text-3xl font-semibold tracking-[-0.045em]">

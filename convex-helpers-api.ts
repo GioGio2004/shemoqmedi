@@ -38,6 +38,8 @@ export type PublicListing = {
   finalScore: number | null; // 60% jury + 40% community
   publishedAt: number;
   votingEndsAt: number;
+  /** Voting was extended a week because fewer than 5 jurors had evaluated it after 7 days. Optional during rollout. */
+  votingExtended?: boolean;
   awardedAt: number | null;
   isClaimed: boolean;
   /** Shown in the Startups collection and filter. */
@@ -91,6 +93,11 @@ export type CreatorSummary = {
   updatedAt: number;
 };
 
+/** A juror's past role ("Art director" at "Studio X", "2019 – present"). */
+export type JurorExperience = { title: string; organization: string; period?: string };
+/** A notable piece of a juror's work. */
+export type JurorWork = { title: string; url?: string; year?: string; description?: string };
+
 /** A jury member as shown on the site. imageUrl null: grey placeholder. */
 export type JurorPublic = {
   slug: string;
@@ -101,6 +108,9 @@ export type JurorPublic = {
   website: string | null; // null: render no website link at all
   linkedinUrl: string | null;
   bio: string | null;
+  /** Optional during rollout: older backends don't send them. Use `?? []`. */
+  experience?: JurorExperience[];
+  work?: JurorWork[];
   isFounding: boolean; // "Founding Jury" badge
   imageUrl: string | null; // null: grey placeholder
 };
@@ -158,6 +168,8 @@ export type JurorProfileArgs = {
   website?: string; // "" clears
   linkedinUrl?: string; // "" clears
   bio?: string;
+  experience?: JurorExperience[]; // [] clears; absent keeps
+  work?: JurorWork[]; // [] clears; absent keeps
 };
 
 export type ConvexUser = {
@@ -223,6 +235,15 @@ export type PublicApiType = {
     /** One vote per user while in_voting; throws ConvexError with a readable message. */
     cast: M<{ slug: string; scores: Pillars }, null>;
     mine: Q<{ slug: string }, { scores: Pillars; createdAt: number } | null>;
+    /**
+     * Whether the signed-in user may vote on this site. kind "badge": they need
+     * at least one Shemoqmedi badge (another of their sites listed) first. Null
+     * when signed out or the account isn't synced yet.
+     */
+    eligibility: Q<
+      { slug: string },
+      { canVote: boolean; reason: string | null; kind: "ok" | "closed" | "own" | "badge" | "voted" } | null
+    >;
   };
   creators: {
     getBySlug: Q<{ slug: string }, { creator: PublicCreator; listings: PublicListing[] } | null>;

@@ -5,8 +5,8 @@ import { DragRail } from "./DragRail";
 import { ListingCard } from "./ListingCard";
 
 /**
- * Sites in their 7-day voting window, closing soonest first, as a horizontal
- * rail you can drag with the mouse or step through with the arrow buttons.
+ * Sites in their voting window (7 days, extended to 14 when the jury needs
+ * more time), closing soonest first, as a horizontal rail you can drag with the mouse or step through with the arrow buttons.
  * Hidden when nothing is in voting.
  */
 export function LiveVotingRail({ listings }: { listings: PublicListing[] }) {

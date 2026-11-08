@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
-import { api, type JurorProfileArgs } from "@/convex-helpers-api";
+import { api, type JurorExperience, type JurorProfileArgs, type JurorWork } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
 import { LIMITS } from "@/lib/taxonomy";
 import { ArrowIcon } from "@/components/site/ui";
@@ -107,6 +107,167 @@ function PhotoField({ current, preset }: { current: string | null; preset: boole
   );
 }
 
+const smallButton =
+  "rounded-full border border-black/14 px-4 py-2 text-sm font-medium hover:border-black disabled:opacity-50";
+const removeButton = "text-sm text-black/55 underline underline-offset-4 hover:text-black";
+
+/** Trimmed rows with empty optional fields left out; fully empty rows dropped. */
+function cleanExperience(rows: JurorExperience[]): JurorExperience[] {
+  return rows
+    .map((r) => ({ title: r.title.trim(), organization: r.organization.trim(), period: r.period?.trim() || undefined }))
+    .filter((r) => r.title || r.organization || r.period);
+}
+
+function cleanWork(rows: JurorWork[]): JurorWork[] {
+  return rows
+    .map((r) => ({
+      title: r.title.trim(),
+      url: r.url?.trim() || undefined,
+      year: r.year?.trim() || undefined,
+      description: r.description?.trim() || undefined,
+    }))
+    .filter((r) => r.title || r.url || r.year || r.description);
+}
+
+/** Rows the server would refuse or drop, explained before saving. */
+function listsProblem(experience: JurorExperience[], work: JurorWork[]) {
+  if (experience.some((r) => !r.title || !r.organization)) return "Each experience entry needs a role and an organisation.";
+  if (work.some((r) => !r.title)) return "Each work entry needs a title.";
+  return null;
+}
+
+/** Past roles: role and organisation, period optional. */
+function ExperienceEditor({
+  rows,
+  onChange,
+}: {
+  rows: JurorExperience[];
+  onChange: (rows: JurorExperience[]) => void;
+}) {
+  const edit = (i: number, key: keyof JurorExperience, value: string) =>
+    onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
+  return (
+    <fieldset className="grid gap-3">
+      <legend className={`${label} mb-3`}>
+        Experience (optional) <span className="text-black/55">{rows.length}/{LIMITS.juryExperience}</span>
+      </legend>
+      {rows.map((r, i) => (
+        <div
+          key={i}
+          className="grid gap-3 rounded-2xl border border-black/10 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_10rem_auto] md:items-center"
+        >
+          <input
+            aria-label={`Experience ${i + 1}: role`}
+            maxLength={80}
+            value={r.title}
+            onChange={(e) => edit(i, "title", e.target.value)}
+            className={input}
+            placeholder="Art director"
+          />
+          <input
+            aria-label={`Experience ${i + 1}: organisation`}
+            maxLength={80}
+            value={r.organization}
+            onChange={(e) => edit(i, "organization", e.target.value)}
+            className={input}
+            placeholder="Studio X"
+          />
+          <input
+            aria-label={`Experience ${i + 1}: period (optional)`}
+            maxLength={40}
+            value={r.period ?? ""}
+            onChange={(e) => edit(i, "period", e.target.value)}
+            className={input}
+            placeholder="2019 – now"
+          />
+          <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className={removeButton}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <div>
+        <button
+          type="button"
+          disabled={rows.length >= LIMITS.juryExperience}
+          onClick={() => onChange([...rows, { title: "", organization: "", period: "" }])}
+          className={smallButton}
+        >
+          Add experience
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+/** Notable work: title, optional link, year and short description. */
+function WorkEditor({ rows, onChange }: { rows: JurorWork[]; onChange: (rows: JurorWork[]) => void }) {
+  const edit = (i: number, key: keyof JurorWork, value: string) =>
+    onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
+  return (
+    <fieldset className="grid gap-3">
+      <legend className={`${label} mb-3`}>
+        Work (optional) <span className="text-black/55">{rows.length}/{LIMITS.juryWork}</span>
+      </legend>
+      {rows.map((r, i) => (
+        <div key={i} className="grid gap-3 rounded-2xl border border-black/10 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem]">
+          <input
+            aria-label={`Work ${i + 1}: title`}
+            maxLength={80}
+            value={r.title}
+            onChange={(e) => edit(i, "title", e.target.value)}
+            className={input}
+            placeholder="Brand site for Company Y"
+          />
+          <input
+            aria-label={`Work ${i + 1}: link (optional)`}
+            inputMode="url"
+            maxLength={LIMITS.url}
+            value={r.url ?? ""}
+            onChange={(e) => edit(i, "url", e.target.value)}
+            className={input}
+            placeholder="https://"
+            spellCheck={false}
+          />
+          <input
+            aria-label={`Work ${i + 1}: year (optional)`}
+            maxLength={20}
+            value={r.year ?? ""}
+            onChange={(e) => edit(i, "year", e.target.value)}
+            className={input}
+            placeholder="2025"
+          />
+          <textarea
+            aria-label={`Work ${i + 1}: short description (optional)`}
+            rows={2}
+            maxLength={200}
+            value={r.description ?? ""}
+            onChange={(e) => edit(i, "description", e.target.value)}
+            className={`${input} resize-y md:col-span-3`}
+            placeholder="Short description (optional)"
+          />
+          <div className="md:col-span-3">
+            <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className={removeButton}>
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+      <div>
+        <button
+          type="button"
+          disabled={rows.length >= LIMITS.juryWork}
+          onClick={() => onChange([...rows, { title: "", url: "", year: "", description: "" }])}
+          className={smallButton}
+        >
+          Add work
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+type TextKey = "name" | "title" | "location" | "website" | "linkedinUrl" | "bio";
+
 function ProfileFields({
   initial,
   photo,
@@ -122,14 +283,29 @@ function ProfileFields({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const set = (key: keyof JurorProfileArgs) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const set = (key: TextKey) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setSaved(false);
     setForm((f) => ({ ...f, [key]: e.target.value }));
+  };
+  const setExperience = (experience: JurorExperience[]) => {
+    setSaved(false);
+    setForm((f) => ({ ...f, experience }));
+  };
+  const setWork = (work: JurorWork[]) => {
+    setSaved(false);
+    setForm((f) => ({ ...f, work }));
   };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+    const experience = cleanExperience(form.experience ?? []);
+    const work = cleanWork(form.work ?? []);
+    const problem = listsProblem(experience, work);
+    if (problem) {
+      setError(problem);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -141,6 +317,9 @@ function ProfileFields({
         website: form.website?.trim() ?? "",
         linkedinUrl: form.linkedinUrl?.trim() ?? "",
         bio: form.bio?.trim() || undefined,
+        // Always sent: [] clears the section.
+        experience,
+        work,
       });
       setSaved(true);
     } catch (err) {
@@ -204,6 +383,8 @@ function ProfileFields({
         </span>
         <textarea rows={3} maxLength={LIMITS.juryBio} value={form.bio ?? ""} onChange={set("bio")} className={`${input} resize-y`} />
       </label>
+      <ExperienceEditor rows={form.experience ?? []} onChange={setExperience} />
+      <WorkEditor rows={form.work ?? []} onChange={setWork} />
       {error && (
         <p role="alert" className="text-sm font-medium">
           {error}
@@ -248,6 +429,8 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
         website: me.website ?? undefined,
         linkedinUrl: me.linkedinUrl ?? undefined,
         bio: me.bio ?? undefined,
+        experience: me.experience ?? [],
+        work: me.work ?? [],
       }}
       photo={{ current: me.imageUrl, preset: me.hasPresetPhoto }}
       submitLabel="Save profile"

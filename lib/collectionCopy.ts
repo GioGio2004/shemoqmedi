@@ -175,25 +175,25 @@ export const COLLECTION_ABOUT: Record<string, string[]> = {
   ],
   global: [
     "This collection gathers websites from studios and independent makers everywhere outside Georgia, from global agencies to freelancers working alone.",
-    "Each site is reviewed by the jury before it goes live, then scored by the jury and the community on design, usability, creativity and code during a seven-day voting window. Browse it for a wide view of what web design looks like right now across industries and technologies, or filter by category to narrow it down.",
+    "Each site is reviewed by the jury before it goes live, then scored by the jury and the community on design, usability, creativity and code during its voting window. Browse it for a wide view of what web design looks like right now across industries and technologies, or filter by category to narrow it down.",
   ],
 
   // ── Awards and status ────────────────────────────────────────────────────
   sotd: [
-    "Site of the Day is Shemoqmedi's highest award. It goes to websites that reach a final score of 8.5 or more after seven days of voting, where the jury's score counts for 60% and the community's for 40%.",
+    "Site of the Day is Shemoqmedi's highest award. It goes to websites that reach a final score of 8.5 or more when their voting window closes, where the jury's score counts for 60% and the community's for 40%.",
     "Each score is the average of four pillars: design, usability, creativity and code. Winning sites usually combine a strong idea with flawless execution, being beautiful, easy to use, original and well built at the same time. Winners receive a badge they can display on their own site. This collection is the archive of every Site of the Day, newest first.",
   ],
   bsc: [
-    "Best Solo Creation is awarded to websites designed and built by one person, without a studio or agency team. A solo site wins it with a final score of 8.2 or more after seven days of jury and community voting.",
+    "Best Solo Creation is awarded to websites designed and built by one person, without a studio or agency team. A solo site wins it with a final score of 8.2 or more once jury and community voting closes.",
     "The award exists because solo developers compete with agencies on a very different budget. These sites show what one person can do across design, motion and engineering together. A site can win Best Solo Creation and Site of the Day at the same time.",
   ],
   hm: [
-    "Honorable Mention goes to websites that finish their seven-day voting window with a final score of 7.5 or more but below the 8.5 needed for Site of the Day.",
+    "Honorable Mention goes to websites that finish their voting window with a final score of 7.5 or more but below the 8.5 needed for Site of the Day.",
     "These are strong, well-crafted sites that the jury and community agreed deserve recognition: often excellent in one or two pillars, such as design or creativity, with smaller compromises elsewhere. Honorable Mention winners can display an award badge on their site, and the collection is a good place to find solid, realistic inspiration.",
   ],
   nominees: [
-    "Nominees are websites in their seven-day public voting window right now. Every site here has been reviewed and approved by the jury before going live.",
-    "Anyone with an account can score a nominee once, from 1 to 10, on design, usability, creativity and code. When voting closes, the community average is combined with the jury's score (40% community, 60% jury) to decide the awards: Site of the Day, Best Solo Creation and Honorable Mention. Sign in, open a site and cast your vote.",
+    "Nominees are websites in their public voting window right now: 7 days, extended to 14 when the jury needs more time. Every site here was approved by the jury before going live.",
+    "Creators with a Shemoqmedi badge can score a nominee once, from 1 to 10, on design, usability, creativity and code, never their own site. When voting closes, the community average is combined with the jury's score (40% community, 60% jury) to decide the awards: Site of the Day, Best Solo Creation and Honorable Mention. Sign in, open a site and cast your vote.",
   ],
   startups: [
     "A startup website often has to explain a product that did not exist a year ago, to investors, early customers and future hires at the same time.",

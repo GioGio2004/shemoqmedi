@@ -656,8 +656,8 @@ export function ListingForm() {
             title="Standard community queue"
             aside={<span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">Free</span>}
           >
-            Reviewed by hand, usually within 14–30 days. Accepted sites enter the 7-day live
-            voting window. Founding 100: the first hundred accepted creators get honorary
+            Reviewed by hand, usually within 14–30 days. Accepted sites get a 7-day voting window,
+            extended to 14 days if the jury needs more time. Founding 100: the first hundred accepted creators get honorary
             supporter status.
           </OptionCard>
           <OptionCard
@@ -677,8 +677,8 @@ export function ListingForm() {
               </span>
             }
           >
-            Guaranteed 48-hour review, immediate entry into the 7-day live voting window, a
-            permanent indexed page and a backlink to your site.
+            Guaranteed 48-hour review, immediate entry into a 7-day voting window (extended to 14
+            days if the jury needs more time), a permanent indexed page and a backlink to your site.
           </OptionCard>
         </div>
       </fieldset>

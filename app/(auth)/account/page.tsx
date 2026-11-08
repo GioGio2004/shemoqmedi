@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex-helpers-api";
 import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { MyListings } from "@/components/listing/MyListings";
@@ -7,13 +11,27 @@ import { PillLink } from "@/components/site/ui";
 
 export const metadata: Metadata = { title: "Your sites", robots: { index: false } };
 
-// Protected by proxy.ts (requires a Clerk session).
+/** Whether the signed-in user is an active juror. Any failure: treat as not a juror. */
+async function isJuror() {
+  try {
+    const token = await (await auth()).getToken({ template: "convex" });
+    if (!token) return false;
+    return (await fetchQuery(api.jury.me, {}, { token })) !== null;
+  } catch {
+    return false;
+  }
+}
+
+// Protected by proxy.ts (requires a Clerk session). Jurors are sent to their
+// jury profile (which lists their sites too), except right after a submit or
+// claim, whose message is shown here.
 export default async function AccountPage({
   searchParams,
 }: {
   searchParams: Promise<{ submitted?: string; claimed?: string }>;
 }) {
   const { submitted, claimed } = await searchParams;
+  if (!submitted && !claimed && (await isJuror())) redirect("/jury/profile");
 
   return (
     <>

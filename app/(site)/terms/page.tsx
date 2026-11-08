@@ -3,6 +3,7 @@ import Link from "next/link";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { CONTACT_EMAIL, LEGAL_UPDATED } from "@/lib/legal";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { LIMITS, VOTING_DAYS } from "@/lib/taxonomy";
 
 const title = "Terms and Conditions";
 const description =
@@ -90,11 +91,20 @@ const sections: InfoSection[] = [
     id: "voting",
     heading: "Voting",
     body: (
-      <p>
-        Each account can score a site once while its voting window is open. Don&apos;t vote on your own sites, use more
-        than one account, trade or buy votes, or use automated means to vote. We may remove votes and close accounts
-        involved in manipulation, and recalculate the affected scores.
-      </p>
+      <>
+        <p>
+          Voting is open to accounts with a Shemoqmedi badge: at least one of their own sites listed here, as an
+          Official Nominee or with an award. Each such account can score a site once while its voting window is open,
+          and never a site it owns or created. Don&apos;t use more than one account, trade or buy votes, or use
+          automated means to vote. We may remove votes and close accounts involved in manipulation, and recalculate
+          the affected scores.
+        </p>
+        <p>
+          The voting window lasts {VOTING_DAYS} days. If a site has fewer than {LIMITS.juryMinEvaluations} jury
+          evaluations by then, it is extended once by {LIMITS.votingExtensionDays} days, then closes. We may change
+          who can vote as the platform grows.
+        </p>
+      </>
     ),
   },
   {

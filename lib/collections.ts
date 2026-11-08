@@ -5,6 +5,7 @@ import {
   CREATOR_TIERS,
   REGIONS,
   TECHNOLOGIES,
+  LIMITS,
   VOTING_DAYS,
   listingCategories,
 } from "@/lib/taxonomy";
@@ -123,9 +124,9 @@ function build(): Collection[] {
     });
   }
   const AWARD_INTRO: Record<(typeof AWARDS)[number]["slug"], string> = {
-    SOTD: `The highest-scoring websites after ${VOTING_DAYS} days of jury and community voting.`,
+    SOTD: "The highest-scoring websites after their jury and community voting window.",
     BSC: "The finest websites built by one person, without an agency budget.",
-    HM: `Websites that came close to Site of the Day after ${VOTING_DAYS} days of voting.`,
+    HM: "Websites that came close to Site of the Day after their voting window.",
   };
   for (const a of AWARDS) {
     out.push({
@@ -149,9 +150,9 @@ function build(): Collection[] {
     kind: "status",
     name: "Nominees",
     heading: "This week's nominees",
-    intro: `Websites in their ${VOTING_DAYS}-day voting window right now. Sign in and score them.`,
+    intro: `Websites in voting right now: ${VOTING_DAYS} days, extended to ${VOTING_DAYS + LIMITS.votingExtensionDays} if the jury needs more time. Badge holders score them.`,
     title: `Live Nominees: Vote on This Week's Best Websites (${year()})`,
-    description: `Websites in their ${VOTING_DAYS}-day voting window right now. Sign in and score them.`,
+    description: `Websites in voting right now: ${VOTING_DAYS} days, extended to ${VOTING_DAYS + LIMITS.votingExtensionDays} if the jury needs more time. Badge holders score them.`,
     summarize: null, // changes every week; the fixed line stays accurate
     match: (l) => l.status === "in_voting",
   });

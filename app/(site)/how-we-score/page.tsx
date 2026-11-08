@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
-import { VOTING_DAYS } from "@/lib/taxonomy";
+import { LIMITS, VOTING_DAYS } from "@/lib/taxonomy";
 
 // Mirrors shemoqmedi-admin/convex/lib/scoring.ts. Change both together.
 const JURY_SHARE = 60;
@@ -10,6 +10,7 @@ const COMMUNITY_SHARE = 40;
 const SOTD = "8.50";
 const BSC = "8.20";
 const HM = "7.50";
+const MAX_DAYS = VOTING_DAYS + LIMITS.votingExtensionDays;
 
 const title = "How We Score Websites: Jury, Community and Awards";
 const description = `Every website is scored from 1 to 10 on design, usability, creativity and code. The jury's score counts ${JURY_SHARE}%, the community's ${COMMUNITY_SHARE}%. Site of the Day takes ${SOTD} or more.`;
@@ -72,13 +73,19 @@ const sections: InfoSection[] = [
   },
   {
     id: "voting",
-    heading: `${VOTING_DAYS} days of voting`,
+    heading: "The voting window",
     body: (
       <>
         <p>
           A site&apos;s voting window opens when the jury approves it and lasts {VOTING_DAYS} days. During that time
-          the <Link href="/jury">jury</Link> gives its score, and anyone with an account can score the site once on the
-          four pillars. Owners cannot vote on their own site.
+          the <Link href="/jury">jury</Link> gives its score, and creators with a Shemoqmedi{" "}
+          <Link href="/badges">badge</Link> (one of their own sites listed here, as an Official Nominee or with an
+          award) can score the site once on the four pillars. Nobody can score their own site, jurors included.
+        </p>
+        <p>
+          Every site should get at least {LIMITS.juryMinEvaluations} jury evaluations. If it has fewer when the{" "}
+          {VOTING_DAYS} days end, voting is extended once by {LIMITS.votingExtensionDays} days, so every site gets up
+          to {MAX_DAYS} days for the jury to see it. After that it closes either way.
         </p>
         <p>
           Sites currently in their window are listed under <Link href="/collections/nominees">Nominees</Link>.
@@ -149,7 +156,7 @@ export default function HowWeScorePage() {
         current="/how-we-score"
         prelude="how we"
         title="Score"
-        lede={`Four pillars, scored 1 to 10 by the jury and the community over ${VOTING_DAYS} days. The jury counts ${JURY_SHARE}%, the community ${COMMUNITY_SHARE}%.`}
+        lede={`Four pillars, scored 1 to 10 by the jury and the community over ${VOTING_DAYS} days, or ${MAX_DAYS} when the jury needs more time. The jury counts ${JURY_SHARE}%, the community ${COMMUNITY_SHARE}%.`}
         sections={sections}
       />
     </>

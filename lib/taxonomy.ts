@@ -113,6 +113,12 @@ export const LIMITS = {
   technologies: 6,
   /** Categories per listing (the first is the primary one). */
   categories: 3,
+  /** Jury evaluations a site should get; with fewer after 7 days voting is extended once by 7 days. */
+  juryMinEvaluations: 5,
+  votingExtensionDays: 7,
+  /** Entries in a juror's Experience and Work sections. */
+  juryExperience: 8,
+  juryWork: 8,
   /** Jury evaluation comment (mirrors the backend). */
   juryCommentMin: 20,
   juryComment: 1000,

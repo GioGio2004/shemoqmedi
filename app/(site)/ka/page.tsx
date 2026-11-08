@@ -7,7 +7,7 @@ import { PillLink } from "@/components/site/ui";
 import { MIN_INDEXABLE } from "@/lib/collections";
 import { getPublicListings } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
-import { VOTING_DAYS } from "@/lib/taxonomy";
+import { LIMITS, VOTING_DAYS } from "@/lib/taxonomy";
 
 // The one Georgian page: a hand-written landing page for Georgian searches
 // ("საუკეთესო ქართული საიტები"), listing the sites made in Georgia. The rest
@@ -165,8 +165,10 @@ export default async function GeorgianPage() {
           <div className={prose}>
             <p>
               ყოველ საიტს ჟიური ხელით ამოწმებს, სანამ ის გამოქვეყნდება. ამის შემდეგ იწყება {VOTING_DAYS}-დღიანი
-              კენჭისყრა: ჟიური და დარეგისტრირებული მომხმარებლები საიტს 1-დან 10-მდე აფასებენ ოთხი კრიტერიუმით:
-              <strong> დიზაინი, მოხმარების სიმარტივე, კრეატიულობა და კოდი</strong>.
+              კენჭისყრა: ჟიური და ბეჯის მქონე ავტორები საიტს 1-დან 10-მდე აფასებენ ოთხი კრიტერიუმით:
+              <strong> დიზაინი, მოხმარების სიმარტივე, კრეატიულობა და კოდი</strong>. თუ საიტს{" "}
+              {LIMITS.juryMinEvaluations}-ზე ნაკლები ჟიურის შეფასება აქვს, კენჭისყრა ერთხელ კიდევ{" "}
+              {LIMITS.votingExtensionDays} დღით გრძელდება. საკუთარ საიტს ვერავინ შეაფასებს.
             </p>
             <p>
               საბოლოო ქულაში ჟიურის შეფასება 60%-ს შეადგენს, საზოგადოების შეფასება კი 40%-ს. კენჭისყრის დასრულების

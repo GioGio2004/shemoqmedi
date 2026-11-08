@@ -10,7 +10,7 @@ import { JURY_CATEGORIES } from "@/lib/taxonomy";
 
 const title = "The Jury: Who Reviews and Scores Websites";
 const description =
-  "Meet the Shemoqmedi jury: designers and developers who score every website in its voting week on design, usability, creativity and code. Their score counts for 60%.";
+  "Meet the Shemoqmedi jury: designers and developers who score every website in its voting window on design, usability, creativity and code. Their score counts for 60%.";
 
 export const metadata: Metadata = {
   title,
@@ -72,7 +72,7 @@ const process: InfoSection[] = [
       <>
         <p>
           Every submitted site is checked by hand before it is listed. Once it goes live, the jury has its
-          seven-day voting week to evaluate it: each juror gives a score from 1 to 10 on design, usability, creativity
+          voting window to evaluate it: each juror gives a score from 1 to 10 on design, usability, creativity
           and code, and writes a short comment that is shown on the site&apos;s page with their name.
         </p>
         <p>
@@ -140,7 +140,7 @@ export default async function JuryPage() {
         current="/jury"
         prelude="the"
         title="Jury"
-        lede="Designers and developers who score every site in its voting week and say what they think of it."
+        lede="Designers and developers who score every site in its voting window and say what they think of it."
         sections={sections}
       />
     </>

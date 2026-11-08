@@ -73,7 +73,7 @@ function ListingPreview({ listing }: { listing: ClaimListingPreview }) {
 
 const perks = {
   juror: [
-    ["Score websites", "Rate sites in their voting week on design, usability, creativity and code."],
+    ["Score websites", "Rate sites in their voting window on design, usability, creativity and code."],
     ["Your name on every review", "Your comments appear on each site's page with your profile."],
     ["A public jury page", "A profile and badge you can share."],
   ],
