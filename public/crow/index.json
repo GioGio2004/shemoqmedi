@@ -1,0 +1,17 @@
+{
+  "pixelRatio": 2,
+  "frameWidth": 314,
+  "frameHeight": 264,
+  "anchor": {
+    "x": 193,
+    "y": 259
+  },
+  "animations": {
+    "walk": "/crow/walk.json",
+    "idle": "/crow/idle.json",
+    "hop": "/crow/hop.json",
+    "takeoff": "/crow/takeoff.json",
+    "peck": "/crow/peck.json",
+    "turn": "/crow/turn.json"
+  }
+}

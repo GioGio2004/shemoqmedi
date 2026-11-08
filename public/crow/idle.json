@@ -1,0 +1,22 @@
+{
+  "name": "idle",
+  "src": "/crow/idle.webp",
+  "frames": 8,
+  "frameWidth": 314,
+  "frameHeight": 264,
+  "fps": 24.0,
+  "anchor": {
+    "x": 193,
+    "y": 259
+  },
+  "pixelRatio": 2,
+  "loop": true,
+  "pingpong": true,
+  "bounds": {
+    "left": -72.1,
+    "top": -79.2,
+    "right": 40.8,
+    "bottom": 0.3
+  },
+  "source": "forage.mp4"
+}

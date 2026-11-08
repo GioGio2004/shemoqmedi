@@ -1,0 +1,27 @@
+{
+  "name": "hop",
+  "src": "/crow/hop.webp",
+  "frames": 12,
+  "frameWidth": 314,
+  "frameHeight": 264,
+  "fps": 24.0,
+  "anchor": {
+    "x": 193,
+    "y": 259
+  },
+  "pixelRatio": 2,
+  "loop": false,
+  "pingpong": false,
+  "bounds": {
+    "left": -72.3,
+    "top": -127.6,
+    "right": 57.5,
+    "bottom": 0.3
+  },
+  "source": "forage.mp4",
+  "air": {
+    "start": 3,
+    "peak": 4,
+    "end": 5
+  }
+}

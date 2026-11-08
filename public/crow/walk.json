@@ -1,0 +1,25 @@
+{
+  "name": "walk",
+  "src": "/crow/walk.webp",
+  "frames": 15,
+  "frameWidth": 314,
+  "frameHeight": 264,
+  "fps": 24.0,
+  "anchor": {
+    "x": 193,
+    "y": 259
+  },
+  "pixelRatio": 2,
+  "loop": true,
+  "pingpong": false,
+  "bounds": {
+    "left": -66.3,
+    "top": -80.5,
+    "right": 55.9,
+    "bottom": 0.3
+  },
+  "source": "forage.mp4",
+  "stride": 26.03,
+  "speed": 41.64,
+  "loopSeam": 0.192
+}

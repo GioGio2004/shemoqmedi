@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getCollectionCounts } from "@/lib/listings";
+import { LivingCrow } from "@/components/site/LivingCrow";
 
 type FooterLink = { label: string; href: string };
+
+const WORDMARK = "Shemoqmedi";
 
 const EXPLORE: FooterLink[] = [
   { label: "Directory", href: "/" },
@@ -70,7 +73,7 @@ export async function Footer() {
   ].filter((col) => col.links.length > 0);
 
   return (
-    <footer className="mt-32 border-t border-black/10">
+    <footer className="relative mt-32 border-t border-black/10">
       <div className="container-site grid gap-12 py-16 md:grid-cols-12">
         <div className="md:col-span-5">
           <p className="text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.02] tracking-[-0.05em]">
@@ -108,11 +111,18 @@ export async function Footer() {
       </div>
 
       <div className="container-site overflow-hidden">
+        {/* One span per letter: the crow measures them to find its perches. */}
         <p
           aria-hidden="true"
+          data-crow-wordmark=""
           className="text-[clamp(3rem,13.6vw,13rem)] leading-[0.82] font-bold tracking-[-0.065em] uppercase select-none"
         >
-          Shemoqmedi
+          {WORDMARK.split("").map((ch, i) => (
+            <span key={i} data-crow-letter="">
+              {ch}
+            </span>
+          ))}
+          <span data-crow-baseline="" className="inline-block h-0 w-0" />
         </p>
       </div>
 
@@ -138,6 +148,8 @@ export async function Footer() {
         </p>
         <p>The web&apos;s finest, listed by the people who build it.</p>
       </div>
+
+      <LivingCrow />
     </footer>
   );
 }

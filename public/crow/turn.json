@@ -1,0 +1,23 @@
+{
+  "name": "turn",
+  "src": "/crow/turn.webp",
+  "frames": 12,
+  "frameWidth": 314,
+  "frameHeight": 264,
+  "fps": 24.0,
+  "anchor": {
+    "x": 193,
+    "y": 259
+  },
+  "pixelRatio": 2,
+  "loop": false,
+  "pingpong": false,
+  "bounds": {
+    "left": -73.1,
+    "top": -79.2,
+    "right": 45.5,
+    "bottom": 0.3
+  },
+  "source": "forage.mp4",
+  "frontOffset": -7.1
+}
