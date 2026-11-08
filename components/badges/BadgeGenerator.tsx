@@ -106,6 +106,18 @@ export function BadgeGenerator() {
   const [copied, setCopied] = useState(false);
   const snippetRef = useRef<HTMLTextAreaElement>(null);
 
+  // Links from a listing page or the account page open the generator with the
+  // listing and its earned badge filled in: /badges?site=<slug>&badge=<badge>.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const site = params.get("site");
+    const wanted = params.get("badge");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL after hydration
+    if (site) setRaw(site);
+    const match = BADGES.find((b) => b.slug === wanted);
+    if (match) setBadge(match.slug);
+  }, []);
+
   const slug = parseSlug(raw);
   const invalid = raw.trim() !== "" && !slug;
   const { html, file, w, h, label } = buildSnippet(badge, theme, style, slug || "your-site");

@@ -68,6 +68,8 @@ export type PublicCreator = {
   region: RegionSlug;
   location: string | null;
   website: string | null;
+  /** Profile links (Dribbble, LinkedIn, ...). Optional until the backend with it is deployed. */
+  links?: string[];
   bio: string | null;
   isClaimed: boolean;
   awards: { SOTD: number; BSC: number; HM: number };

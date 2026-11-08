@@ -97,6 +97,7 @@ export default async function Home() {
       <HeroSlider listings={sliderOrder(listings)} />
       <PageHero
         afterHero={listings.some((l) => l.coverUrl)}
+        eyebrow="Website awards & web design inspiration"
         prelude="the web's finest"
         title="Websites"
         lede="Web design inspiration: sites worth seeing, scored by a jury and the community. The best get awarded."

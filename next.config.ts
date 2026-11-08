@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 // The one host that may be indexed. Hard-coded on purpose (not read from
 // NEXT_PUBLIC_URL) so an env typo can never noindex the live site.
 const CANONICAL_HOST = "www.shemoqmedi.space";
+const APEX_HOST = "shemoqmedi.space";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -17,22 +18,37 @@ const nextConfig: NextConfig = {
     // page redirect; dead Voloo pages (/menu/*, /venues/*, /privacy,
     // /terms, ...) fall through to a real 404 (app/not-found.tsx, noindex)
     // instead of redirecting to the home page, which Google treats as a soft 404.
-    return [
-      // The site used to be localized under /en, /ka and /ru. It is English-only now.
-      { source: "/:locale(en|ka|ru)", destination: "/", permanent: true },
+    const legacy = [
+      // The site used to be localized under /en, /ka and /ru. It is English-only
+      // now; /ka is the hand-written Georgian landing page (app/(site)/ka).
+      { source: "/:locale(en|ru)", destination: "/" },
       // The old Clerk catch-all pages (/en/sign-in/factor-one, ...).
-      { source: "/:locale(en|ka|ru)/:page(sign-in|sign-up)/:rest*", destination: "/:page", permanent: true },
+      { source: "/:locale(en|ka|ru)/:page(sign-in|sign-up)/:rest*", destination: "/:page" },
       {
         source: "/:locale(en|ka|ru)/:page(account|submit|sites|creators|collections|badges|vote|claim)/:rest*",
         destination: "/:page/:rest*",
-        permanent: true,
       },
       // Category pages became programmatic collections.
-      { source: "/category/:slug", destination: "/collections/:slug", permanent: true },
-      { source: "/:locale(en|ka|ru)/category/:slug", destination: "/collections/:slug", permanent: true },
+      { source: "/category/:slug", destination: "/collections/:slug" },
+      { source: "/:locale(en|ka|ru)/category/:slug", destination: "/collections/:slug" },
       // Physical Voloo NFC stickers still point at /t/<uuid>. Never crawled;
       // people tapping one land on the home page rather than a 404.
-      { source: "/t/:path*", destination: "/", permanent: true },
+      { source: "/t/:path*", destination: "/" },
+    ];
+    // The apex is a Vercel domain redirect today, so requests for it never
+    // reach this app (apex /en/sites/x → www/en/sites/x → www/sites/x). If the
+    // apex is attached to the project without a redirect, these host rules
+    // send every old apex URL to its final www address in one hop instead.
+    const apex = { type: "host" as const, value: APEX_HOST.replace(/\./g, "\\.") };
+    return [
+      ...legacy.map((r) => ({
+        ...r,
+        destination: `https://${CANONICAL_HOST}${r.destination}`,
+        has: [apex],
+        permanent: true,
+      })),
+      { source: "/:path*", has: [apex], destination: `https://${CANONICAL_HOST}/:path*`, permanent: true },
+      ...legacy.map((r) => ({ ...r, permanent: true })),
     ];
   },
   async headers() {

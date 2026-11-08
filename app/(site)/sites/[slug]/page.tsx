@@ -17,6 +17,8 @@ import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { AWARDS, listingCategories } from "@/lib/taxonomy";
+import { listingImageUrls, screenshotCaption } from "@/lib/imageSeo";
+import { badgeHref, earnedBadge } from "@/lib/badges";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -214,8 +216,16 @@ function buildJsonLd(listing: PublicListing, meta: { title: string; description:
   const pageUrl = absoluteUrl(`/sites/${listing.slug}`);
   const category = categoryName(listing.category);
   const published = new Date(listing.publishedAt).toISOString();
-  const images = [listing.coverUrl, ...listing.galleryUrls].filter((src): src is string => !!src);
+  const images = listingImageUrls(listing);
   const awards = rankedAwards(listing);
+  // One entity for the site's maker, shared by the work and its screenshots.
+  const creator = {
+    "@type": listing.creatorTier === "solo" ? "Person" : "Organization",
+    // Same @id as the creator profile's main entity.
+    ...(listing.creator ? { "@id": `${absoluteUrl(`/creators/${listing.creator.slug}`)}#creator` } : {}),
+    name: listing.creditName,
+    url: listing.creditUrl ?? undefined,
+  };
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -238,17 +248,27 @@ function buildJsonLd(listing: PublicListing, meta: { title: string; description:
         name: listing.title,
         description: listing.tagline,
         url: listing.url,
-        image: images.length > 0 ? images : undefined,
+        // Google Images reads creator and creditText from ImageObject and
+        // shows them with the screenshot (same URLs as the image sitemap).
+        image:
+          images.length > 0
+            ? images.map((src, i) => ({
+                "@type": "ImageObject",
+                "@id": `${pageUrl}#screenshot-${i + 1}`,
+                contentUrl: src,
+                url: src,
+                name: screenshotCaption(listing.title, i, images.length),
+                caption: `${screenshotCaption(listing.title, i, images.length)}, web design by ${listing.creditName}`,
+                creator,
+                creditText: listing.creditName,
+                copyrightNotice: `© ${listing.creditName}`,
+                representativeOfPage: i === 0,
+              }))
+            : undefined,
         genre: category,
         keywords: listing.technologies.length > 0 ? listing.technologies.join(", ") : undefined,
         datePublished: published,
-        creator: {
-          "@type": listing.creatorTier === "solo" ? "Person" : "Organization",
-          // Same @id as the creator profile's main entity.
-          ...(listing.creator ? { "@id": `${absoluteUrl(`/creators/${listing.creator.slug}`)}#creator` } : {}),
-          name: listing.creditName,
-          url: listing.creditUrl ?? undefined,
-        },
+        creator,
         ...(awards.length > 0 ? { award: awards.map((a) => `${SITE_NAME} ${a.name}`) } : {}),
         mainEntityOfPage: { "@id": pageUrl },
       },
@@ -269,6 +289,9 @@ function buildJsonLd(listing: PublicListing, meta: { title: string; description:
     ],
   };
 }
+
+const BADGE_NAMES = { sotd: "Site of the Day", bsc: "Best Solo Creation", hm: "Honorable Mention", nominee: "Official Nominee" };
+const badgeName = (listing: PublicListing) => BADGE_NAMES[earnedBadge(listing)];
 
 /** "Voting closed" line for listings outside their window. */
 function closedLabel(listing: PublicListing) {
@@ -464,6 +487,20 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
                 <p className="mt-3 text-sm leading-relaxed">
                   Voting has closed for this site. {closedLabel(listing)}.
                 </p>
+              </div>
+            )}
+
+            {listing.isClaimed && (
+              <div className="rounded-3xl border border-black/10 p-6 md:p-8">
+                <p className="eyebrow">For the creator</p>
+                <p className="mt-3 text-base leading-relaxed font-medium tracking-[-0.01em]">
+                  Made {listing.title}? Put your {badgeName(listing)} badge on your site. It links back to these scores.
+                </p>
+                <div className="mt-6">
+                  <PillLink href={badgeHref(listing.slug, earnedBadge(listing))} variant="outline">
+                    Get your badge
+                  </PillLink>
+                </div>
               </div>
             )}
 

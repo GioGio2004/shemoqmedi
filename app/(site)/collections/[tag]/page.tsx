@@ -10,6 +10,7 @@ import {
   MIN_INDEXABLE,
   type Collection,
 } from "@/lib/collections";
+import { COLLECTION_ABOUT } from "@/lib/collectionCopy";
 import { getPublicListings } from "@/lib/listings";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
@@ -36,7 +37,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: { absolute: collection.title },
     description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      // /ka is the Georgian version of the Georgia collection (paired only
+      // while this page is indexable; hreflang to a noindex page is an error).
+      ...(collection.tag === "georgia" && hits.length >= MIN_INDEXABLE
+        ? { languages: { en: url, ka: absoluteUrl("/ka"), "x-default": url } }
+        : {}),
+    },
     // Replaces the root openGraph, so the shared fields and image are repeated.
     openGraph: {
       type: "website",
@@ -88,6 +96,7 @@ export default async function CollectionPage({ params }: Params) {
     (c) => c.tag !== collection.tag && group(c.kind) === group(collection.kind) && all.some(c.match),
   );
   const url = absoluteUrl(`/collections/${collection.tag}`);
+  const about = COLLECTION_ABOUT[collection.tag];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -153,6 +162,19 @@ export default async function CollectionPage({ params }: Params) {
       <section aria-label={collection.heading} className="container-site pb-24">
         <ListingGrid listings={listings} />
       </section>
+
+      {about && (
+        <section aria-labelledby="about-collection" className="container-site border-t border-black/10 py-16 md:py-24">
+          <h2 id="about-collection" className="eyebrow">
+            About {collection.heading.toLowerCase().startsWith("this") ? "the nominees" : collection.heading}
+          </h2>
+          <div className="mt-6 grid max-w-2xl gap-5 text-[15px] leading-relaxed text-black/70">
+            {about.map((paragraph) => (
+              <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }

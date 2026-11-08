@@ -30,6 +30,13 @@ const toLink = (c: { tag: string; label: string }): FooterLink => ({
   href: `/collections/${c.tag}`,
 });
 
+const ABOUT: FooterLink[] = [
+  { label: "About", href: "/about" },
+  { label: "How we score", href: "/how-we-score" },
+  { label: "The jury", href: "/jury" },
+  { label: "ქართულად", href: "/ka" },
+];
+
 const ACCOUNT: FooterLink[] = [
   { label: "Submit a site", href: "/submit" },
   { label: "Your sites", href: "/account" },
@@ -57,6 +64,7 @@ export async function Footer() {
   const columns = [
     { title: "Explore", links: EXPLORE },
     { title: "Collections", links: collections },
+    { title: "About", links: ABOUT },
     { title: "Account", links: ACCOUNT },
   ].filter((col) => col.links.length > 0);
 
@@ -75,14 +83,19 @@ export async function Footer() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 md:col-span-7">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 md:col-span-7">
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>
               <p className="eyebrow mb-4">{col.title}</p>
               <ul className="grid gap-2 text-sm">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="hover:underline">
+                    <Link
+                      href={link.href}
+                      hrefLang={link.href === "/ka" ? "ka" : undefined}
+                      lang={link.href === "/ka" ? "ka" : undefined}
+                      className="hover:underline"
+                    >
                       {link.label}
                     </Link>
                   </li>

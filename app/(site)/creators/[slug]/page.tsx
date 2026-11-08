@@ -92,6 +92,25 @@ function safeWebsite(raw: string | null): string | null {
   }
 }
 
+/** Readable name for a profile link: the network, or the bare host. */
+const NETWORKS: [RegExp, string][] = [
+  [/(^|\.)dribbble\.com$/, "Dribbble"],
+  [/(^|\.)behance\.net$/, "Behance"],
+  [/(^|\.)linkedin\.com$/, "LinkedIn"],
+  [/(^|\.)(x|twitter)\.com$/, "X"],
+  [/(^|\.)instagram\.com$/, "Instagram"],
+  [/(^|\.)github\.com$/, "GitHub"],
+  [/(^|\.)awwwards\.com$/, "Awwwards"],
+  [/(^|\.)youtube\.com$/, "YouTube"],
+  [/(^|\.)vimeo\.com$/, "Vimeo"],
+  [/(^|\.)facebook\.com$/, "Facebook"],
+  [/(^|\.)threads\.(net|com)$/, "Threads"],
+];
+function linkLabel(href: string) {
+  const host = new URL(href).hostname.replace(/^www\./, "");
+  return NETWORKS.find(([re]) => re.test(host))?.[1] ?? host;
+}
+
 const mono = "font-mono text-[11px] font-medium tracking-[0.08em] uppercase tabular-nums";
 
 export default async function CreatorPage({ params }: Params) {
@@ -100,6 +119,9 @@ export default async function CreatorPage({ params }: Params) {
   if (!data) notFound();
   const { creator, listings } = data;
   const website = safeWebsite(creator.website);
+  const links = (creator.links ?? []).map(safeWebsite).filter((l): l is string => l !== null && l !== website);
+  // Website + profiles: tells Google these accounts are the same person or studio.
+  const sameAs = [...(website ? [website] : []), ...links];
 
   // ProfilePage about one Person (solo) or Organization (agency). The
   // creator's @id is the one listing pages use for their creator, so both
@@ -124,7 +146,7 @@ export default async function CreatorPage({ params }: Params) {
         name: creator.name,
         url: website ?? url,
         description: creator.bio ?? undefined,
-        sameAs: website ? [website] : undefined,
+        sameAs: sameAs.length > 0 ? sameAs : undefined,
         ...(creator.location
           ? { [solo ? "homeLocation" : "location"]: { "@type": "Place", name: creator.location } }
           : {}),
@@ -195,6 +217,24 @@ export default async function CreatorPage({ params }: Params) {
                 >
                   {hostOf(website)}
                 </a>
+              </dd>
+            </div>
+          )}
+          {links.length > 0 && (
+            <div>
+              <dt className="sr-only">Profiles</dt>
+              <dd className="flex flex-wrap gap-x-5 gap-y-2">
+                {links.map((href) => (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-sm underline decoration-black/20 underline-offset-4 hover:decoration-black"
+                  >
+                    {linkLabel(href)}
+                  </a>
+                ))}
               </dd>
             </div>
           )}

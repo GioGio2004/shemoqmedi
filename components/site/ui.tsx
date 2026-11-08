@@ -84,7 +84,7 @@ export function Wordmark({ className }: { className?: string }) {
       className={cn("flex items-center gap-3 text-black", className)}
     >
       {/* Above the fold on every page (often the LCP element), so never lazy. */}
-      <Image src="/brand/crow.png" alt="" width={179} height={200} loading="eager" className="h-auto w-[34px]" />
+      <Image src="/brand/crow.png" alt="" width={179} height={200} fetchPriority="low" className="h-auto w-[34px]" />
       <span className="flex flex-col leading-none">
         <span className="text-[18px] font-bold tracking-[-0.055em] uppercase">Shemoqmedi</span>
         <span className="mt-[5px] text-[9px] font-semibold tracking-[0.27em] uppercase">Space</span>
