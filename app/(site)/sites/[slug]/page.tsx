@@ -405,9 +405,10 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
         {listing.videoUrl && (
           <figure className="mt-6">
-            {/* Plays muted on a loop once it scrolls into view; our own play/pause button, no browser bar. */}
+            {/* Plays muted on a loop once it scrolls into view; our own play/pause and full-screen buttons, no browser bar. */}
             <InViewVideo
               toggle
+              fullscreen
               toggleLabel="walkthrough"
               poster={listing.coverUrl ? posterUrl(listing.coverUrl) : undefined}
               src={listing.videoUrl}

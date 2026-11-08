@@ -4,8 +4,16 @@ import { HeroShowcase } from "@/components/listing/HeroShowcase";
 import { HeroSlider } from "@/components/listing/HeroSlider";
 import type { PublicListing } from "@/convex-helpers-api";
 
-/** Header slider order: award winners (newest first), then top-scored, then newest. Max 12. */
+/**
+ * Header slider: the sites an admin featured (admin → Featured), in their
+ * order. With none chosen it picks automatically: award winners (newest
+ * first), then top-scored, then newest. Max 12.
+ */
 function sliderOrder(listings: PublicListing[]) {
+  const featured = listings
+    .filter((l) => l.coverUrl && typeof l.featuredRank === "number")
+    .sort((a, b) => (a.featuredRank ?? 0) - (b.featuredRank ?? 0));
+  if (featured.length > 0) return featured.slice(0, 12);
   return [...listings]
     .filter((l) => l.coverUrl)
     .sort(

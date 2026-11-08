@@ -47,6 +47,8 @@ export type PublicListing = {
   isStartup: boolean;
   /** false: outbound links to the site (and its creator) get rel="nofollow noopener". Optional until the backend with it is deployed. */
   isDoFollow?: boolean;
+  /** Position in the home page's featured header (1 = first), chosen in the admin. null: not featured. Optional until the backend with it is deployed. */
+  featuredRank?: number | null;
   coverUrl: string | null; // first screenshot: 16:9, or a full page that scrolls
   galleryUrls: string[]; // up to 4 more screenshots, in order
   videoUrl: string | null; // short muted hover preview
