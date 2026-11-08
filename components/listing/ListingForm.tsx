@@ -622,7 +622,7 @@ export function ListingForm() {
           id="video"
           kind="video"
           label="Preview video (optional)"
-          hint="A short, silent clip that plays on hover. MP4 or WebM, up to 10 MB."
+          hint="A short, silent clip that plays on hover. MP4 or WebM, up to 15 MB."
           file={video}
           onChange={setVideo}
           aspect="aspect-video"

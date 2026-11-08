@@ -10,7 +10,9 @@ import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ScreenshotGallery } from "@/components/listing/ScreenshotGallery";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
-import { getListing, getPublicSlugs, withRef } from "@/lib/listings";
+import { getJuryReviews, getListing, getPublicSlugs, withRef } from "@/lib/listings";
+import { JuryLauncher } from "@/components/jury/JuryLauncher";
+import { JuryReviews } from "@/components/jury/JuryReviews";
 import { resolveListingSlug } from "@/lib/slugRedirect";
 import { categoryName, regionName, technologySlug } from "@/lib/collections";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
@@ -312,6 +314,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
   }
 
   const liveUrl = withRef(listing.url);
+  const juryReviews = await getJuryReviews(listing.slug);
   const categories = listingCategories(listing);
   const inVoting = listing.status === "in_voting";
   const jsonLd = buildJsonLd(listing, {
@@ -401,6 +404,8 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           <p className="mt-3 max-w-2xl text-lg leading-relaxed tracking-[-0.01em]">{listing.juryNote}</p>
         </section>
       )}
+
+      <JuryReviews reviews={juryReviews} />
 
       {/* Details */}
       <section aria-label="Details" className="container-site mt-12">
@@ -537,6 +542,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
       {/* Up to 3 neighbouring listings: same category, then shared stack, then newest */}
       <RelatedListings listing={listing} />
+
+      {/* Jury members only: loads auth code only for signed-in visitors. */}
+      {inVoting && <JuryLauncher slug={listing.slug} title={listing.title} />}
     </>
   );
 }

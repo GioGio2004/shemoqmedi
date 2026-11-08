@@ -104,6 +104,11 @@ export const LIMITS = {
   technologies: 6,
   /** Categories per listing (the first is the primary one). */
   categories: 3,
+  /** Jury evaluation comment (mirrors the backend). */
+  juryCommentMin: 20,
+  juryComment: 1000,
+  juryTitle: 80,
+  juryBio: 400,
   reviewNote: 500,
   claimMessage: 1000,
   /** Extra screenshots after the cover (so 5 images in all). */
@@ -111,7 +116,7 @@ export const LIMITS = {
   /** Max screenshot size in bytes. */
   imageBytes: 5 * 1024 * 1024,
   /** Max hover-video size in bytes. */
-  videoBytes: 10 * 1024 * 1024,
+  videoBytes: 15 * 1024 * 1024,
   /** Max listings one user can have waiting for review at once. */
   pendingPerUser: 5,
   /** Max URLs per admin import batch. */

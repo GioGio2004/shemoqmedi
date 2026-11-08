@@ -6,6 +6,8 @@ import { unstable_rethrow } from "next/navigation";
 import {
   api,
   type CreatorSummary,
+  type JurorPublic,
+  type JuryReview,
   type PublicCreator,
   type PublicListing,
 } from "@/convex-helpers-api";
@@ -47,6 +49,25 @@ export const getListing = cache((slug: string): Promise<PublicListing | null> =>
 
 export function getPublicSlugs() {
   return safe("listings.publicSlugs", () => fetchQuery(api.listings.publicSlugs, {}), []);
+}
+
+/**
+ * Jury reviews for a listing page. Unlike the reads above this never throws:
+ * the reviews are one section of the page, so a failed read renders the page
+ * without them rather than failing the whole listing.
+ */
+export const getJuryReviews = cache(async (slug: string): Promise<JuryReview[]> => {
+  try {
+    return await fetchQuery(api.jury.reviewsForListing, { slug });
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("jury.reviewsForListing failed:", error);
+    return [];
+  }
+});
+
+export function getJurors(): Promise<(JurorPublic & { evaluations: number })[]> {
+  return safe("jury.listPublic", () => fetchQuery(api.jury.listPublic, {}), []);
 }
 
 export const getCreator = cache(

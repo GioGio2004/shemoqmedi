@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { JurorPublic } from "@/convex-helpers-api";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
-import { JURY } from "@/lib/jury";
+import { JurorAvatar } from "@/components/jury/JurorAvatar";
+import { getJurors } from "@/lib/listings";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { hostOf } from "@/lib/format";
 
 const title = "The Jury: Who Reviews and Scores Websites";
 const description =
-  "The Shemoqmedi jury reviews every submitted website by hand and scores it on design, usability, creativity and code. Its score counts for 60% of the final result.";
+  "Meet the Shemoqmedi jury: designers and developers who score every website in its voting week on design, usability, creativity and code. Their score counts for 60%.";
 
 export const metadata: Metadata = {
   title,
@@ -15,9 +18,11 @@ export const metadata: Metadata = {
   openGraph: infoOpenGraph("/jury", title, description),
 };
 
+// Members come from Convex (jury.listPublic); refreshed in the background.
 export const dynamic = "force-static";
+export const revalidate = 300;
 
-function safeUrl(raw?: string) {
+function safeUrl(raw: string | null) {
   if (!raw) return null;
   try {
     const u = new URL(raw);
@@ -27,83 +32,79 @@ function safeUrl(raw?: string) {
   }
 }
 
-const members: InfoSection[] =
-  JURY.length > 0
-    ? [
-        {
-          id: "members",
-          heading: "Members",
-          body: (
-            <ul className="grid gap-5 sm:grid-cols-2">
-              {JURY.map((m) => {
-                const url = safeUrl(m.url);
-                return (
-                  <li key={m.name}>
-                    <p className="font-semibold text-black">
-                      {url ? (
-                        <a href={url} target="_blank" rel="noopener">
-                          {m.name}
-                        </a>
-                      ) : (
-                        m.name
-                      )}
-                    </p>
-                    <p className="text-sm">
-                      {m.role}
-                      {m.location ? `, ${m.location}` : ""}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          ),
-        },
-      ]
-    : [];
+function Members({ jurors }: { jurors: (JurorPublic & { evaluations: number })[] }) {
+  return (
+    <ul className="grid gap-8 sm:grid-cols-2">
+      {jurors.map((j) => {
+        const url = safeUrl(j.website);
+        return (
+          <li key={j.slug} id={j.slug} className="grid scroll-mt-32 content-start gap-3">
+            <JurorAvatar url={j.imageUrl} size={72} />
+            <div>
+              <p className="text-lg font-semibold tracking-[-0.02em] text-black">{j.name}</p>
+              <p className="text-sm">
+                {j.title}
+                {j.location ? `, ${j.location}` : ""}
+              </p>
+            </div>
+            {j.bio && <p className="text-sm">{j.bio}</p>}
+            <p className="text-xs text-black/55">
+              {j.evaluations} {j.evaluations === 1 ? "evaluation" : "evaluations"}
+              {url && (
+                <>
+                  {" · "}
+                  <a href={url} target="_blank" rel="noopener">
+                    {hostOf(url)}
+                  </a>
+                </>
+              )}
+            </p>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
-const sections: InfoSection[] = [
-  ...members,
+const process: InfoSection[] = [
   {
     id: "review",
-    heading: "Every site is reviewed by hand",
+    heading: "How the jury works",
     body: (
       <>
         <p>
-          Nothing appears on Shemoqmedi automatically. The jury opens every submitted website before it is listed and
-          checks that it is live, finished and the submitter&apos;s own work.
+          Every submitted site is checked by hand before it is listed. Once it goes live, the jury has its
+          seven-day voting week to evaluate it: each juror gives a score from 1 to 10 on design, usability, creativity
+          and code, and writes a short comment that is shown on the site&apos;s page with their name.
         </p>
         <p>
-          Sites that do not meet the bar are declined with a short note that explains why, so the creator can improve
-          the site and submit it again.
+          The site&apos;s jury score is the average of its jurors&apos; evaluations and counts for 60% of the final
+          result; the community&apos;s votes count for the other 40%. The full method is on{" "}
+          <Link href="/how-we-score">How we score</Link>.
         </p>
       </>
     ),
   },
   {
-    id: "scores",
-    heading: "What the jury scores",
+    id: "membership",
+    heading: "Joining the jury",
     body: (
       <p>
-        For each approved site the jury gives a score from 1 to 10 on design, usability, creativity and code. That
-        score counts for 60% of the final result; the community&apos;s votes count for the other 40%. The full method
-        is on <Link href="/how-we-score">How we score</Link>.
-      </p>
-    ),
-  },
-  {
-    id: "notes",
-    heading: "Jury notes",
-    body: (
-      <p>
-        Many listings carry a short jury note on their page: a few sentences on what stands out, from layout and
-        typography to motion and engineering. It is written to help other designers and developers learn from the
-        work.
+        Jury membership is by invitation. We invite designers, developers and studio leads whose own work and
+        judgement we trust. Jurors never evaluate their own sites.
       </p>
     ),
   },
 ];
 
-export default function JuryPage() {
+export default async function JuryPage() {
+  const jurors = await getJurors();
+  const sections: InfoSection[] = [
+    ...(jurors.length > 0
+      ? [{ id: "members", heading: "Members", body: <Members jurors={jurors} /> }]
+      : []),
+    ...process,
+  ];
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -113,6 +114,18 @@ export default function JuryPage() {
     description,
     isPartOf: { "@id": `${SITE_URL}/#website` },
     inLanguage: "en",
+    ...(jurors.length > 0
+      ? {
+          mentions: jurors.map((j) => ({
+            "@type": "Person",
+            "@id": `${absoluteUrl("/jury")}#${j.slug}`,
+            name: j.name,
+            jobTitle: j.title,
+            url: safeUrl(j.website) ?? undefined,
+            image: j.imageUrl ?? undefined,
+          })),
+        }
+      : {}),
   };
   return (
     <>
@@ -124,7 +137,7 @@ export default function JuryPage() {
         current="/jury"
         prelude="the"
         title="Jury"
-        lede="The people who review every submission by hand and score it on four pillars."
+        lede="Designers and developers who score every site in its voting week and say what they think of it."
         sections={sections}
       />
     </>

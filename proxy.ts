@@ -7,6 +7,8 @@ const isProtectedRoute = createRouteMatcher([
   "/submit(.*)",
   "/vote(.*)",
   "/claim(.*)",
+  "/jury/join(.*)",
+  "/jury/profile(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -15,7 +17,8 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   if (!userId) {
     // Our own sign-in page (not Clerk's hosted one), then back here.
-    const url = new URL("/sign-in", req.url);
+    // Invited jurors usually have no account yet: send them to sign-up.
+    const url = new URL(req.nextUrl.pathname.startsWith("/jury/join") ? "/sign-up" : "/sign-in", req.url);
     url.searchParams.set("redirect_url", req.nextUrl.href);
     return NextResponse.redirect(url);
   }
@@ -33,6 +36,8 @@ export const config = {
     "/submit/:path*",
     "/vote/:path*",
     "/claim/:path*",
+    "/jury/join/:path*",
+    "/jury/profile/:path*",
     "/sign-in/:path*",
     "/sign-up/:path*",
     "/sso-callback/:path*",

@@ -87,6 +87,34 @@ export type CreatorSummary = {
   updatedAt: number;
 };
 
+/** A jury member as shown on the site. imageUrl null: grey placeholder. */
+export type JurorPublic = {
+  slug: string;
+  name: string;
+  title: string;
+  location: string | null;
+  website: string | null;
+  bio: string | null;
+  imageUrl: string | null;
+};
+
+export type JuryReview = {
+  juror: JurorPublic;
+  scores: Pillars;
+  average: number;
+  comment: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type JurorProfileArgs = {
+  name: string;
+  title: string;
+  location?: string;
+  website?: string;
+  bio?: string;
+};
+
 export type ConvexUser = {
   _id: Id<"users">;
   _creationTime: number;
@@ -153,6 +181,28 @@ export type PublicApiType = {
   creators: {
     getBySlug: Q<{ slug: string }, { creator: PublicCreator; listings: PublicListing[] } | null>;
     listPublic: Q<Empty, CreatorSummary[]>;
+  };
+  jury: {
+    /** Active jurors with their evaluation counts (/jury). */
+    listPublic: Q<Empty, (JurorPublic & { evaluations: number })[]>;
+    reviewsForListing: Q<{ slug: string }, JuryReview[]>;
+    /** The signed-in user's jury profile, or null if they are not on the jury. */
+    me: Q<Empty, JurorPublic | null>;
+    myEvaluation: Q<
+      { slug: string },
+      {
+        blocked: string | null;
+        evaluation: { scores: Pillars; comment: string; updatedAt: number } | null;
+        votingEndsAt: number | null;
+      } | null
+    >;
+    evaluate: M<{ slug: string; scores: Pillars; comment: string }, null>;
+    updateProfile: M<JurorProfileArgs, null>;
+    inviteByToken: Q<
+      { token: string },
+      { status: "valid" | "accepted" | "revoked" | "expired" | "unknown"; name: string | null; email: string | null }
+    >;
+    acceptInvite: M<{ token: string } & JurorProfileArgs, null>;
   };
   claims: {
     submit: M<
