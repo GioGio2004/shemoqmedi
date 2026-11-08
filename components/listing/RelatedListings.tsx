@@ -31,8 +31,6 @@ export function pickRelated(listing: PublicListing, all: PublicListing[], count 
  * to its neighbours (for visitors and crawlers alike). Server component;
  * renders nothing when there is no other listing. Cards never preload their
  * images: the row is below the fold and must not compete with the cover.
- * They show the screenshot only, no hover-preview video: three more videos
- * streaming on every listing page view would eat the media bandwidth.
  */
 export async function RelatedListings({ listing }: { listing: PublicListing }) {
   const related = pickRelated(listing, await getPublicListings());
@@ -51,7 +49,7 @@ export async function RelatedListings({ listing }: { listing: PublicListing }) {
         <ul className="mt-10 grid grid-cols-1 gap-x-8 gap-y-12 md:mt-12 md:grid-cols-2 lg:grid-cols-3">
           {related.map((l) => (
             <li key={l.slug}>
-              <ListingCard listing={{ ...l, videoUrl: null }} />
+              <ListingCard listing={l} />
             </li>
           ))}
         </ul>

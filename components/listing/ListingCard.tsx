@@ -8,14 +8,13 @@ import { outboundRel, withRefClient } from "@/lib/ref";
 import { cn } from "@/lib/utils";
 import { AwardBadge, ScoreBadge } from "./Badges";
 import { Countdown } from "./Countdown";
-import { InViewVideo } from "./InViewVideo";
 import { ArrowIcon } from "@/components/site/ui";
 
 /**
- * Directory card. 16:9 screenshot; if the listing has a preview video it
- * plays muted on a loop whenever the card is on screen (fading in over the
- * screenshot once it starts) and pauses when it scrolls away. On hover: slow
- * zoom and a floating "Visit site" pill.
+ * Directory card. 16:9 screenshot only: preview videos play on the listing
+ * page alone, so grids of cards stay light and fast (a dozen looping videos
+ * on the home page was most of its weight). On hover: slow zoom and a
+ * floating "Visit site" pill.
  */
 export function ListingCard({
   listing,
@@ -40,14 +39,6 @@ export function ListingCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
               priority={priority}
               className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-            />
-          )}
-          {listing.videoUrl && (
-            <InViewVideo
-              src={listing.videoUrl}
-              fadeIn
-              aria-hidden="true"
-              className="absolute inset-0 size-full object-cover object-top"
             />
           )}
         </Link>
