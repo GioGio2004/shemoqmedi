@@ -61,6 +61,7 @@ class Clip:
     # None = every frame of the file.
     seq: list[int] | None = None
     fps: float = 24.0
+    step: int = 1  # keep every n-th frame (fps / n): long, slow clips
     # How the horizontal anchor is found:
     #   track = alpha centroid per frame, smoothed over 5 frames (spec default)
     #   feet  = foot position on the ground, interpolated through the air
@@ -78,8 +79,13 @@ class Clip:
 
 
 SPEC = {
-    "walk": Clip("walk", "walk.mp4", auto_loop=(8, 40)),
-    "idle": Clip("idle", "idle.mp4", anchor="feet", pingpong=False),
+    # walk.mp4 (Flow, 2026-11-09): treadmill walk with two head-down dips
+    # (~42-62, ~110-130) and a still stand from ~150; 66-109 is the cleanest
+    # head-up stretch. Use seq=None for a clip that is a clean walk throughout.
+    "walk": Clip("walk", "walk.mp4", seq=list(range(66, 110)), auto_loop=(14, 40)),
+    # idle.mp4: 8 s, head turns to the camera and back, feet locked. Kept
+    # whole (it starts and ends on the reference pose) at 12 fps.
+    "idle": Clip("idle", "idle.mp4", anchor="feet", step=2),
     "hop": Clip("hop", "hop.mp4", anchor="feet", loop=False, air=True),
     "takeoff": Clip("takeoff", "takeoff.mp4", anchor="feet", loop=False, air=True, leaves=True),
 }
@@ -351,6 +357,20 @@ def stride_from_feet(a: Analysed, loop: list[int]) -> float:
     return -total  # planted foot moves backwards; crow moves forwards
 
 
+MAX_SHEET_W = 16000  # WebP's limit is 16383 px per side
+
+
+def tile(frames: list[np.ndarray], W: int, H: int) -> tuple[np.ndarray, int]:
+    """One horizontal strip, wrapped into rows when it would be too wide."""
+    cols = max(1, min(len(frames), MAX_SHEET_W // W))
+    rows = -(-len(frames) // cols)
+    sheet = np.zeros((rows * H, cols * W), np.float32)
+    for k, f in enumerate(frames):
+        y, x = (k // cols) * H, (k % cols) * W
+        sheet[y : y + H, x : x + W] = f
+    return sheet, cols
+
+
 def encode(sheet: np.ndarray, nframes: int) -> tuple[bytes, str]:
     h, w = sheet.shape
     rgba = np.empty((h, w, 4), np.uint8)
@@ -398,8 +418,10 @@ def main() -> int:
     # Scale: clips from the same file share the walk's standing height (same
     # camera), other files are scaled by their own standing height.
     ref = {an["walk"].clip.file: an["walk"].stand_h}
-    for a in an.values():
-        ref.setdefault(a.clip.file, a.stand_h)
+    for file in {a.clip.file for a in an.values()} - set(ref):
+        same = [a for a in an.values() if a.clip.file == file]
+        standing = [a.stand_h for a in same if not a.clip.air] or [same[0].stand_h]
+        ref[file] = float(np.median(standing))
     for a in an.values():
         a.scale = TARGET_H / ref[a.clip.file]
 
@@ -473,11 +495,13 @@ def main() -> int:
             meta["frontOffset"] = round(sym, 1)
             a.notes.append(f"front view at frame {k}; its centre is {sym:+.1f} CSS px from the feet")
 
+        if a.clip.step > 1:
+            seq = seq[:: a.clip.step]
         frames = [rendered[i] for i in seq]
-        fps = a.fps
+        fps = a.fps / a.clip.step
         # Keep each sheet under MAX_BYTES; halve the frame rate if needed.
         while True:
-            sheet = np.concatenate(frames, axis=1)
+            sheet, cols = tile(frames, W, H)
             data, how = encode(sheet, len(frames))
             if data or len(frames) <= 2:
                 break
@@ -499,6 +523,7 @@ def main() -> int:
             "name": name,
             "src": f"/crow/{name}.webp",
             "frames": len(frames),
+            "columns": cols,  # frame k is at column k % columns, row k // columns
             "frameWidth": W,
             "frameHeight": H,
             "fps": fps,
@@ -518,12 +543,13 @@ def main() -> int:
 
         if args.preview:
             args.preview.mkdir(parents=True, exist_ok=True)
-            bg = np.full((H, W * len(frames), 3), 200, np.uint8)
+            bg = np.full((*sheet.shape, 3), 200, np.uint8)
             al = sheet[..., None]
             prev = (bg * (1 - al) + INK * al).astype(np.uint8)
-            cv2.line(prev, (0, AY), (prev.shape[1], AY), (0, 0, 255), 1)
             for k in range(len(frames)):
-                cv2.line(prev, (k * W + AX, 0), (k * W + AX, H), (255, 0, 0), 1)
+                x, y = (k % cols) * W, (k // cols) * H
+                cv2.line(prev, (x, y + AY), (x + W, y + AY), (0, 0, 255), 1)
+                cv2.line(prev, (x + AX, y), (x + AX, y + H), (255, 0, 0), 1)
             cv2.imwrite(str(args.preview / f"{name}.png"), prev)
 
     (OUT / "index.json").write_text(json.dumps(index, indent=2) + "\n")

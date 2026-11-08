@@ -12,6 +12,8 @@ export interface AnimMeta {
   name: AnimName;
   src: string;
   frames: number;
+  /** Long sheets wrap: frame k sits at column k % columns, row k / columns. */
+  columns?: number;
   frameWidth: number;
   frameHeight: number;
   fps: number;

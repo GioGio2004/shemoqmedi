@@ -2,20 +2,21 @@
   "name": "peck",
   "src": "/crow/peck.webp",
   "frames": 22,
-  "frameWidth": 314,
-  "frameHeight": 264,
+  "columns": 22,
+  "frameWidth": 376,
+  "frameHeight": 318,
   "fps": 24.0,
   "anchor": {
-    "x": 193,
-    "y": 259
+    "x": 233,
+    "y": 312
   },
   "pixelRatio": 2,
   "loop": false,
   "pingpong": false,
   "bounds": {
-    "left": -94.7,
-    "top": -71.2,
-    "right": 54.9,
+    "left": -114.3,
+    "top": -85.9,
+    "right": 66.3,
     "bottom": 0.3
   },
   "source": "forage.mp4"

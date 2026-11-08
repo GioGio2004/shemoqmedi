@@ -822,7 +822,10 @@ export class CrowEngine {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       const f = clamp(this.frame, 0, a.frames - 1);
-      ctx.drawImage(a.img, f * a.frameWidth, 0, a.frameWidth, a.frameHeight, -ax, -ay, dw, dh);
+      const cols = a.columns ?? a.frames;
+      const sx = (f % cols) * a.frameWidth;
+      const sy = Math.floor(f / cols) * a.frameHeight;
+      ctx.drawImage(a.img, sx, sy, a.frameWidth, a.frameHeight, -ax, -ay, dw, dh);
       ctx.restore();
       const left = this.facing === 1 ? cx - ax : cx - (dw - ax);
       this.dirty = [Math.floor(left) - 2, Math.floor(cy - ay) - 2, Math.ceil(dw) + 4, Math.ceil(dh) + 4];
