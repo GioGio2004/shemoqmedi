@@ -74,7 +74,10 @@ const schema = z.object({
     .trim()
     .min(1, "Short description is required.")
     .max(LIMITS.tagline, `Short description must be ${LIMITS.tagline} characters or less.`),
-  category: z.string().refine(isCategory, "Choose a category."),
+  categories: z
+    .array(z.string().refine(isCategory, "Unknown category selected."))
+    .min(1, "Choose at least one category.")
+    .max(LIMITS.categories, `Choose up to ${LIMITS.categories} categories.`),
   technologies: z
     .array(z.string().refine(isTechnology, "Unknown technology selected."))
     .min(1, "Choose at least one technology.")
@@ -353,7 +356,7 @@ export function ListingForm() {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [tagline, setTagline] = useState("");
-  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [technologies, setTechnologies] = useState<string[]>([]);
   const [creatorTier, setCreatorTier] = useState<CreatorTier | "">("");
   const [region, setRegion] = useState<RegionSlug | "">("");
@@ -369,6 +372,15 @@ export function ListingForm() {
 
   // Prefill "Made by" with the account name until the user edits it.
   const displayCredit = creditTouched ? creditName : creditName || user?.fullName || "";
+
+  const toggleCategory = (slug: string) =>
+    setCategories((current) =>
+      current.includes(slug)
+        ? current.filter((c) => c !== slug)
+        : current.length >= LIMITS.categories
+          ? current
+          : [...current, slug],
+    );
 
   const toggleTech = (name: string) =>
     setTechnologies((current) =>
@@ -393,7 +405,7 @@ export function ListingForm() {
       title,
       url,
       tagline,
-      category,
+      categories,
       technologies,
       creatorTier,
       region,
@@ -422,7 +434,7 @@ export function ListingForm() {
         title: data.title,
         url: data.url,
         tagline: data.tagline,
-        category: data.category,
+        categories: data.categories,
         technologies: data.technologies,
         creatorTier: data.creatorTier,
         region: data.region,
@@ -485,19 +497,25 @@ export function ListingForm() {
         </Field>
 
         <fieldset className="grid gap-3">
-          <legend className="eyebrow mb-1 text-black">Category</legend>
+          <legend className="eyebrow mb-1 text-black">
+            Category <span className="text-black/55">({categories.length}/{LIMITS.categories})</span>
+          </legend>
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.slug}
-                type="button"
-                aria-pressed={category === c.slug}
-                onClick={() => setCategory(c.slug)}
-                className={pill(category === c.slug)}
-              >
-                {c.name}
-              </button>
-            ))}
+            {CATEGORIES.map((c) => {
+              const on = categories.includes(c.slug);
+              return (
+                <button
+                  key={c.slug}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggleCategory(c.slug)}
+                  disabled={!on && categories.length >= LIMITS.categories}
+                  className={cn(pill(on), "disabled:opacity-35")}
+                >
+                  {c.name}
+                </button>
+              );
+            })}
           </div>
         </fieldset>
 

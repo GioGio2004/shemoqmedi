@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PublicListing } from "@/convex-helpers-api";
 import { PillLink } from "@/components/site/ui";
-import { CATEGORIES, REGIONS, TECHNOLOGIES } from "@/lib/taxonomy";
+import { CATEGORIES, REGIONS, TECHNOLOGIES, listingCategories } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
 import { useDragScroll } from "@/lib/useDragScroll";
 import { ListingCard } from "./ListingCard";
@@ -44,7 +44,7 @@ function techName(slug: string) {
 
 function matches(listing: PublicListing, f: Filters) {
   if (f.award && !matchAward(listing, f.award)) return false;
-  if (f.category && listing.category !== f.category) return false;
+  if (f.category && !listingCategories(listing).includes(f.category)) return false;
   if (f.region && listing.region !== f.region) return false;
   if (f.tech) {
     const name = techName(f.tech);
@@ -75,7 +75,7 @@ function writeUrl(f: Filters) {
 
 export function DirectoryBrowser({ listings }: { listings: PublicListing[] }) {
   const options = useMemo<Record<Key, Option[]>>(() => {
-    const categories = new Set(listings.map((l) => l.category));
+    const categories = new Set(listings.flatMap(listingCategories));
     const techs = new Set(listings.flatMap((l) => l.technologies));
     return {
       award: AWARD_OPTIONS,

@@ -20,7 +20,8 @@ export type PublicListing = {
   title: string;
   tagline: string;
   url: string;
-  category: string; // CATEGORIES slug
+  category: string; // primary CATEGORIES slug (= categories[0])
+  categories: string[]; // CATEGORIES slugs, primary first
   technologies: string[]; // TECHNOLOGIES names
   region: RegionSlug;
   creatorTier: CreatorTier;
@@ -108,7 +109,7 @@ export type SubmitArgs = {
   title: string;
   tagline: string;
   url: string;
-  category: string;
+  categories: string[]; // CATEGORIES slugs, primary first
   technologies: string[];
   creatorTier: CreatorTier;
   region: RegionSlug;

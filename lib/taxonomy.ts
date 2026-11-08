@@ -84,6 +84,11 @@ export function isCategory(value: string): value is CategorySlug {
   return CATEGORIES.some((c) => c.slug === value);
 }
 
+/** A listing's category slugs, primary first (falls back to the single `category`). */
+export function listingCategories(listing: { category: string; categories?: string[] }) {
+  return listing.categories?.length ? listing.categories : [listing.category];
+}
+
 export function isTechnology(value: string): value is TechnologyName {
   return TECHNOLOGIES.some((t) => t.name === value);
 }
@@ -97,6 +102,8 @@ export const LIMITS = {
   creditName: 80,
   url: 500,
   technologies: 6,
+  /** Categories per listing (the first is the primary one). */
+  categories: 3,
   reviewNote: 500,
   claimMessage: 1000,
   /** Extra screenshots after the cover (so 5 images in all). */

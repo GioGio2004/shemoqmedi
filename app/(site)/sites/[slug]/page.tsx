@@ -16,7 +16,7 @@ import { categoryName, regionName, technologySlug } from "@/lib/collections";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
-import { AWARDS } from "@/lib/taxonomy";
+import { AWARDS, listingCategories } from "@/lib/taxonomy";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -289,6 +289,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
   }
 
   const liveUrl = withRef(listing.url);
+  const categories = listingCategories(listing);
   const inVoting = listing.status === "in_voting";
   const jsonLd = buildJsonLd(listing, {
     title: listingTitle(listing),
@@ -382,9 +383,13 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
       <section aria-label="Details" className="container-site mt-12">
         <dl className="grid gap-px overflow-hidden rounded-3xl border border-black/10 bg-black/10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-white p-6">
-            <dt className="eyebrow">Category</dt>
-            <dd className="mt-3">
-              <Tag href={`/collections/${listing.category}`}>{categoryName(listing.category)}</Tag>
+            <dt className="eyebrow">{categories.length > 1 ? "Categories" : "Category"}</dt>
+            <dd className="mt-3 flex flex-wrap gap-2">
+              {categories.map((slug) => (
+                <Tag key={slug} href={`/collections/${slug}`}>
+                  {categoryName(slug)}
+                </Tag>
+              ))}
             </dd>
           </div>
           <div className="bg-white p-6">

@@ -6,6 +6,7 @@ import {
   REGIONS,
   TECHNOLOGIES,
   VOTING_DAYS,
+  listingCategories,
 } from "@/lib/taxonomy";
 
 // Programmatic SEO collections: one static page per category, technology,
@@ -72,7 +73,7 @@ function build(): Collection[] {
       title: bestTitle(c.name),
       description: `The best ${phrase} websites for web design inspiration, hand-reviewed and scored by an independent jury and the community.`,
       summarize: (n, list) => `${n} hand-picked ${phrase} websites: ${list}. ${SCORED_BY}`,
-      match: (l) => l.category === c.slug,
+      match: (l) => listingCategories(l).includes(c.slug),
     });
   }
   for (const t of TECHNOLOGIES) {

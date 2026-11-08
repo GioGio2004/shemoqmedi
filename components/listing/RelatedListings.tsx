@@ -1,9 +1,10 @@
 import type { PublicListing } from "@/convex-helpers-api";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { getPublicListings } from "@/lib/listings";
+import { listingCategories } from "@/lib/taxonomy";
 
 /**
- * Up to `count` other public listings: the same category first, then sites
+ * Up to `count` other public listings: a shared category first, then sites
  * sharing a technology, then the newest. Within each group, more shared
  * technologies rank higher; ties keep the newest-first order of `all`.
  */
@@ -13,9 +14,11 @@ export function pickRelated(listing: PublicListing, all: PublicListing[], count 
     l.technologies.filter((t) => listing.technologies.includes(t)).length;
   const byShared = (a: PublicListing, b: PublicListing) => shared(b) - shared(a);
 
-  const sameCategory = others.filter((l) => l.category === listing.category).sort(byShared);
+  const mine = listingCategories(listing);
+  const sharesCategory = (l: PublicListing) => listingCategories(l).some((c) => mine.includes(c));
+  const sameCategory = others.filter(sharesCategory).sort(byShared);
   const sameTech = others
-    .filter((l) => l.category !== listing.category && shared(l) > 0)
+    .filter((l) => !sharesCategory(l) && shared(l) > 0)
     .sort(byShared);
   const picked = new Set([...sameCategory, ...sameTech]);
   const newest = others.filter((l) => !picked.has(l));
