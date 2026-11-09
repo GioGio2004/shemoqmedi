@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import type { MenuData } from "@/app/api/menu/route";
 import { useEffect, useRef } from "react";
 
 /**
@@ -16,6 +17,11 @@ export function NavCrow() {
   const slot = useRef<HTMLSpanElement>(null);
   const engineRef = useRef<{ routeChanged(): void } | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
 
   // A client-side page change: a crow on (or flying to) the old page leaves.
   useEffect(() => {
@@ -59,6 +65,16 @@ export function NavCrow() {
         debug,
         home: el,
         onHome: (home) => (mark.dataset.crow = home ? "home" : "away"),
+        // Tap reaction: off to a random featured or award-winning site.
+        surprise: async () => {
+          const data = (await (await fetch("/api/menu")).json()) as MenuData;
+          const other = (slug: string) => `/sites/${slug}` !== window.location.pathname;
+          const picks = (data.picks ?? []).filter(other);
+          // No other featured site: any other site.
+          const pool = picks.length ? picks : data.sites.map((s) => s.slug).filter(other);
+          return pool.length ? `/sites/${pool[Math.floor(Math.random() * pool.length)]}` : null;
+        },
+        navigate: (href) => routerRef.current.push(href),
       });
       el.dataset.live = "true";
       engineRef.current = engine;

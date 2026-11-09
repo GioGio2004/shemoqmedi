@@ -24,6 +24,8 @@ export type MenuData = {
   counts: Record<string, number>;
   /** Every live site, newest first, for the search box. */
   sites: MenuSite[];
+  /** Featured and award-winning sites (slugs), for the crow's "Surprise me". */
+  picks: string[];
 };
 
 export async function GET() {
@@ -52,5 +54,7 @@ export async function GET() {
     .slice(0, 3)
     .map((l) => sites.find((s) => s.slug === l.slug)!);
 
-  return Response.json({ spotlight, counts, sites } satisfies MenuData);
+  const picks = listings.filter((l) => typeof l.featuredRank === "number" || l.awards.length > 0).map((l) => l.slug);
+
+  return Response.json({ spotlight, counts, sites, picks } satisfies MenuData);
 }

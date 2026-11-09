@@ -8,6 +8,13 @@
  *     moves on: to another spot, back home, or off screen.
  *   OFF: a while later it flies back in, to a spot in view or home.
  *
+ * Special perches (data-crow-perch="badge" | "countdown" | "video"): the SOTD
+ * badge, a vote's countdown in its last day (it pecks at it) and a playing
+ * walkthrough. They're picked more often, and it leaves once one stops being
+ * a perch (the video paused). Airborne it casts a softer, wider shadow.
+ * Tap it while it sits on the page: a ruffle, a hop across the screen, or
+ * now and then it flies off to a featured site ("Surprise me").
+ *
  * Two spaces, so scrolling never makes it wobble:
  *   - page space: sitting on a spot, or flying to one. The canvas is
  *     absolutely positioned in the document, so the browser scrolls it with
@@ -24,7 +31,7 @@
 import { loadAnimation, type Anim, type AnimName } from "./sprites";
 import { measureWorld } from "./world";
 
-export type RoamState = "PERCH" | "REST" | "STRETCH" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
+export type RoamState = "PERCH" | "REST" | "STRETCH" | "PECK" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
 type Space = "page" | "view";
 
 export type RoamSprites = { idle: Anim; takeoff: Anim } & Partial<Record<AnimName, Anim>>;
@@ -35,6 +42,10 @@ export interface RoamOptions {
   home: HTMLElement;
   /** True: the crow is (about to be) home, the name slides aside. False: it left. */
   onHome: (home: boolean) => void;
+  /** "Surprise me": the address of a featured site to fly off to, or null. */
+  surprise?: () => Promise<string | null>;
+  /** Client-side navigation (the router). */
+  navigate?: (href: string) => void;
 }
 
 /**
@@ -59,11 +70,23 @@ const Z_FLIGHT = "55"; // above the header while flying and at home
 const Z_PERCH = "20"; // sitting on the page: under the header, sticky bars, the menu
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
-const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const menuOpen = () => document.documentElement.dataset.menuOpen !== undefined;
 const isPage = (s: Spot): s is PageSpot => s.kind === "card" || s.kind === "letter";
+/** The kind of a special perch ("badge", "countdown", "video"), or "" for a plain one. */
+const perchKind = (s: Spot) => (s.kind === "card" ? (s.el.dataset.crowPerch ?? "") : "");
+/** Special perches are worth the trip: picked four times as often. */
+const weighted = (xs: Spot[]) => {
+  const w = xs.map((x) => (perchKind(x) ? 4 : 1));
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < xs.length; i++) if ((r -= w[i]) < 0) return xs[i];
+  return xs[xs.length - 1];
+};
+// Its shadow is always there (depth): close and firm when it stands, lower,
+// wider and softer once airborne, easing between the two.
+const SHADOW_SIT = "drop-shadow(0 4px 4px rgb(0 0 0 / 0.3))";
+const SHADOW_AIR = "drop-shadow(0 14px 10px rgb(0 0 0 / 0.22))";
 
 interface Pose {
   anim: AnimName;
@@ -102,6 +125,11 @@ export class CrowRoamer {
   private lastW = 0;
   /** Home's space: view in the fixed site header, page in a header that scrolls. */
   private homeSpace: Space = "view";
+  private pecks = 2;
+  private airborne: boolean | null = null;
+  /** A "Surprise me" flight: where to go once it's off screen. */
+  private surpriseTo: Promise<string | null> | null = null;
+  private hoverRaf = 0;
 
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -127,7 +155,7 @@ export class CrowRoamer {
     const c = document.createElement("canvas");
     c.setAttribute("aria-hidden", "true");
     c.className = "crow-roam";
-    c.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;will-change:transform";
+    c.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;will-change:transform;transition:filter .35s ease";
     document.body.appendChild(c);
     this.canvas = c;
     this.ctx = c.getContext("2d")!;
@@ -144,6 +172,9 @@ export class CrowRoamer {
     document.addEventListener("visibilitychange", this.onVisibility);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("scroll", this.onScroll, { passive: true });
+    // Taps: the canvas lets every pointer through, so hits are tested here.
+    window.addEventListener("click", this.onClick, true);
+    if (window.matchMedia("(hover: hover)").matches) window.addEventListener("pointermove", this.onPointerMove, { passive: true });
     this.render();
     this.onVisibility();
   }
@@ -155,6 +186,10 @@ export class CrowRoamer {
     document.removeEventListener("visibilitychange", this.onVisibility);
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("scroll", this.onScroll);
+    window.removeEventListener("click", this.onClick, true);
+    window.removeEventListener("pointermove", this.onPointerMove);
+    cancelAnimationFrame(this.hoverRaf);
+    document.documentElement.style.cursor = "";
     this.canvas.remove();
   }
 
@@ -247,7 +282,7 @@ export class CrowRoamer {
   }
 
   private isSitting() {
-    return this.state === "PERCH" || this.state === "REST" || this.state === "STRETCH";
+    return this.state === "PERCH" || this.state === "REST" || this.state === "STRETCH" || this.state === "PECK";
   }
 
   private busy() {
@@ -279,6 +314,81 @@ export class CrowRoamer {
     this.render();
     this.schedule();
   };
+
+  // ----------------------------------------------------------------------
+  // Taps
+  // ----------------------------------------------------------------------
+
+  /** Is this screen point on the bird (an inked pixel, give or take a finger)? Only while it sits on the page. */
+  private hit(cx: number, cy: number): boolean {
+    if (!this.isSitting() || !isPage(this.spot) || this.surpriseTo) return false;
+    const r = this.canvas.getBoundingClientRect();
+    const lx = cx - r.left;
+    const ly = cy - r.top;
+    if (lx < 0 || ly < 0 || lx > r.width || ly > r.height) return false;
+    const d = this.dpr;
+    const rad = 7;
+    const x0 = Math.max(0, Math.floor((lx - rad) * d));
+    const y0 = Math.max(0, Math.floor((ly - rad) * d));
+    const w = Math.min(this.canvas.width - x0, Math.ceil(rad * 2 * d));
+    const h = Math.min(this.canvas.height - y0, Math.ceil(rad * 2 * d));
+    if (w <= 0 || h <= 0) return false;
+    const px = this.ctx.getImageData(x0, y0, w, h).data;
+    for (let i = 3; i < px.length; i += 4) if (px[i] > 60) return true;
+    return false;
+  }
+
+  private onClick = (e: MouseEvent) => {
+    if (!this.hit(e.clientX, e.clientY)) return;
+    // The tap was for the crow, not the card or link under it.
+    e.preventDefault();
+    e.stopPropagation();
+    this.react();
+  };
+
+  private onPointerMove = (e: PointerEvent) => {
+    if (this.hoverRaf) return;
+    this.hoverRaf = requestAnimationFrame(() => {
+      this.hoverRaf = 0;
+      document.documentElement.style.cursor = this.hit(e.clientX, e.clientY) ? "pointer" : "";
+    });
+  };
+
+  /** Tapped: a ruffle, a hop to the other side of the screen, or now and then "Surprise me". */
+  private react() {
+    document.documentElement.style.cursor = "";
+    this.need("stretch");
+    const r = Math.random();
+    if (r < 0.2 && this.opts.surprise && this.opts.navigate) return this.surprise();
+    if (r < 0.55 || !this.sprites.stretch) return this.hopAcross();
+    this.set("STRETCH");
+    this.wake();
+  }
+
+  private hopAcross() {
+    const [vx, vy] = this.toView(this.x, this.y);
+    const side = vx < window.innerWidth / 2 ? 1 : -1; // the far half of the screen
+    const spots = this.spotsInView().filter((p) => (this.point(p)[0] - window.scrollX - window.innerWidth / 2) * side > 0);
+    this.target = spots.length
+      ? weighted(spots)
+      : { kind: "air", x: side === 1 ? window.innerWidth + 90 : -90, y: vy - rand(60, 140) };
+    this.set("TAKEOFF");
+    this.wake();
+  }
+
+  private surprise() {
+    this.surpriseTo = this.opts.surprise!().catch(() => null);
+    const vy = this.toView(this.x, this.y)[1];
+    this.target = { kind: "air", x: this.pose.facing === 1 ? window.innerWidth + 90 : -90, y: vy - rand(80, 160) };
+    this.set("TAKEOFF");
+    this.wake();
+  }
+
+  /** Act now, not at the next scheduled tick. */
+  private wake() {
+    this.stop();
+    this.schedule();
+  }
 
   // ----------------------------------------------------------------------
   // Spaces, spots, geometry
@@ -391,7 +501,8 @@ export class CrowRoamer {
     document.querySelectorAll<HTMLElement>("[data-crow-perch]").forEach((el) => {
       if (taken(el)) return;
       const r = el.getBoundingClientRect();
-      const fx = rand(0.22, 0.78);
+      // A small perch (a badge): stand on its middle, clear of the card's rounded corner.
+      const fx = r.width < 140 ? rand(0.42, 0.72) : rand(0.22, 0.78);
       const vx = r.left + r.width * fx;
       const vy = r.top + 1;
       if (this.landable(vx, vy, ceiling, el))
@@ -482,6 +593,8 @@ export class CrowRoamer {
     if (this.isSitting() && this.spotMoved(this.spot)) {
       return this.spotVisible(this.spot) && this.moved(this.spot as PageSpot) ? this.leave() : this.vanish();
     }
+    // Its perch stopped being one (the walkthrough paused, the vote closed): off it goes.
+    if (this.isSitting() && this.spot.kind === "card" && !this.spot.el.hasAttribute("data-crow-perch")) return this.leave();
     switch (this.state) {
       case "PERCH": {
         this.wait -= dt;
@@ -519,11 +632,16 @@ export class CrowRoamer {
           break;
         }
         if (this.onSpotFor >= this.stay) return this.leave();
-        // While it stays: rest only at home; on the page, at most a stretch.
+        // While it stays: rest only at home; on the page, at most a stretch;
+        // on a closing vote's countdown, it pecks at the clock.
         const home = this.spot.kind === "home";
-        const what: AnimName | null = home ? (Math.random() < 0.7 ? "rest" : "stretch") : Math.random() < 0.3 ? "stretch" : null;
+        const clock = perchKind(this.spot) === "countdown";
+        let what: AnimName | null;
+        if (home) what = Math.random() < 0.7 ? "rest" : "stretch";
+        else if (clock) what = Math.random() < 0.8 ? "pickup" : null;
+        else what = Math.random() < 0.3 ? "stretch" : null;
         if (!what) {
-          this.wait = rand(3, 6);
+          this.wait = clock ? rand(1.5, 3) : rand(3, 6);
           break;
         }
         if (!s[what]) {
@@ -532,7 +650,31 @@ export class CrowRoamer {
           break;
         }
         this.restFor = this.opts.debug ? 2 : rand(6, 12);
-        this.set(what === "rest" ? "REST" : "STRETCH");
+        this.pecks = Math.random() < 0.5 ? 2 : 3;
+        this.set(what === "rest" ? "REST" : what === "pickup" ? "PECK" : "STRETCH");
+        break;
+      }
+      case "PECK": {
+        // Bend down to the clock, a few quick pecks, straight back up.
+        const a = s.pickup!;
+        const c = a.marks?.contact ?? a.frames - 1;
+        const m = Math.floor(c * 0.55);
+        const fps = a.fps * 1.5;
+        const down = c / fps;
+        const peck = (2 * (c - m)) / fps;
+        let f: number;
+        if (this.t < down) f = this.t * fps;
+        else if (this.t < down + this.pecks * peck) {
+          const u = (this.t - down) % peck;
+          f = u < peck / 2 ? c - u * fps : m + (u - peck / 2) * fps;
+        } else {
+          f = c - (this.t - down - this.pecks * peck) * fps;
+          if (f <= 0) {
+            this.toPerch(rand(3, 6));
+            break;
+          }
+        }
+        this.show("pickup", clamp(Math.floor(f), 0, a.frames - 1));
         break;
       }
       case "STRETCH": {
@@ -648,6 +790,8 @@ export class CrowRoamer {
           if (this.opts.debug) this.stay = 6;
           if (this.spot.kind === "home" && this.firstHome) this.stay = this.opts.debug ? 2 : rand(7, 8);
           if (this.spot.kind === "home") this.firstHome = false;
+          if (perchKind(this.spot)) this.stay = this.opts.debug ? 8 : rand(14, 24);
+          if (perchKind(this.spot) === "countdown") this.need("pickup");
           if (isPage(this.spot) && this.spot.el.hasAttribute("data-crow-goto")) {
             this.gotoDone = true;
             this.stay = this.opts.debug ? 8 : rand(30, 60); // it came here on purpose: it stays
@@ -712,8 +856,8 @@ export class CrowRoamer {
     const r = Math.random();
     const vy = this.toView(this.x, this.y)[1];
     if (this.spot.kind !== "home" && r < 0.3) this.target = { kind: "home" };
-    else if (ahead.length && r < 0.75) this.target = pick(ahead);
-    else if (spots.length && r < 0.85) this.target = pick(spots);
+    else if (ahead.length && r < 0.75) this.target = weighted(ahead);
+    else if (spots.length && r < 0.85) this.target = weighted(spots);
     else this.target = { kind: "air", x: this.pose.facing === 1 ? window.innerWidth + 90 : -90, y: vy - rand(60, 160) };
     this.set("TAKEOFF");
   }
@@ -726,7 +870,7 @@ export class CrowRoamer {
   private appear() {
     const goto = this.gotoDone ? null : this.gotoSpot();
     const spots = goto || this.firstArrival ? [] : this.spotsInView();
-    this.target = goto ?? (spots.length && Math.random() < 0.75 ? pick(spots) : { kind: "home" });
+    this.target = goto ?? (spots.length && Math.random() < 0.75 ? weighted(spots) : { kind: "home" });
     this.firstArrival = false;
     const tp = this.point(this.target);
     const page = this.spaceOf(this.target) === "page";
@@ -770,6 +914,13 @@ export class CrowRoamer {
   /** Gone (off screen, or its spot went away): come back later. */
   private vanish() {
     clearTimeout(this.leftHomeTimer);
+    if (this.surpriseTo) {
+      const go = this.surpriseTo;
+      this.surpriseTo = null;
+      void go.then((href) => {
+        if (href && !this.destroyed) this.opts.navigate?.(href);
+      });
+    }
     if (this.spot.kind === "home" || this.target.kind === "home") this.opts.onHome(false);
     this.spot = { kind: "air", x: -200, y: -200 };
     this.target = this.spot;
@@ -842,6 +993,12 @@ export class CrowRoamer {
       c.style.visibility = show ? "visible" : "hidden";
     }
     if (!show) return;
+
+    const air = this.state === "FLY" || this.state === "LAND";
+    if (air !== this.airborne) {
+      this.airborne = air;
+      c.style.filter = air ? SHADOW_AIR : SHADOW_SIT;
+    }
 
     // Where the box goes: fixed (view) or in the document (page). Styles are
     // only written when they change, so a sitting crow costs nothing.

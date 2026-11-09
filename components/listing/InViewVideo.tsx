@@ -162,7 +162,8 @@ export function InViewVideo({
     "grid size-11 place-items-center rounded-full border border-white/25 bg-black text-white transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white";
 
   return (
-    <div ref={box} className="video-box relative">
+    // While it plays, the site's crow may sit on the video's top edge.
+    <div ref={box} data-crow-perch={!paused && !isFull ? "video" : undefined} className="video-box relative">
       {video}
       <div className="absolute right-3 bottom-3 flex gap-2 md:right-4 md:bottom-4">
         {fullscreen && (

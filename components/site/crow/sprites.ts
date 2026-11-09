@@ -76,12 +76,19 @@ async function loadAnim(url: string): Promise<Anim> {
 }
 
 /**
+ * Bump when a set's index.json changes (an animation added): /crow is cached
+ * for a day, so browsers would keep the old list.
+ */
+const INDEX_VERSION = 2;
+const indexUrl = (base: string) => `${base}/index.json?v=${INDEX_VERSION}`;
+
+/**
  * Loads the sheets listed in `${base}/index.json`; `only` limits the set.
  * The navbar uses the small set in /crow/nav (a 48 px crow).
  */
 export async function loadSprites(only: AnimName[] = FOOTER, base = "/crow"): Promise<Sprites | null> {
   try {
-    const index = (await (await fetch(`${base}/index.json`)).json()) as {
+    const index = (await (await fetch(indexUrl(base))).json()) as {
       animations: Partial<Record<AnimName, string>>;
     };
     const names = (Object.keys(index.animations) as AnimName[]).filter((n) => !only || only.includes(n));
@@ -102,7 +109,7 @@ const indexes = new Map<string, Promise<{ animations: Partial<Record<AnimName, s
 /** One sheet, or null; for sets that load more animations later. */
 export async function loadAnimation(name: AnimName, base = "/crow"): Promise<Anim | null> {
   try {
-    if (!indexes.has(base)) indexes.set(base, fetch(`${base}/index.json`).then((r) => r.json()));
+    if (!indexes.has(base)) indexes.set(base, fetch(indexUrl(base)).then((r) => r.json()));
     const index = await indexes.get(base)!;
     const url = index.animations[name];
     return url ? await loadAnim(url) : null;

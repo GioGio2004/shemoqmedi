@@ -18,6 +18,8 @@ export function AwardBadge({
   return (
     <span
       title={awardName(award)}
+      // The site's crow may land on a Site of the Day badge.
+      data-crow-perch={award === "SOTD" ? "badge" : undefined}
       className={cn(
         mono,
         "inline-flex h-6 items-center rounded-full bg-black px-2.5 text-white",

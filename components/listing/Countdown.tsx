@@ -22,8 +22,12 @@ export function Countdown({
     return () => clearInterval(id);
   }, []);
 
+  // The vote's last day: the site's crow may come and peck at the clock.
+  const closing = now !== null && endsAt - now > 0 && endsAt - now < 24 * 60 * 60 * 1000;
+
   return (
     <span
+      data-crow-perch={closing ? "countdown" : undefined}
       className={cn(
         "inline-flex h-6 min-w-[11.5rem] items-center justify-center rounded-full border border-black/15 bg-white px-2.5 font-mono text-[10px] font-medium tracking-[0.08em] text-black uppercase tabular-nums",
         className,
