@@ -1,19 +1,27 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /**
  * The crow's home in the navbar logo (see crow/roam.ts). The slot renders the
  * static crow mark on the server; after the page has loaded the live crow
- * takes its place and, a few seconds later, sets off around the page. While
- * the crow is home the name beside it is hidden; when it leaves, the name
- * slides into its spot (data-crow on the wordmark link: home | away | static).
+ * takes its place and, a few seconds later, sets off around the page. When it
+ * leaves, the name slides over into its spot; just before it comes back, the
+ * name slides aside again (data-crow on the wordmark link: home | away | static).
  *
  * ?crowdebug: short waits, state written above the crow, window.__crow.
  */
 export function NavCrow() {
   const slot = useRef<HTMLSpanElement>(null);
+  const engineRef = useRef<{ routeChanged(): void } | null>(null);
+  const pathname = usePathname();
+
+  // A client-side page change: a crow on (or flying to) the old page leaves.
+  useEffect(() => {
+    engineRef.current?.routeChanged();
+  }, [pathname]);
 
   useEffect(() => {
     const el = slot.current;
@@ -24,7 +32,7 @@ export function NavCrow() {
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
     const lite = !!conn?.saveData || /2g/.test(conn?.effectiveType ?? "");
 
-    let engine: { destroy(): void } | null = null;
+    let engine: { destroy(): void; routeChanged(): void } | null = null;
     let cancelled = false;
     let idleId = 0;
 
@@ -32,6 +40,7 @@ export function NavCrow() {
     const still = () => {
       engine?.destroy();
       engine = null;
+      engineRef.current = null;
       delete el.dataset.live;
       mark.dataset.crow = "static";
       delete (window as unknown as { __crow?: unknown }).__crow;
@@ -53,6 +62,7 @@ export function NavCrow() {
         onHome: (home) => (mark.dataset.crow = home ? "home" : "away"),
       });
       el.dataset.live = "true";
+      engineRef.current = engine;
       if (debug) (window as unknown as { __crow?: unknown }).__crow = engine;
     };
 
@@ -74,6 +84,7 @@ export function NavCrow() {
       clearTimeout(idleId);
       engine?.destroy();
       engine = null;
+      engineRef.current = null;
       delete el.dataset.live;
       mark.dataset.crow = "home";
     };

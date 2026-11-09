@@ -141,7 +141,11 @@ export function DirectoryBrowser({ listings }: { listings: PublicListing[] }) {
         </h2>
       </div>
 
-      <div className="sticky top-20 z-30 mt-10 border-y border-black/10 bg-white/90 backdrop-blur md:top-[88px] md:mt-12">
+      {/* data-crow-ceiling: the site's crow won't land under this bar while it's stuck. */}
+      <div
+        data-crow-ceiling=""
+        className="sticky top-20 z-30 mt-10 border-y border-black/10 bg-white/90 backdrop-blur md:top-[88px] md:mt-12"
+      >
         <div className="container-site flex items-center gap-4 py-3">
           <div
             ref={strip}
