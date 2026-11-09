@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Log in", robots: { index: false } };
 
 export default function SignInPage() {
   return (
-    <AuthShell prelude="welcome back" title="Log in">
+    <AuthShell prelude="welcome back" title="Log in" crowLetter="i">
       <Suspense>
         <SignInForm />
       </Suspense>

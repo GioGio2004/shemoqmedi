@@ -80,17 +80,19 @@ export function PillLink({
 }
 
 /**
- * Stacked wordmark, Kencho-style. `live` (the site header only) turns the
- * crow mark into the live crow (NavCrow). When the crow flies off, the name
- * slides over into its spot; just before it comes back, the name slides
- * aside again to make room. Elsewhere (sign-in, 404) the mark stays still.
+ * Stacked wordmark, Kencho-style. `live` (the site and log-in headers): no
+ * logo image at all. The page opens with the name over the crow's empty spot
+ * (data-crow="away"); the live crow (NavCrow) flies in and the name slides
+ * aside to make room, and slides back whenever the crow leaves. Without the
+ * live crow (reduced motion, no JavaScript) the name simply stays there.
+ * Elsewhere (404, SSO) the still mark is shown.
  */
 export function Wordmark({ className, live = false }: { className?: string; live?: boolean }) {
   return (
     <Link
       href="/"
       aria-label="shemoqmedi, home"
-      data-crow={live ? "home" : undefined}
+      data-crow={live ? "away" : undefined}
       className={cn("flex items-center gap-3 text-black [--crow-slot:50px] min-[360px]:[--crow-slot:68px]", className)}
     >
       {live ? (

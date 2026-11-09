@@ -8,12 +8,16 @@ import { Wordmark } from "@/components/site/ui";
 export function AuthShell({
   prelude,
   title,
+  crowLetter,
   children,
 }: {
   prelude: string;
   title: string;
+  /** A letter of the title the crow heads for first (e.g. the I of LOG IN). */
+  crowLetter?: string;
   children: React.ReactNode;
 }) {
+  const goto = crowLetter ? title.toLowerCase().lastIndexOf(crowLetter.toLowerCase()) : -1;
   return (
     <div className="min-h-dvh">
       <header className="container-site flex h-20 items-center md:h-[88px]">
@@ -31,7 +35,7 @@ export function AuthShell({
             className="mt-[clamp(2.75rem,5vw,4rem)] text-[clamp(3.5rem,10vw,9.5rem)] leading-[0.86] font-semibold tracking-[-0.065em] uppercase"
           >
             {title.split("").map((ch, i) => (
-              <span key={i} aria-hidden="true" data-crow-letter="">
+              <span key={i} aria-hidden="true" data-crow-letter="" data-crow-goto={i === goto ? "" : undefined}>
                 {ch}
               </span>
             ))}

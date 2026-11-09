@@ -91,6 +91,11 @@ export class CrowRoamer {
   private leftHomeTimer = 0;
   private flight = { x0: 0, y0: 0, cx: 0, cy: 0, x1: 0, y1: 0, dur: 1, k0: 0, face: 1 as 1 | -1 };
   private landFrom = 0;
+  /** First arrival of the page: goes home (or to the must-visit spot). */
+  private firstArrival = true;
+  private firstHome = true;
+  /** The page's must-visit spot (data-crow-goto) has been visited. */
+  private gotoDone = false;
   private lastScroll = 0;
   private size = 1;
   private crowH = 44;
@@ -129,12 +134,13 @@ export class CrowRoamer {
     this.homeSpace = this.fixedAncestor(opts.home) ? "view" : "page";
     this.space = this.homeSpace;
     this.measure();
-    [this.x, this.y] = this.homePoint();
-    // The page opens with the crow at home; 7-8 s later it sets off.
-    this.wait = opts.debug ? 2 : rand(7, 8);
-    this.look = -1;
-    this.hold = this.wait;
-    opts.onHome(true);
+    // No logo on load: once the header is there, the crow flies in (to the
+    // page's must-visit spot if it has one, else home to the logo).
+    this.spot = { kind: "air", x: -200, y: -200 };
+    this.target = this.spot;
+    this.space = "view";
+    this.state = "OFF";
+    this.wait = 0.35;
     document.addEventListener("visibilitychange", this.onVisibility);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("scroll", this.onScroll, { passive: true });
@@ -154,6 +160,7 @@ export class CrowRoamer {
 
   /** A client-side page change: anything on the old page is gone. */
   routeChanged() {
+    this.gotoDone = false;
     if (this.state === "OFF") return;
     if (this.space === "page" && !(this.spot.kind === "home" && this.isSitting())) this.vanish();
     else if (this.spot.kind === "home" && this.isSitting()) [this.x, this.y] = this.homePoint();
@@ -408,6 +415,23 @@ export class CrowRoamer {
     return out;
   }
 
+  /** The page's must-visit letter (data-crow-goto), if it's in view and landable. */
+  private gotoSpot(): Spot | null {
+    const el = document.querySelector<HTMLElement>("[data-crow-goto]");
+    const mark = el?.closest<HTMLElement>("[data-crow-wordmark]");
+    if (!el || !mark) return null;
+    const w = measureWorld(mark, mark);
+    const idx = Array.from(mark.querySelectorAll<HTMLElement>("[data-crow-letter]")).indexOf(el);
+    const l = w?.letters.find((x) => x.index === idx);
+    if (!l) return null;
+    const f = mark.getBoundingClientRect();
+    const vx = f.left + l.perchX;
+    const vy = f.top + l.perchY;
+    if (!this.landable(vx, vy, this.ceiling(), undefined, mark)) return null;
+    const r = el.getBoundingClientRect();
+    return { kind: "letter", el, x: vx + window.scrollX, y: vy + window.scrollY, ex: r.left + window.scrollX, ey: r.top + window.scrollY };
+  }
+
   /** How far a page spot's element has moved since it was picked (page px), or null if gone. */
   private moved(s: PageSpot): [number, number] | null {
     if (!s.el.isConnected) return null;
@@ -478,6 +502,15 @@ export class CrowRoamer {
           if (this.hold <= 0) this.look = 0;
         }
         this.show("idle", f);
+        // A page with a must-visit spot (the log-in I): from the logo, straight down.
+        if (this.spot.kind === "home" && !this.gotoDone && this.state === "PERCH" && this.t > 0.6 && !menuOpen()) {
+          const g = this.gotoSpot();
+          if (g) {
+            this.target = g;
+            this.set("TAKEOFF");
+            break;
+          }
+        }
         if (this.wait > 0 || this.look > 0) break;
         // Not while the menu is open, nor mid-scroll (the space switch at
         // take-off reads the scroll position).
@@ -613,6 +646,12 @@ export class CrowRoamer {
           this.onSpotFor = 0;
           this.stay = this.spot.kind === "home" ? rand(12, 24) : rand(9, 16);
           if (this.opts.debug) this.stay = 6;
+          if (this.spot.kind === "home" && this.firstHome) this.stay = this.opts.debug ? 2 : rand(7, 8);
+          if (this.spot.kind === "home") this.firstHome = false;
+          if (isPage(this.spot) && this.spot.el.hasAttribute("data-crow-goto")) {
+            this.gotoDone = true;
+            this.stay = this.opts.debug ? 8 : rand(30, 60); // it came here on purpose: it stays
+          }
           this.toPerch(rand(1.5, 3.5));
         }
         break;
@@ -685,8 +724,10 @@ export class CrowRoamer {
 
   /** Back from off screen: fly in from the nearer side to a spot in view, or home. */
   private appear() {
-    const spots = this.spotsInView();
-    this.target = spots.length && Math.random() < 0.75 ? pick(spots) : { kind: "home" };
+    const goto = this.gotoDone ? null : this.gotoSpot();
+    const spots = goto || this.firstArrival ? [] : this.spotsInView();
+    this.target = goto ?? (spots.length && Math.random() < 0.75 ? pick(spots) : { kind: "home" });
+    this.firstArrival = false;
     const tp = this.point(this.target);
     const page = this.spaceOf(this.target) === "page";
     const endVx = tp[0] - (page ? window.scrollX : 0);

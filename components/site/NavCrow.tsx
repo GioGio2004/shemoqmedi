@@ -1,15 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /**
- * The crow's home in the navbar logo (see crow/roam.ts). The slot renders the
- * static crow mark on the server; after the page has loaded the live crow
- * takes its place and, a few seconds later, sets off around the page. When it
- * leaves, the name slides over into its spot; just before it comes back, the
- * name slides aside again (data-crow on the wordmark link: home | away | static).
+ * The crow's home in the navbar logo (see crow/roam.ts). The slot is empty:
+ * no logo image, ever. Once the header has loaded the live crow flies in and
+ * lands there (the name slides aside to make room), and from then on roams the
+ * page. data-crow on the wordmark link: home (crow there, name beside it) or
+ * away (name over the empty spot).
  *
  * ?crowdebug: short waits, state written above the crow, window.__crow.
  */
@@ -36,13 +35,13 @@ export function NavCrow() {
     let cancelled = false;
     let idleId = 0;
 
-    // No live crow: the still mark and the name, as before.
+    // No live crow (reduced motion, data saver): just the name, over the spot.
     const still = () => {
       engine?.destroy();
       engine = null;
       engineRef.current = null;
       delete el.dataset.live;
-      mark.dataset.crow = "static";
+      mark.dataset.crow = "away"; // no live crow: the name keeps the spot
       delete (window as unknown as { __crow?: unknown }).__crow;
     };
 
@@ -86,25 +85,12 @@ export function NavCrow() {
       engine = null;
       engineRef.current = null;
       delete el.dataset.live;
-      mark.dataset.crow = "home";
+      mark.dataset.crow = "away";
     };
   }, []);
 
   return (
-    <span
-      ref={slot}
-      className="nav-crow relative block h-[32px] w-[50px] shrink-0 min-[360px]:h-[44px] min-[360px]:w-[68px] motion-reduce:w-[40px]"
-    >
-      {/* The still mark (the crow with its wings raised) until the live crow arrives. */}
-      <Image
-        src="/brand/crow-wings.png"
-        alt=""
-        width={400}
-        height={394}
-        sizes="44px"
-        loading="eager"
-        className="absolute bottom-0 left-1/2 h-full w-auto -translate-x-1/2 transition-opacity duration-300 [[data-live=true]_&]:opacity-0"
-      />
-    </span>
+    // The crow's spot: empty until the live crow lands (the name covers it till then).
+    <span ref={slot} className="nav-crow relative block h-[32px] w-[50px] shrink-0 min-[360px]:h-[44px] min-[360px]:w-[68px]" />
   );
 }
