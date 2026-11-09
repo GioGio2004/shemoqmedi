@@ -5,7 +5,9 @@
  *     loads it takes off in the direction it faces.
  *   SPOT (the top of a card, a letter of a big title, a pill button): it
  *     lands, looks around, maybe stretches, stays for its whole visit, then
- *     moves on: to another spot, back home, or off screen.
+ *     moves on: to another spot, back home, or off screen. On a wide spot
+ *     (a card's top edge, a playing video, a pill) it walks along it the way
+ *     it faces, then flies on: walk, fly, walk, fly.
  *   OFF: a while later it flies back in, to a spot in view or home.
  *
  * Special perches (data-crow-perch="badge" | "countdown" | "video"): the SOTD
@@ -31,7 +33,7 @@
 import { loadAnimation, type Anim, type AnimName } from "./sprites";
 import { measureWorld } from "./world";
 
-export type RoamState = "PERCH" | "REST" | "STRETCH" | "PECK" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
+export type RoamState = "PERCH" | "REST" | "STRETCH" | "PECK" | "WALK" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
 type Space = "page" | "view";
 
 export type RoamSprites = { idle: Anim; takeoff: Anim } & Partial<Record<AnimName, Anim>>;
@@ -68,6 +70,8 @@ const FEET_Y = 0.72;
 const HOVER = 24; // CSS px (at the 48 px sheet size) above the spot before landing
 const Z_FLIGHT = "55"; // above the header while flying and at home
 const Z_PERCH = "20"; // sitting on the page: under the header, sticky bars, the menu
+const WALK_PLAY = 1.4; // walk sheet playback speed (the feet still match the ground)
+const WALK_MIN_W = 160; // CSS px: a perch at least this wide is walked along
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
@@ -126,6 +130,10 @@ export class CrowRoamer {
   /** Home's space: view in the fixed site header, page in a header that scrolls. */
   private homeSpace: Space = "view";
   private pecks = 2;
+  /** Walk along this perch before flying on (set on landing on a wide one). */
+  private walkNext = false;
+  private walkTo = 0;
+  private walkDir: 1 | -1 = 1;
   private airborne: boolean | null = null;
   /** A "Surprise me" flight: where to go once it's off screen. */
   private surpriseTo: Promise<string | null> | null = null;
@@ -282,11 +290,13 @@ export class CrowRoamer {
   }
 
   private isSitting() {
-    return this.state === "PERCH" || this.state === "REST" || this.state === "STRETCH" || this.state === "PECK";
+    return (
+      this.state === "PERCH" || this.state === "REST" || this.state === "STRETCH" || this.state === "PECK" || this.state === "WALK"
+    );
   }
 
   private busy() {
-    return !!this.fade || this.state === "TAKEOFF" || this.state === "FLY" || this.state === "LAND";
+    return !!this.fade || this.state === "TAKEOFF" || this.state === "FLY" || this.state === "LAND" || this.state === "WALK";
   }
 
   private schedule() {
@@ -631,6 +641,11 @@ export class CrowRoamer {
           this.wait = 0.25;
           break;
         }
+        // Just landed on a wide perch: walk along it first (then fly on).
+        if (this.walkNext) {
+          this.walkNext = false;
+          if (this.startWalk()) break;
+        }
         if (this.onSpotFor >= this.stay) return this.leave();
         // While it stays: rest only at home; on the page, at most a stretch;
         // on a closing vote's countdown, it pecks at the clock.
@@ -652,6 +667,27 @@ export class CrowRoamer {
         this.restFor = this.opts.debug ? 2 : rand(6, 12);
         this.pecks = Math.random() < 0.5 ? 2 : 3;
         this.set(what === "rest" ? "REST" : what === "pickup" ? "PECK" : "STRETCH");
+        break;
+      }
+      case "WALK": {
+        const a = s.walk!;
+        const spot = this.spot;
+        if (spot.kind !== "card") {
+          this.toPerch(1);
+          break;
+        }
+        const step = (a.speed ?? 24) * this.size * WALK_PLAY * dt;
+        let feet = spot.x + this.walkDir * step;
+        const done = this.walkDir === 1 ? feet >= this.walkTo : feet <= this.walkTo;
+        if (done) feet = this.walkTo;
+        spot.x = feet;
+        this.x = feet - this.shift(this.walkDir);
+        this.show("walk", Math.floor(this.t * a.fps * WALK_PLAY) % a.frames, this.walkDir);
+        if (done) {
+          this.toPerch(rand(0.6, 1.4));
+          // Walked: next it flies (a special perch keeps its longer visit).
+          if (!perchKind(spot)) this.stay = 0;
+        }
         break;
       }
       case "PECK": {
@@ -791,6 +827,8 @@ export class CrowRoamer {
           if (this.spot.kind === "home" && this.firstHome) this.stay = this.opts.debug ? 2 : rand(7, 8);
           if (this.spot.kind === "home") this.firstHome = false;
           if (perchKind(this.spot)) this.stay = this.opts.debug ? 8 : rand(14, 24);
+          this.need("walk");
+          this.walkNext = this.walkable(this.spot);
           if (perchKind(this.spot) === "countdown") this.need("pickup");
           if (isPage(this.spot) && this.spot.el.hasAttribute("data-crow-goto")) {
             this.gotoDone = true;
@@ -838,6 +876,33 @@ export class CrowRoamer {
     this.setSpace("view");
     this.target = { kind: "air", x: this.pose.facing === 1 ? window.innerWidth + 90 : -90, y: this.y - 120 };
     this.startFlight(this.flight.k0 + Math.floor(this.t * this.sprites.takeoff.fps));
+  }
+
+  /** A perch wide enough to walk along (not a badge or a countdown). */
+  private walkable(s: Spot): boolean {
+    if (s.kind !== "card") return false;
+    const k = perchKind(s);
+    return k !== "badge" && k !== "countdown" && s.el.getBoundingClientRect().width >= WALK_MIN_W;
+  }
+
+  /** Walk along the perch the way it faces (or turn, if that end is near). False if there's no room. */
+  private startWalk(): boolean {
+    const spot = this.spot;
+    if (spot.kind !== "card" || !this.sprites.walk) return false;
+    const r = spot.el.getBoundingClientRect();
+    const m = this.crowH * 0.9; // clear of the rounded corners
+    const side = this.boxW * FEET_X + 4; // the crow box stays on screen
+    const lo = Math.max(r.left + m, side) + window.scrollX;
+    const hi = Math.min(r.right - m, window.innerWidth - side) + window.scrollX;
+    const feet = spot.x;
+    let dir = this.pose.facing;
+    const room = (d: 1 | -1) => (d === 1 ? hi - feet : feet - lo);
+    if (room(dir) < 50 && room(dir === 1 ? -1 : 1) > room(dir)) dir = dir === 1 ? -1 : 1;
+    if (room(dir) < 40) return false;
+    this.walkDir = dir;
+    this.walkTo = feet + dir * Math.min(room(dir), rand(90, 220));
+    this.set("WALK");
+    return true;
   }
 
   private toPerch(wait: number) {

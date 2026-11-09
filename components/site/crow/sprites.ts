@@ -79,7 +79,7 @@ async function loadAnim(url: string): Promise<Anim> {
  * Bump when a set's index.json changes (an animation added): /crow is cached
  * for a day, so browsers would keep the old list.
  */
-const INDEX_VERSION = 2;
+const INDEX_VERSION = 3;
 const indexUrl = (base: string) => `${base}/index.json?v=${INDEX_VERSION}`;
 
 /**

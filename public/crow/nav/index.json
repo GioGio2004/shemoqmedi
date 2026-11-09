@@ -5,6 +5,7 @@
     "takeoff": "/crow/nav/takeoff.json",
     "rest": "/crow/nav/rest.json",
     "stretch": "/crow/nav/stretch.json",
-    "pickup": "/crow/nav/pickup.json"
+    "pickup": "/crow/nav/pickup.json",
+    "walk": "/crow/nav/walk.json"
   }
 }
