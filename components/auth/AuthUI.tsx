@@ -72,6 +72,8 @@ export function GoogleButton({
       type="button"
       onClick={onClick}
       disabled={pending || disabled}
+      // The site's crow may land on top of this pill (crow/roam.ts).
+      data-crow-perch=""
       className="inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full border border-black/14 bg-white px-6 text-[12px] font-semibold tracking-[0.05em] uppercase transition-colors hover:border-black disabled:opacity-50"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" className="size-[18px]" fill="currentColor">

@@ -1,22 +1,28 @@
 /**
  * The site's crow. It lives in the navbar logo, and roams the page.
  *
- *   HOME (the logo; the name is hidden while it sits there)
- *     -> after 7-8 s it takes off in the direction it faces and flies to a
- *        spot on the page (the top of a card, a footer letter) or off screen
- *   SPOT: looks around, now and then rests or stretches, then leaves again:
- *        to another spot, back home, or off screen
- *   OFF: a while later it flies in to a spot in view, or home
+ *   HOME (the logo): looks around, rests now and then. 7-8 s after the page
+ *     loads it takes off in the direction it faces.
+ *   SPOT (the top of a card, a footer letter): it lands, looks around, maybe
+ *     stretches, and stays for its whole visit, then moves on: to another
+ *     spot, back home, or off screen.
+ *   OFF: a while later it flies back in, to a spot in view or home.
  *
- * One small canvas (a crow-sized box) follows the bird: it is moved with a
- * transform, so nothing big is ever repainted. Positions are the crow's feet
- * in viewport px; a perched crow follows its spot as the page scrolls.
+ * Two spaces, so scrolling never makes it wobble:
+ *   - page space: sitting on a spot, or flying to one. The canvas is
+ *     absolutely positioned in the document, so the browser scrolls it with
+ *     the content (no script runs on scroll). The landing point is fixed when
+ *     the crow picks it.
+ *   - view space: home in the fixed header, and flying off screen. The
+ *     canvas is position: fixed.
+ * One crow-sized canvas follows the bird, moved with a transform.
  */
 
 import { loadAnimation, type Anim, type AnimName } from "./sprites";
-import { measureWorld, type World } from "./world";
+import { measureWorld } from "./world";
 
 export type RoamState = "PERCH" | "REST" | "STRETCH" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
+type Space = "page" | "view";
 
 export type RoamSprites = { idle: Anim; takeoff: Anim } & Partial<Record<AnimName, Anim>>;
 
@@ -24,23 +30,25 @@ export interface RoamOptions {
   debug: boolean;
   /** The logo slot the crow calls home. */
   home: HTMLElement;
-  /** Called with true when the crow is home (the name hides), false when it leaves. */
+  /** True: the crow is (about to be) home, the name slides aside. False: it left. */
   onHome: (home: boolean) => void;
 }
 
-/** Where the crow can stand. */
+/** Where the crow can stand. Page spots keep the point picked at the time. */
 type Spot =
   | { kind: "home" }
-  | { kind: "card"; el: HTMLElement; fx: number }
-  | { kind: "letter"; i: number }
-  | { kind: "air"; x: number; y: number }; // off screen (flying away)
+  | { kind: "card"; el: HTMLElement; x: number; y: number; fx: number }
+  | { kind: "letter"; el: HTMLElement; x: number; y: number }
+  | { kind: "air"; x: number; y: number };
 
 export const ROAM_BASE = "/crow/nav";
 const FADE = 0.18;
 const BOX_W = 3.6; // canvas box, in crow heights
 const BOX_H = 3;
-const FEET_X = 0.5; // feet inside the box (fractions)
+const FEET_X = 0.5; // the feet inside the box (fractions)
 const FEET_Y = 0.72;
+const Z_FLIGHT = "55"; // above the header while flying
+const Z_PERCH = "45"; // under the header when sitting on the page
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
@@ -58,24 +66,25 @@ export class CrowRoamer {
   private state: RoamState = "PERCH";
   private spot: Spot = { kind: "home" };
   private target: Spot = { kind: "home" };
+  private space: Space = "view";
   private pose: Pose = { anim: "idle", frame: 0, facing: 1 };
-  private fade: { from: Pose; dx: number; dy: number; t: number } | null = null;
+  private fade: { from: Pose; t: number } | null = null;
+  /** The feet, in the current space. */
   private x = 0;
   private y = 0;
   private t = 0;
   private wait: number;
   private look = -1;
   private hold = 0;
-  private stay = 0; // seconds on the current spot before leaving
+  private stay = 0; // seconds to spend on the current spot
   private onSpotFor = 0;
-  private outOfView = 0;
   private restFor = 0;
-  private flight = { x0: 0, y0: 0, cx: 0, cy: 0, dur: 1 };
+  private homeCalled = false;
+  private flight = { x0: 0, y0: 0, cx: 0, cy: 0, x1: 0, y1: 0, dur: 1 };
   private size = 1;
   private crowH = 44;
-  private world: World | null = null;
-  private worldAt = 0;
-  private scrollers = new WeakMap<HTMLElement, HTMLElement | null>();
+  /** Home's space: view in the fixed site header, page in a header that scrolls. */
+  private homeSpace: Space = "view";
 
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -84,6 +93,7 @@ export class CrowRoamer {
   private boxW = 0;
   private boxH = 0;
   private drawn = "";
+  private placed = "";
   private loading = new Set<AnimName>();
 
   private raf = 0;
@@ -98,18 +108,22 @@ export class CrowRoamer {
   ) {
     const c = document.createElement("canvas");
     c.setAttribute("aria-hidden", "true");
-    c.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;z-index:55;will-change:transform";
+    c.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;will-change:transform";
     document.body.appendChild(c);
     this.canvas = c;
     this.ctx = c.getContext("2d")!;
+    this.homeSpace = this.fixedAncestor(opts.home) ? "view" : "page";
+    this.space = this.homeSpace;
     this.measure();
+    [this.x, this.y] = this.homePoint();
     // The page opens with the crow at home; 7-8 s later it sets off.
     this.wait = opts.debug ? 2 : rand(7, 8);
     this.stay = 0;
+    this.look = -1;
+    this.hold = this.wait;
     opts.onHome(true);
     document.addEventListener("visibilitychange", this.onVisibility);
     window.addEventListener("resize", this.onResize);
-    window.addEventListener("scroll", this.onScroll, { capture: true, passive: true });
     this.render();
     this.onVisibility();
   }
@@ -119,13 +133,22 @@ export class CrowRoamer {
     this.stop();
     document.removeEventListener("visibilitychange", this.onVisibility);
     window.removeEventListener("resize", this.onResize);
-    window.removeEventListener("scroll", this.onScroll, { capture: true });
     this.canvas.remove();
   }
 
   get debugState() {
-    const [x, y] = this.feet();
-    return { state: this.state, spot: this.spot.kind, target: this.target.kind, anim: this.pose.anim, frame: this.pose.frame, facing: this.pose.facing, wait: +this.wait.toFixed(2), x: Math.round(x), y: Math.round(y) };
+    return {
+      state: this.state,
+      spot: this.spot.kind,
+      target: this.target.kind,
+      space: this.space,
+      anim: this.pose.anim,
+      frame: this.pose.frame,
+      facing: this.pose.facing,
+      wait: +this.wait.toFixed(2),
+      x: Math.round(this.x),
+      y: Math.round(this.y),
+    };
   }
 
   /** Debug: do the next thing now. */
@@ -162,18 +185,13 @@ export class CrowRoamer {
 
   private onResize = () => {
     this.measure();
-    this.world = null;
+    // Sitting at home: follow the header. Sitting on the page: the layout
+    // may have moved under it, so let it fly off and come back later.
+    if (this.state !== "OFF" && this.spot.kind !== "home" && this.isSitting()) this.vanish();
+    else if (this.spot.kind === "home" && this.isSitting()) [this.x, this.y] = this.homePoint();
     this.drawn = "";
+    this.placed = "";
     this.render();
-  };
-
-  // A perched crow follows its spot as the page (or a card rail) scrolls.
-  private onScroll = () => {
-    if (this.state === "OFF" || this.raf) return;
-    this.raf = requestAnimationFrame(() => {
-      this.raf = 0;
-      this.render();
-    });
   };
 
   private stop() {
@@ -181,6 +199,10 @@ export class CrowRoamer {
     clearTimeout(this.timer);
     this.raf = 0;
     this.timer = 0;
+  }
+
+  private isSitting() {
+    return this.state === "PERCH" || this.state === "REST" || this.state === "STRETCH";
   }
 
   private busy() {
@@ -214,89 +236,147 @@ export class CrowRoamer {
   };
 
   // ----------------------------------------------------------------------
-  // Spots
+  // Spaces and spots
   // ----------------------------------------------------------------------
 
-  private footerWorld(): World | null {
-    const now = performance.now();
-    if (this.world && now - this.worldAt < 2000) return this.world;
-    const footer = document.querySelector<HTMLElement>("footer");
-    const mark = footer?.querySelector<HTMLElement>("[data-crow-wordmark]");
-    this.world = footer && mark ? measureWorld(footer, mark) : null;
-    this.worldAt = now;
-    return this.world;
-  }
-
-  /** The feet position of a spot, in viewport px (null if it's gone). */
-  private resolve(s: Spot): [number, number] | null {
-    switch (s.kind) {
-      case "home": {
-        const r = this.opts.home.getBoundingClientRect();
-        const b = this.sprites.idle.bounds;
-        return [r.left + Math.abs(b.left) * this.size + 1, r.top + this.crowH];
-      }
-      case "card": {
-        if (!s.el.isConnected) return null;
-        const r = s.el.getBoundingClientRect();
-        return [r.left + r.width * s.fx, r.top + 1];
-      }
-      case "letter": {
-        const w = this.footerWorld();
-        const l = w?.letters[s.i];
-        const f = document.querySelector("footer")?.getBoundingClientRect();
-        if (!l || !f) return null;
-        return [f.left + l.perchX, f.top + l.perchY];
-      }
-      case "air":
-        return [s.x, s.y];
+  /** Move the current position into the other space (page = view + scroll). */
+  private setSpace(space: Space) {
+    if (space === this.space) return;
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    if (space === "page") {
+      this.x += sx;
+      this.y += sy;
+      this.flight.x0 += sx;
+      this.flight.y0 += sy;
+    } else {
+      this.x -= sx;
+      this.y -= sy;
+      this.flight.x0 -= sx;
+      this.flight.y0 -= sy;
     }
+    this.space = space;
+    this.placed = "";
   }
 
+  private spaceOf(s: Spot): Space {
+    return s.kind === "home" ? this.homeSpace : s.kind === "air" ? "view" : "page";
+  }
+
+  private fixedAncestor(el: HTMLElement): boolean {
+    for (let p: HTMLElement | null = el; p; p = p.parentElement) {
+      const pos = getComputedStyle(p).position;
+      if (pos === "fixed" || pos === "sticky") return true;
+    }
+    return false;
+  }
+
+  /** Home's feet point, in home's space. */
+  private homePoint(): [number, number] {
+    const r = this.opts.home.getBoundingClientRect();
+    const b = this.sprites.idle.bounds;
+    const page = this.homeSpace === "page";
+    return [
+      r.left + Math.abs(b.left) * this.size + 1 + (page ? window.scrollX : 0),
+      r.top + this.crowH + (page ? window.scrollY : 0),
+    ];
+  }
+
+  /** A spot's feet point, in its own space. */
+  private point(s: Spot): [number, number] {
+    return s.kind === "home" ? this.homePoint() : [s.x, s.y];
+  }
+
+  /** The nearest scrolling ancestor (a card rail), if any. */
   private scroller(el: HTMLElement): HTMLElement | null {
-    if (this.scrollers.has(el)) return this.scrollers.get(el)!;
     let p = el.parentElement;
     while (p && p !== document.body) {
       const cs = getComputedStyle(p);
-      if (/(auto|scroll|hidden)/.test(cs.overflowX + cs.overflowY)) break;
+      if (/(auto|scroll|hidden)/.test(cs.overflowX + cs.overflowY)) return p;
       p = p.parentElement;
     }
-    const found = p && p !== document.body ? p : null;
-    this.scrollers.set(el, found);
-    return found;
+    return null;
   }
 
-  /** In view, clear of the header, and not clipped by a scrolling rail. */
-  private inView(s: Spot): boolean {
-    if (s.kind === "home") return true;
-    const p = this.resolve(s);
-    if (!p) return false;
-    const [x, y] = p;
+  /** Is a viewport point a good place to land: in view, clear of the header, not clipped by a rail? */
+  private landable(x: number, y: number, el?: HTMLElement, own?: HTMLElement): boolean {
     const head = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
     const m = this.crowH;
-    if (x < m || x > window.innerWidth - m || y < head + m * 1.2 || y > window.innerHeight - 8) return false;
-    if (s.kind === "card") {
-      const sc = this.scroller(s.el);
+    // Keep away from the edges (the whole crow box stays on screen) and
+    // from the header, so it has room to land and won't scroll out at once.
+    const side = this.boxW * FEET_X + 4;
+    if (x < side || x > window.innerWidth - side || y < head + m * 1.6 || y > window.innerHeight - m * 0.6) return false;
+    if (el) {
+      const sc = this.scroller(el);
       if (sc) {
         const r = sc.getBoundingClientRect();
-        if (x < r.left + m * 0.6 || x > r.right - m * 0.6) return false;
+        if (x < r.left + m * 0.7 || x > r.right - m * 0.7) return false;
+      }
+    }
+    return this.clearAbove(x, y, own ?? el);
+  }
+
+  /** No text where the crow's body would be (black on black reads badly). */
+  private clearAbove(x: number, y: number, own?: HTMLElement): boolean {
+    const w = this.crowH * 0.75;
+    for (const dy of [0.35, 0.65, 0.95]) {
+      for (const dx of [-w, -w / 2, 0, w / 2]) {
+        const el = document.elementFromPoint(x + dx, y - this.crowH * dy);
+        if (!el || (own && own.contains(el))) continue; // its own title or card
+        for (const n of el.childNodes) {
+          if (n.nodeType === Node.TEXT_NODE && n.textContent?.trim()) return false;
+        }
       }
     }
     return true;
   }
 
-  /** Spots in view right now (not the one the crow is on). */
+  /** Spots in view right now, with their landing points fixed in page space. */
   private spotsInView(): Spot[] {
     const out: Spot[] = [];
+    const sx = window.scrollX;
+    const sy = window.scrollY;
     document.querySelectorAll<HTMLElement>("[data-crow-perch]").forEach((el) => {
-      const s: Spot = { kind: "card", el, fx: rand(0.22, 0.78) };
-      if (!(this.spot.kind === "card" && this.spot.el === el) && this.inView(s)) out.push(s);
+      if ((this.spot.kind === "card" && this.spot.el === el) || (this.target.kind === "card" && this.target.el === el)) return;
+      const r = el.getBoundingClientRect();
+      const fx = rand(0.22, 0.78);
+      const vx = r.left + r.width * fx;
+      const vy = r.top + 1;
+      if (this.landable(vx, vy, el)) out.push({ kind: "card", el, fx, x: vx + sx, y: vy + sy });
     });
-    const w = this.footerWorld();
-    w?.letters.forEach((_, i) => {
-      const s: Spot = { kind: "letter", i };
-      if (!(this.spot.kind === "letter" && this.spot.i === i) && this.inView(s)) out.push(s);
+    // Big letter-split titles: the footer wordmark, the log-in title.
+    document.querySelectorAll<HTMLElement>("[data-crow-wordmark]").forEach((mark) => {
+      const w = measureWorld(mark, mark);
+      const f = mark.getBoundingClientRect();
+      const letters = mark.querySelectorAll<HTMLElement>("[data-crow-letter]");
+      w?.letters.forEach((l) => {
+        const el = letters[l.index];
+        if (!el || (this.spot.kind === "letter" && this.spot.el === el)) return;
+        const vx = f.left + l.perchX;
+        const vy = f.top + l.perchY;
+        if (this.landable(vx, vy, undefined, mark)) out.push({ kind: "letter", el, x: vx + sx, y: vy + sy });
+      });
     });
     return out;
+  }
+
+  /** Has the spot moved from where the crow landed (a rail scrolled, the layout changed)? */
+  private spotMoved(s: Spot): boolean {
+    if (s.kind !== "card") return s.kind === "letter" && !s.el.isConnected;
+    if (!s.el.isConnected) return true;
+    const r = s.el.getBoundingClientRect();
+    const x = r.left + r.width * s.fx + window.scrollX;
+    const y = r.top + 1 + window.scrollY;
+    return Math.abs(x - s.x) > 10 || Math.abs(y - s.y) > 10;
+  }
+
+  /** Is the crow's spot on screen now? */
+  private spotVisible(s: Spot): boolean {
+    if (s.kind === "home" && this.homeSpace === "view") return true;
+    const [x, y] = this.point(s);
+    const vx = x - window.scrollX;
+    const vy = y - window.scrollY;
+    return vx > -this.crowH && vx < window.innerWidth + this.crowH && vy > 0 && vy < window.innerHeight + this.crowH * 2;
   }
 
   // ----------------------------------------------------------------------
@@ -311,14 +391,9 @@ export class CrowRoamer {
   private show(anim: AnimName, frame: number, facing: 1 | -1 = this.pose.facing) {
     const p = this.pose;
     if ((anim !== p.anim || facing !== p.facing) && !this.fade && this.state !== "OFF") {
-      this.fade = { from: { ...p }, dx: 0, dy: 0, t: 0 };
+      this.fade = { from: { ...p }, t: 0 };
     }
     this.pose = { anim, frame, facing };
-  }
-
-  private feet(): [number, number] {
-    if (this.state === "FLY" || this.state === "LAND" || this.state === "OFF") return [this.x, this.y];
-    return this.resolve(this.spot) ?? [this.x, this.y];
   }
 
   private update(dt: number) {
@@ -332,11 +407,9 @@ export class CrowRoamer {
       case "PERCH": {
         this.wait -= dt;
         this.onSpotFor += dt;
-        // Its spot is gone (another page) or scrolled away for a while: slip off.
-        if (this.spot.kind !== "home") {
-          if (!this.resolve(this.spot)) return this.vanish();
-          this.outOfView = this.inView(this.spot) ? 0 : this.outOfView + dt;
-          if (this.outOfView > (this.opts.debug ? 2 : 6)) return this.vanish();
+        if (this.spot.kind !== "home" && this.spotMoved(this.spot)) {
+          // The card moved under it (its rail scrolled): off it goes.
+          return this.spotVisible(this.spot) ? this.leave() : this.vanish();
         }
         // A slow look around, then still.
         const idle = s.idle;
@@ -347,7 +420,7 @@ export class CrowRoamer {
           if (f >= idle.frames) {
             f = 0;
             this.look = -1;
-            this.hold = rand(4, 9);
+            this.hold = rand(3, 6);
           }
         } else {
           this.hold -= dt;
@@ -360,21 +433,26 @@ export class CrowRoamer {
           break;
         }
         if (this.onSpotFor >= this.stay) return this.leave();
-        // Something to do while it stays.
-        const what: AnimName = Math.random() < 0.6 ? "rest" : "stretch";
+        // While it stays: rest only at home; on the page, at most a stretch.
+        const home = this.spot.kind === "home";
+        const what: AnimName | null = home ? (Math.random() < 0.7 ? "rest" : "stretch") : Math.random() < 0.3 ? "stretch" : null;
+        if (!what) {
+          this.wait = rand(3, 6);
+          break;
+        }
         if (!s[what]) {
           this.need(what);
           this.wait = 4;
           break;
         }
-        this.restFor = rand(8, 18);
+        this.restFor = rand(6, 12);
         this.set(what === "rest" ? "REST" : "STRETCH");
         break;
       }
       case "STRETCH": {
         const a = s.stretch!;
         const f = Math.floor(this.t * a.fps);
-        if (f >= a.frames) this.toPerch(rand(6, 14));
+        if (f >= a.frames) this.toPerch(rand(2, 5));
         else this.show("stretch", f);
         break;
       }
@@ -392,7 +470,7 @@ export class CrowRoamer {
         } else {
           f = rise + Math.floor((this.t - down - this.restFor) * a.fps);
           if (f >= a.frames) {
-            this.toPerch(rand(6, 14));
+            this.toPerch(rand(2, 5));
             break;
           }
         }
@@ -405,8 +483,8 @@ export class CrowRoamer {
         const f = Math.floor(this.t * a.fps);
         this.show("takeoff", Math.min(f, a.frames - 1));
         if (f > lift) {
-          [this.x, this.y] = this.feet();
-          if (this.spot.kind === "home") window.setTimeout(() => this.opts.onHome(false), 350);
+          if (this.spot.kind === "home") [this.x, this.y] = this.homePoint();
+          if (this.spot.kind === "home") window.setTimeout(() => this.state !== "LAND" && this.opts.onHome(false), 350);
           this.startFlight();
         }
         break;
@@ -414,26 +492,39 @@ export class CrowRoamer {
       case "FLY": {
         const a = s.takeoff;
         const fl = this.flight;
+        // Home is in the fixed header: aim at it as it is now. Page spots
+        // keep the point picked at take-off, so the path never wobbles.
+        if (this.target.kind === "home") {
+          const [hx, hy] = this.homePoint();
+          fl.x1 = hx;
+          fl.y1 = hy - 14 * this.size;
+          // Make room: the name slides aside just before the crow comes in.
+          if (!this.homeCalled && this.t > fl.dur - 0.9) {
+            this.homeCalled = true;
+            this.opts.onHome(true);
+          }
+        }
         const u = clamp(this.t / fl.dur, 0, 1);
-        // The target may move (scrolling): aim at where it is now.
-        const end = this.hoverPoint();
-        if (!end) return this.vanish();
         const e = smooth(u);
-        const ix = (1 - e) * (1 - e) * fl.x0 + 2 * (1 - e) * e * fl.cx + e * e * end[0];
-        const iy = (1 - e) * (1 - e) * fl.y0 + 2 * (1 - e) * e * fl.cy + e * e * end[1];
-        const face = Math.abs(ix - this.x) > 0.3 ? (ix > this.x ? 1 : -1) : this.pose.facing;
-        this.x = ix;
-        this.y = iy;
+        const nx = (1 - e) * (1 - e) * fl.x0 + 2 * (1 - e) * e * fl.cx + e * e * fl.x1;
+        const ny = (1 - e) * (1 - e) * fl.y0 + 2 * (1 - e) * e * fl.cy + e * e * fl.y1;
+        const face = Math.abs(nx - this.x) > 0.3 ? (nx > this.x ? 1 : -1) : this.pose.facing;
+        this.x = nx;
+        this.y = ny;
         const lift = a.marks?.liftoff ?? 0;
         const f = this.flightFrame(a, lift + 1 + Math.floor(this.t * a.fps));
         this.show("takeoff", f, face);
         if (u < 1) break;
         if (this.target.kind === "air") return this.vanish();
-        // Land on the loop's first frame, which is where the landing begins.
+        // Land from the loop's first frame, which is where the landing starts.
         if (f === (a.loopStart ?? 0)) {
-          this.flight = { ...this.flight, x0: this.x, y0: this.y };
+          fl.x0 = this.x;
+          fl.y0 = this.y;
+          if (this.target.kind === "home" && !this.homeCalled) {
+            this.homeCalled = true;
+            this.opts.onHome(true);
+          }
           this.set("LAND");
-          if (this.target.kind === "home") this.opts.onHome(true);
         }
         break;
       }
@@ -443,19 +534,22 @@ export class CrowRoamer {
         const start = a.loopStart ?? a.frames - 1;
         const k = Math.floor(this.t * a.fps);
         const f = Math.max(0, start - k);
-        const to = this.resolve(this.target);
-        if (!to) return this.vanish();
+        const [tx, ty] = this.point(this.target);
         const u = clamp(k / Math.max(1, start - lift), 0, 1);
-        this.x = this.flight.x0 + (to[0] - this.flight.x0) * smooth(u);
-        this.y = this.flight.y0 + (to[1] - this.flight.y0) * smooth(u);
+        this.x = this.flight.x0 + (tx - this.flight.x0) * smooth(u);
+        this.y = this.flight.y0 + (ty - this.flight.y0) * smooth(u);
         this.show("takeoff", f);
         if (f === 0) {
+          this.x = tx;
+          this.y = ty;
+          // At home it faces the name (right); a quick blend turns it round.
+          if (this.target.kind === "home" && this.pose.facing === -1) this.show("idle", 0, 1);
           this.spot = this.target;
           this.onSpotFor = 0;
-          this.outOfView = 0;
-          this.stay = this.spot.kind === "home" ? rand(25, 60) : rand(25, 70);
+          // Lively, like the debug pace: short visits, home a little longer.
+          this.stay = this.spot.kind === "home" ? rand(12, 24) : rand(9, 16);
           if (this.opts.debug) this.stay = 6;
-          this.toPerch(rand(3, 8));
+          this.toPerch(rand(1.5, 3.5));
         }
         break;
       }
@@ -479,55 +573,58 @@ export class CrowRoamer {
     this.hold = rand(1, 3);
   }
 
-  /** Take off from the current spot, in the direction it is facing. */
+  /** The visit is over: take off in the direction it faces (or slip away unseen). */
   private leave() {
-    const here = this.feet();
+    if (!this.spotVisible(this.spot)) return this.vanish();
+    const [hx, hy] = this.point(this.spot);
+    const vx = hx - (this.space === "page" ? window.scrollX : 0);
+    const vy = hy - (this.space === "page" ? window.scrollY : 0);
     const spots = this.spotsInView();
-    const ahead = spots.filter((p) => {
-      const q = this.resolve(p);
-      return q && Math.sign(q[0] - here[0]) === this.pose.facing;
-    });
+    const ahead = spots.filter((p) => Math.sign(this.point(p)[0] - window.scrollX - vx) === this.pose.facing);
     const r = Math.random();
     if (this.spot.kind !== "home" && r < 0.3) this.target = { kind: "home" };
     else if (ahead.length && r < 0.75) this.target = pick(ahead);
     else if (spots.length && r < 0.85) this.target = pick(spots);
-    else this.target = { kind: "air", x: this.pose.facing === 1 ? window.innerWidth + 90 : -90, y: here[1] - rand(60, 160) };
+    else this.target = { kind: "air", x: this.pose.facing === 1 ? window.innerWidth + 90 : -90, y: vy - rand(60, 160) };
     this.set("TAKEOFF");
   }
 
-  /** Back from off screen: fly in from the nearer side to a spot in view. */
+  /** Back from off screen: fly in from the nearer side to a spot in view, or home. */
   private appear() {
     const spots = this.spotsInView();
     this.target = spots.length && Math.random() < 0.75 ? pick(spots) : { kind: "home" };
-    const end = this.resolve(this.target);
-    if (!end) {
-      this.wait = 3;
-      return;
-    }
-    const fromLeft = end[0] < window.innerWidth / 2;
+    const tp = this.point(this.target);
+    const page = this.spaceOf(this.target) === "page";
+    const endVx = tp[0] - (page ? window.scrollX : 0);
+    const endVy = tp[1] - (page ? window.scrollY : 0);
+    const fromLeft = endVx < window.innerWidth / 2;
+    // Start just off screen (view space), then fly in.
+    this.space = "view";
     this.x = fromLeft ? -80 : window.innerWidth + 80;
-    this.y = Math.max(40, end[1] - rand(80, 200));
+    this.y = Math.max(40, endVy - rand(80, 200));
     this.pose = { anim: "takeoff", frame: this.sprites.takeoff.loopStart ?? 0, facing: fromLeft ? 1 : -1 };
     this.fade = null;
     this.startFlight();
   }
 
-  /** Where the crow hovers before landing on the target. */
-  private hoverPoint(): [number, number] | null {
-    const p = this.resolve(this.target);
-    return p ? [p[0], p[1] - 14 * this.size] : null;
-  }
-
   private startFlight() {
-    const end = this.hoverPoint() ?? [this.x, this.y];
-    const dist = Math.hypot(end[0] - this.x, end[1] - this.y);
-    // A gentle arc over the straight line.
-    const lift = Math.min(160, 40 + dist * 0.25);
+    this.homeCalled = false;
+    const space = this.spaceOf(this.target);
+    this.flight.x0 = this.x;
+    this.flight.y0 = this.y;
+    this.setSpace(space);
+    const [tx, ty] = this.point(this.target);
+    const x1 = tx;
+    const y1 = this.target.kind === "air" ? ty : ty - 14 * this.size;
+    const dist = Math.hypot(x1 - this.x, y1 - this.y);
+    const lift = Math.min(160, 40 + dist * 0.25); // a gentle arc
     this.flight = {
       x0: this.x,
       y0: this.y,
-      cx: (this.x + end[0]) / 2,
-      cy: Math.min(this.y, end[1]) - lift,
+      cx: (this.x + x1) / 2,
+      cy: Math.min(this.y, y1) - lift,
+      x1,
+      y1,
       dur: clamp(dist / (330 * this.size), 0.8, 3.2),
     };
     this.set("FLY");
@@ -535,11 +632,13 @@ export class CrowRoamer {
 
   /** Gone (off screen, or its spot went away): come back later. */
   private vanish() {
-    if (this.spot.kind === "home" && this.state !== "FLY") this.opts.onHome(false);
+    if (this.spot.kind === "home") this.opts.onHome(false);
     this.spot = { kind: "air", x: -200, y: -200 };
+    this.target = this.spot;
     this.fade = null;
+    this.setSpace("view");
     this.set("OFF");
-    this.wait = this.opts.debug ? 3 : rand(12, 35);
+    this.wait = this.opts.debug ? 3 : rand(4, 9);
     this.drawn = "";
     this.render();
   }
@@ -596,18 +695,23 @@ export class CrowRoamer {
   private render() {
     if (this.destroyed) return;
     const c = this.canvas;
-    const [x, y] = this.feet();
-    // Hidden: away, the menu is open, or its spot is under the header.
-    const head = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
-    const hidden =
-      this.state === "OFF" ||
-      menuOpen() ||
-      (this.spot.kind !== "home" && (this.state === "PERCH" || this.state === "REST" || this.state === "STRETCH") && y < head + 4);
+    const hidden = this.state === "OFF" || menuOpen();
     c.style.visibility = hidden ? "hidden" : "visible";
     if (hidden) return;
-    const ox = x - this.boxW * FEET_X;
-    const oy = y - this.boxH * FEET_Y;
-    c.style.transform = `translate3d(${ox.toFixed(1)}px, ${oy.toFixed(1)}px, 0)`;
+
+    // Where the box goes: fixed (view) or in the document (page). The style
+    // only changes when the position does, so a sitting crow costs nothing.
+    const sitting = this.isSitting();
+    const flight = !sitting;
+    const ox = this.x - this.boxW * FEET_X;
+    const oy = this.y - this.boxH * FEET_Y;
+    const place = `${this.space}|${flight}|${ox.toFixed(1)}|${oy.toFixed(1)}`;
+    if (place !== this.placed) {
+      this.placed = place;
+      c.style.position = this.space === "page" ? "absolute" : "fixed";
+      c.style.zIndex = flight || this.spot.kind === "home" ? Z_FLIGHT : Z_PERCH;
+      c.style.transform = `translate3d(${ox.toFixed(1)}px, ${oy.toFixed(1)}px, 0)`;
+    }
 
     const key = `${this.pose.anim}|${this.pose.frame}|${this.pose.facing}|${this.fade ? this.fade.t.toFixed(3) : ""}`;
     if (key === this.drawn && !this.opts.debug) return;
