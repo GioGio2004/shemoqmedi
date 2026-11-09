@@ -5,7 +5,9 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
 import { getAward, getAwardSlugs, withRef } from "@/lib/listings";
-import { badgeDate, badgeLabel } from "@/lib/badgeSvg";
+import { BadgeArt, BadgeDefs } from "@/components/badges/BadgeArt";
+import { BadgeReveal } from "@/components/badges/BadgeReveal";
+import { badgeDate, badgeLabel } from "@/lib/badgeInfo";
 import { collectionHref } from "@/lib/collections";
 import { formatScore } from "@/lib/format";
 import { SITE_NAME, absoluteUrl } from "@/lib/site";
@@ -27,9 +29,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!award) return { robots: { index: false } };
   const label = badgeLabel(award.tier, award.period, award.date);
   const title = `${award.listing.title}: ${label}`;
-  const description = `${award.listing.title} by ${award.listing.creditName} won ${label} on ${SITE_NAME}${
-    award.score !== null ? ` with a jury score of ${formatScore(award.score)}` : ""
-  }.`;
+  const description =
+    award.tier === "F100"
+      ? `${award.listing.title} by ${award.listing.creditName} is one of the first hundred websites on ${SITE_NAME}: ${label}.`
+      : `${award.listing.title} by ${award.listing.creditName} won ${label} on ${SITE_NAME}${
+          award.score !== null ? ` with a jury score of ${formatScore(award.score)}` : ""
+        }.`;
   return {
     title,
     description,
@@ -70,7 +75,11 @@ export default async function AwardPage({ params }: Params) {
         prelude={award.name.toLowerCase()}
         title={award.listing.title}
         titleClassName="text-[clamp(3rem,9vw,9rem)] leading-[0.88]"
-        lede={`by ${award.listing.creditName}, ${badgeDate(award.tier, award.period, award.date)}.`}
+        lede={
+          award.tier === "F100"
+            ? `by ${award.listing.creditName}. One of the first hundred sites on Shemoqmedi, ${badgeDate(award.tier, award.period, award.date)}.`
+            : `by ${award.listing.creditName}, ${badgeDate(award.tier, award.period, award.date)}.`
+        }
         meta={award.score !== null ? `Jury score ${formatScore(award.score)} / 10` : undefined}
         action={<PillLink href={`/sites/${award.listing.slug}`}>See the site&apos;s scores</PillLink>}
       />
@@ -89,8 +98,10 @@ export default async function AwardPage({ params }: Params) {
           )}
         </div>
         <div className="grid gap-6 rounded-3xl border border-black/10 p-6 md:p-8">
-          {/* eslint-disable-next-line @next/next/no-img-element -- the award's own SVG badge */}
-          <img src={`/badge/${slug}?theme=light`} alt={label} width={220} height={64} />
+          <BadgeDefs />
+          <BadgeReveal className="mx-auto w-full max-w-[220px]">
+            <BadgeArt shape="seal" tier={award.tier} period={award.period} date={award.date} />
+          </BadgeReveal>
           <dl className="grid gap-3 text-sm">
             <div className="flex justify-between gap-4 border-b border-black/10 pb-3">
               <dt className="text-black/55">Award</dt>
@@ -101,13 +112,15 @@ export default async function AwardPage({ params }: Params) {
               </dd>
             </div>
             <div className="flex justify-between gap-4 border-b border-black/10 pb-3">
-              <dt className="text-black/55">Date</dt>
+              <dt className="text-black/55">{award.tier === "F100" ? "Member" : "Date"}</dt>
               <dd>{badgeDate(award.tier, award.period, award.date)}</dd>
             </div>
-            <div className="flex justify-between gap-4 border-b border-black/10 pb-3">
-              <dt className="text-black/55">Jury score</dt>
-              <dd className="font-mono tabular-nums">{formatScore(award.score)}</dd>
-            </div>
+            {award.score !== null && (
+              <div className="flex justify-between gap-4 border-b border-black/10 pb-3">
+                <dt className="text-black/55">Jury score</dt>
+                <dd className="font-mono tabular-nums">{formatScore(award.score)}</dd>
+              </div>
+            )}
             <div className="flex justify-between gap-4">
               <dt className="text-black/55">Made by</dt>
               <dd>

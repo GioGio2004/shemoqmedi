@@ -150,3 +150,17 @@ export const getListingAwards = cache(async (slug: string): Promise<PublicAward[
 export function getAwardSlugs(): Promise<{ slug: string; createdAt: number }[]> {
   return safe("awards.publicSlugs", () => fetchQuery(api.awards.publicSlugs, {}), []);
 }
+
+/**
+ * The First 100 giveaway counter for the badges page. Never throws: a failed
+ * read shows the page without the count.
+ */
+export async function getFirst100Count(): Promise<{ given: number; limit: number } | null> {
+  try {
+    return await fetchQuery(api.awards.first100Count, {});
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("awards.first100Count failed:", error);
+    return null;
+  }
+}

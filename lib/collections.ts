@@ -146,21 +146,27 @@ function build(): Collection[] {
     SOTD: "One website a day, from the jury's best-scored sites. Never the same site twice.",
     BSC: "The finest websites built by one person, without an agency budget.",
     HM: "Websites the jury scored 6.50 or more in their weekly batch.",
+    F100: "The first hundred websites on Shemoqmedi, each with an honorary numbered badge.",
   };
   for (const a of AWARDS) {
     out.push({
       tag: a.slug.toLowerCase(),
       kind: "award",
       name: a.name,
-      heading: `${a.name} winners`,
+      heading: a.slug === "F100" ? "The First 100" : `${a.name} winners`,
       intro: AWARD_INTRO[a.slug],
-      title: `${a.name} Winners | Web Design Awards (${year()})`,
+      title: a.slug === "F100" ? "The First 100 Websites on Shemoqmedi" : `${a.name} Winners | Web Design Awards (${year()})`,
       description:
         a.slug === "BSC"
           ? "Best Solo Creation: the finest websites built by one person, without an agency budget."
-          : `Every ${a.name} winner on Shemoqmedi, with the jury's scores for ${PILLARS_LINE}.`,
-      summarize: (n, list) =>
-        `${n} ${a.name} ${n === 1 ? "winner" : "winners"}: ${list}. With the jury's scores for ${PILLARS_LINE}.`,
+          : a.slug === "F100"
+            ? "The first hundred websites on Shemoqmedi. Each holds an honorary First 100 badge with its own number."
+            : `Every ${a.name} winner on Shemoqmedi, with the jury's scores for ${PILLARS_LINE}.`,
+      summarize:
+        a.slug === "F100"
+          ? (n, list) => `${n} of the first hundred websites on Shemoqmedi: ${list}. Each holds a numbered honorary badge.`
+          : (n, list) =>
+              `${n} ${a.name} ${n === 1 ? "winner" : "winners"}: ${list}. With the jury's scores for ${PILLARS_LINE}.`,
       match: (l) => l.awards.includes(a.slug),
     });
   }

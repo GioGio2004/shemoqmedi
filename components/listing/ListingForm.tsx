@@ -700,9 +700,8 @@ export function ListingForm() {
             title="Standard community queue"
             aside={<span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">Free</span>}
           >
-            Reviewed by hand, usually within 14–30 days. Accepted sites get a 7-day voting window,
-            extended to 14 days if the jury needs more time. Founding 100: the first hundred accepted creators get honorary
-            supporter status.
+            Reviewed by hand, usually within 14–30 days. Accepted sites join that week&apos;s batch and are scored by
+            the jury the week after. First 100: the first hundred sites we welcome get a numbered honorary badge.
           </OptionCard>
           <OptionCard
             name="submissionTier"

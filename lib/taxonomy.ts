@@ -106,14 +106,16 @@ export const CREATOR_TIERS = [
 /**
  * Highest first (mirrors the backend). Tiers: Site of the Year > Site of the
  * Month > Site of the Day > Honorable Mention; Best Solo Creation is a side
- * award for solo makers. `color` is the crow on the tier's badge.
+ * award for solo makers; First 100 is the honorary badge given to the first
+ * hundred sites. Badge colours live in lib/badgeSvg.ts.
  */
 export const AWARDS = [
-  { slug: "SOTY", name: "Site of the Year", short: "SOTY", color: "#B8902B", crow: "gold" },
-  { slug: "SOTM", name: "Site of the Month", short: "SOTM", color: "#D22B20", crow: "red" },
-  { slug: "SOTD", name: "Site of the Day", short: "SOTD", color: "#000000", crow: "black" },
-  { slug: "BSC", name: "Best Solo Creation", short: "BSC", color: "#000000", crow: "black" },
-  { slug: "HM", name: "Honorable Mention", short: "HM", color: "#8E9196", crow: "silver" },
+  { slug: "SOTY", name: "Site of the Year", short: "SOTY" },
+  { slug: "SOTM", name: "Site of the Month", short: "SOTM" },
+  { slug: "SOTD", name: "Site of the Day", short: "SOTD" },
+  { slug: "BSC", name: "Best Solo Creation", short: "BSC" },
+  { slug: "HM", name: "Honorable Mention", short: "HM" },
+  { slug: "F100", name: "First 100", short: "F100" },
 ] as const;
 
 /** Jury pillars and their weight in the final score (mirrors the backend). */

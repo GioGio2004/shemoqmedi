@@ -94,7 +94,7 @@ export type PublicCreator = {
   bio: string | null;
   isClaimed: boolean;
   /** SOTY and SOTM are optional until the backend with them is deployed. */
-  awards: { SOTY?: number; SOTM?: number; SOTD: number; BSC: number; HM: number };
+  awards: { SOTY?: number; SOTM?: number; SOTD: number; BSC: number; HM: number; F100?: number };
   nominations: number;
 };
 
@@ -194,7 +194,7 @@ export type PublicAward = {
   slug: string; // /awards/<slug>, badge /badge/<slug>
   tier: AwardSlug;
   name: string;
-  period: string; // SOTD "2026-11-12", SOTM "2026-11", SOTY "2026", HM/BSC the batch week
+  period: string; // SOTD "2026-11-12", SOTM "2026-11", SOTY "2026", HM/BSC the batch week, F100 the member number "017"
   date: string; // Tbilisi day it was announced
   score: number | null;
   listing: {
@@ -349,6 +349,8 @@ export type PublicApiType = {
     publicSlugs: Q<Empty, { slug: string; createdAt: number }[]>;
     /** The signed-in owner's awards (badge embed codes). */
     mine: Q<Empty, PublicAward[]>;
+    /** How many of the hundred honorary First 100 badges are given. */
+    first100Count: Q<Empty, { given: number; limit: number }>;
   };
   rounds: {
     /** Open Site of the Month / Year rounds the signed-in juror can score; null for non-jurors. */

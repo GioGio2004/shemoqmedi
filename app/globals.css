@@ -267,3 +267,170 @@ html[data-menu-open] .site-header {
   border-radius: 0;
   background: #000;
 }
+
+/* ── Award badges drawn inline (components/badges/BadgeArt.tsx) ──────────────
+   Each part of a badge is a <g data-part>. Inside .badge-reveal the parts
+   start hidden and play once when it gets [data-in] (BadgeReveal.tsx): the
+   seal stamps in, its ring draws, the arc text swings into place, the perch
+   line draws, the crow drops onto it and the lettering rises. Afterwards the
+   crow nods now and then, and hops when the badge is hovered. */
+.badge-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.badge-art [data-part],
+.badge-art .badge-crow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* The arc text turns round the seal's centre, not its own. */
+.badge-art [data-part="arc"] {
+  transform-box: view-box;
+}
+.badge-art .badge-crow {
+  transform-origin: 62% 100%; /* its feet */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .badge-reveal .badge-art [data-part] {
+    opacity: 0;
+  }
+  .badge-reveal[data-in] .badge-art [data-part] {
+    opacity: 1;
+    animation: badge-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--badge-delay, 0ms) + var(--at, 0ms));
+  }
+  .badge-reveal[data-in] .badge-art [data-part="bg"] {
+    animation-name: badge-stamp;
+    animation-duration: 0.55s;
+  }
+  .badge-reveal[data-in] .badge-art [data-part="ring"] {
+    --at: 120ms;
+    animation-name: badge-fade;
+  }
+  .badge-reveal[data-in] .badge-art [data-part="ring"] circle {
+    stroke-dasharray: 1;
+    animation: badge-ring 0.9s cubic-bezier(0.6, 0, 0.2, 1) both;
+    animation-delay: calc(var(--badge-delay, 0ms) + 120ms);
+  }
+  .badge-reveal[data-in] .badge-art [data-part="arc"] {
+    --at: 350ms;
+    animation-name: badge-arc;
+    animation-duration: 0.9s;
+  }
+  .badge-reveal[data-in] .badge-art [data-part="perch"] {
+    --at: 300ms;
+    animation-name: badge-draw;
+    animation-duration: 0.45s;
+  }
+  .badge-reveal[data-in] .badge-art [data-part="crow"] {
+    --at: 520ms;
+    animation-name: badge-land;
+    animation-duration: 0.7s;
+    animation-timing-function: cubic-bezier(0.2, 1.35, 0.4, 1);
+  }
+  .badge-reveal[data-in] .badge-art [data-part="small"],
+  .badge-reveal[data-in] .badge-art [data-part="title"] {
+    --at: 700ms;
+  }
+  .badge-reveal[data-in] .badge-art [data-part="word"],
+  .badge-reveal[data-in] .badge-art [data-part="sub"] {
+    --at: 800ms;
+  }
+  .badge-reveal[data-in] .badge-art [data-part="date"] {
+    --at: 900ms;
+  }
+  /* Tags have no ring or arc: start the crow and lettering sooner. */
+  .badge-reveal[data-in] .badge-art[data-shape="tag"] [data-part="perch"] {
+    --at: 150ms;
+  }
+  .badge-reveal[data-in] .badge-art[data-shape="tag"] [data-part="crow"] {
+    --at: 300ms;
+  }
+  .badge-reveal[data-in] .badge-art[data-shape="tag"] [data-part="title"] {
+    --at: 380ms;
+  }
+  .badge-reveal[data-in] .badge-art[data-shape="tag"] [data-part="sub"] {
+    --at: 480ms;
+  }
+
+  /* After landing: a small nod every few seconds, and a hop on hover. */
+  .badge-reveal[data-in] .badge-art .badge-crow {
+    animation: badge-nod 7s ease-in-out infinite;
+    animation-delay: calc(var(--badge-delay, 0ms) * 4 + 2.5s);
+  }
+  .badge-reveal[data-in]:hover .badge-art .badge-crow {
+    animation: badge-hop 0.7s cubic-bezier(0.3, 0, 0.3, 1);
+  }
+}
+
+@keyframes badge-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14%);
+  }
+}
+@keyframes badge-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes badge-stamp {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+@keyframes badge-ring {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes badge-arc {
+  from {
+    opacity: 0;
+    transform: rotate(-32deg);
+  }
+}
+@keyframes badge-draw {
+  from {
+    opacity: 1;
+    transform: scaleX(0);
+  }
+}
+@keyframes badge-land {
+  from {
+    opacity: 0;
+    transform: translateY(-26%) rotate(-8deg);
+  }
+}
+@keyframes badge-nod {
+  0%,
+  88%,
+  100% {
+    transform: none;
+  }
+  92% {
+    transform: rotate(-3deg);
+  }
+  96% {
+    transform: rotate(1deg);
+  }
+}
+@keyframes badge-hop {
+  0%,
+  100% {
+    transform: none;
+  }
+  35% {
+    transform: translateY(-9%) rotate(-5deg);
+  }
+  70% {
+    transform: translateY(0) rotate(1.5deg);
+  }
+}

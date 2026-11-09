@@ -21,7 +21,7 @@ import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { AWARDS, listingCategories } from "@/lib/taxonomy";
 import { listingImageUrls, screenshotCaption } from "@/lib/imageSeo";
-import { badgeLabel } from "@/lib/badgeSvg";
+import { badgeLabel, badgePath } from "@/lib/badgeInfo";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -536,7 +536,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
                     <li key={a.slug}>
                       <Link href={`/awards/${a.slug}`} className="group flex items-center gap-4">
                         {/* eslint-disable-next-line @next/next/no-img-element -- the award's own SVG badge */}
-                        <img src={`/badge/${a.slug}?theme=light`} alt="" width={150} height={44} className="shrink-0" />
+                        <img src={badgePath(a.slug, { shape: "tag" })} alt="" height={40} className="h-10 w-auto shrink-0" />
                         <span className="text-sm group-hover:underline group-hover:underline-offset-4">
                           {badgeLabel(a.tier, a.period, a.date)}
                         </span>
