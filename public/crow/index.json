@@ -1,17 +1,16 @@
 {
   "pixelRatio": 2,
-  "frameWidth": 376,
-  "frameHeight": 318,
-  "anchor": {
-    "x": 233,
-    "y": 312
-  },
   "animations": {
     "walk": "/crow/walk.json",
     "idle": "/crow/idle.json",
     "hop": "/crow/hop.json",
     "takeoff": "/crow/takeoff.json",
-    "peck": "/crow/peck.json",
+    "pickup": "/crow/pickup.json",
+    "place": "/crow/place.json",
+    "peek": "/crow/peek.json",
+    "caw": "/crow/caw.json",
+    "stretch": "/crow/stretch.json",
+    "rest": "/crow/rest.json",
     "turn": "/crow/turn.json"
   }
 }

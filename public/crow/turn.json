@@ -1,24 +1,25 @@
 {
   "name": "turn",
   "src": "/crow/turn.webp",
-  "frames": 12,
-  "columns": 12,
-  "frameWidth": 376,
-  "frameHeight": 318,
-  "fps": 24.0,
+  "frames": 11,
+  "columns": 11,
+  "frameWidth": 224,
+  "frameHeight": 170,
+  "fps": 16.0,
   "anchor": {
-    "x": 233,
-    "y": 312
+    "x": 143,
+    "y": 164
   },
   "pixelRatio": 2,
   "loop": false,
   "pingpong": false,
+  "reverseAfter": false,
   "bounds": {
-    "left": -88.2,
-    "top": -95.6,
-    "right": 54.9,
+    "left": -69.5,
+    "top": -80.0,
+    "right": 38.2,
     "bottom": 0.3
   },
   "source": "forage.mp4",
-  "frontOffset": -8.6
+  "frontOffset": -13.5
 }

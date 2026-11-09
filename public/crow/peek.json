@@ -1,0 +1,30 @@
+{
+  "name": "peek",
+  "src": "/crow/peek.webp",
+  "frames": 63,
+  "columns": 16,
+  "frameWidth": 198,
+  "frameHeight": 250,
+  "fps": 12.0,
+  "anchor": {
+    "x": 100,
+    "y": 244
+  },
+  "pixelRatio": 2,
+  "loop": false,
+  "pingpong": false,
+  "reverseAfter": false,
+  "bounds": {
+    "left": -48.1,
+    "top": -120.0,
+    "right": 46.6,
+    "bottom": 0.0
+  },
+  "source": "peek.mp4",
+  "marks": {
+    "rise": 4,
+    "look_left": 14,
+    "look_camera": 31,
+    "sink": 55
+  }
+}

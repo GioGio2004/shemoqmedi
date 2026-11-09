@@ -32,7 +32,7 @@ type Side = "left" | "right";
 type Spot = { side: Side; t: number } | { side: Side; base: true } | { side: Side; out: true };
 type Step =
   | { k: "walk"; to: Spot; state: CrowState }
-  | { k: "look"; anim: "idle" | "peck"; dur: number }
+  | { k: "look"; anim: "idle" | "pickup"; dur: number }
   | { k: "turn" }
   | { k: "hopUp"; letter: number }
   | { k: "perch"; dur: number }
@@ -61,7 +61,8 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 const DISPLAY_H = 80; // CSS px, crow height on desktop
 const MOBILE_SCALE = 0.7; // about 30% smaller under 768 px
-const GRAVITY = 2600; // CSS px/s² at desktop size: a calm, weighty hop
+const GRAVITY = 2600;
+const FADE = 0.14; // s, silhouette blend between two clips // CSS px/s² at desktop size: a calm, weighty hop
 
 export class CrowEngine {
   private readonly ctx: CanvasRenderingContext2D;
@@ -106,6 +107,8 @@ export class CrowEngine {
   private lastTs = 0;
   private drawnKey = "";
   private dirty: [number, number, number, number] | null = null;
+  private fade: { anim: AnimName; frame: number; x: number; y: number; facing: 1 | -1; offset: number; t: number } | null = null;
+  private fadeCanvas: HTMLCanvasElement | null = null;
   private relayoutQueued = false;
 
   private readonly io: IntersectionObserver;
@@ -327,7 +330,7 @@ export class CrowEngine {
     const steps: Step[] = [];
     const looks = (dur: [number, number]): Step => ({
       k: "look",
-      anim: this.sprites.peck && chance(0.4) ? "peck" : "idle",
+      anim: this.sprites.pickup && chance(0.4) ? "pickup" : "idle",
       dur: rand(dur[0], dur[1]),
     });
 
@@ -416,6 +419,7 @@ export class CrowEngine {
     this.offset = 0;
     this.visible = true;
     this.setAnim("idle", 0);
+    this.fade = null; // nothing on screen to blend from
     this.state = first.state;
   }
 
@@ -464,6 +468,10 @@ export class CrowEngine {
   // ----------------------------------------------------------------------
 
   private advance(dt: number) {
+    if (this.fade) {
+      this.fade.t += dt;
+      if (this.fade.t >= FADE) this.fade = null;
+    }
     if (this.state === "OFFSCREEN") {
       this.sleepLeft -= dt;
       if (this.sleepLeft <= 0) this.beginVisit();
@@ -498,7 +506,7 @@ export class CrowEngine {
         return this.walkAction(step);
       }
       case "look":
-        return this.idleAction("LOOK", step.dur, step.anim === "peck");
+        return this.idleAction("LOOK", step.dur, step.anim === "pickup");
       case "perch":
         return this.idleAction("PERCH", step.dur, false);
       case "turn":
@@ -524,6 +532,11 @@ export class CrowEngine {
   }
 
   private setAnim(name: AnimName, frame: number) {
+    if (name !== this.anim && this.visible && !this.opts.reducedMotion) {
+      // Clips start and end on slightly different poses: blend the old
+      // silhouette into the new one instead of cutting.
+      this.fade = { anim: this.anim, frame: this.frame, x: this.x, y: this.y, facing: this.facing, offset: this.offset, t: 0 };
+    }
     this.anim = name;
     this.frame = frame;
   }
@@ -564,7 +577,10 @@ export class CrowEngine {
   /** Stand and look around; peck first when asked. */
   private idleAction(state: CrowState, dur: number, peck: boolean): Action {
     const idle = this.sprites.idle;
-    const peckAnim = peck ? this.sprites.peck : undefined;
+    const peckAnim = peck ? this.sprites.pickup : undefined;
+    // Never stop while the head faces the camera (the next clip starts in
+    // profile, so it would snap round).
+    const away = idle.marks && idle.marks.away_start !== undefined ? [idle.marks.away_start, idle.marks.away_end] : null;
     let t = 0;
     // Ping-pong look-around with random holds, so it never loops the same.
     let f = 0;
@@ -574,12 +590,16 @@ export class CrowEngine {
       state,
       update: (dt) => {
         t += dt;
-        if (peckAnim && t < peckAnim.frames / peckAnim.fps) {
-          this.setAnim("peck", Math.min(peckAnim.frames - 1, Math.floor(t * peckAnim.fps)));
+        const span = peckAnim ? (peckAnim.reverseAfter ? 2 * peckAnim.frames - 1 : peckAnim.frames) : 0;
+        if (peckAnim && t < span / peckAnim.fps) {
+          const k = Math.min(span - 1, Math.floor(t * peckAnim.fps));
+          this.setAnim("pickup", k < peckAnim.frames ? k : span - 1 - k);
           return false;
         }
         if (!idle.pingpong) {
-          this.setAnim("idle", Math.floor(t * idle.fps) % idle.frames);
+          // After a pickup, start on the profile frame that matches its end.
+          const ti = peckAnim ? t - span / peckAnim.fps : t;
+          this.setAnim("idle", (Math.floor(ti * idle.fps) + (peckAnim ? 4 : 0)) % idle.frames);
         } else {
           if (dir === 0) {
             hold -= dt;
@@ -594,7 +614,8 @@ export class CrowEngine {
           }
           this.setAnim("idle", Math.round(f));
         }
-        return t >= dur;
+        if (t < dur) return false;
+        return !(away && this.anim === "idle" && this.frame >= away[0] && this.frame <= away[1]);
       },
     };
   }
@@ -793,10 +814,41 @@ export class CrowEngine {
   // Rendering
   // ----------------------------------------------------------------------
 
+  /** Draws one sprite frame with its anchor at (x, y); returns the box it covers. */
+  private drawSprite(
+    ctx: CanvasRenderingContext2D,
+    name: AnimName,
+    frame: number,
+    x: number,
+    y: number,
+    facing: 1 | -1,
+  ): [number, number, number, number] {
+    const a = this.sprites[name] ?? this.sprites.idle;
+    const pr = a.pixelRatio;
+    const s = this.size;
+    const dw = (a.frameWidth / pr) * s;
+    const dh = (a.frameHeight / pr) * s;
+    const ax = (a.anchor.x / pr) * s;
+    const ay = (a.anchor.y / pr) * s;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(facing, 1);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    const f = clamp(frame, 0, a.frames - 1);
+    const cols = a.columns ?? a.frames;
+    const sx = (f % cols) * a.frameWidth;
+    const sy = Math.floor(f / cols) * a.frameHeight;
+    ctx.drawImage(a.img, sx, sy, a.frameWidth, a.frameHeight, -ax, -ay, dw, dh);
+    ctx.restore();
+    const left = facing === 1 ? x - ax : x - (dw - ax);
+    return [Math.floor(left) - 2, Math.floor(y - ay) - 2, Math.ceil(dw) + 4, Math.ceil(dh) + 4];
+  }
+
   private render() {
     const ctx = this.ctx;
-    const a = this.sprites[this.anim] ?? this.sprites.idle;
-    const key = `${this.visible}|${this.anim}|${this.frame}|${this.x.toFixed(2)}|${this.y.toFixed(2)}|${this.facing}|${this.offset.toFixed(2)}|${this.canvasTop}`;
+    const fade = this.fade;
+    const key = `${this.visible}|${this.anim}|${this.frame}|${this.x.toFixed(2)}|${this.y.toFixed(2)}|${this.facing}|${this.offset.toFixed(2)}|${this.canvasTop}|${fade ? fade.t.toFixed(3) : ""}`;
     if (key === this.drawnKey && !this.opts.debug) return;
     this.drawnKey = key;
 
@@ -808,27 +860,41 @@ export class CrowEngine {
     this.dirty = null;
 
     if (this.visible) {
-      const pr = a.pixelRatio;
-      const s = this.size;
-      const dw = (a.frameWidth / pr) * s;
-      const dh = (a.frameHeight / pr) * s;
-      const ax = (a.anchor.x / pr) * s;
-      const ay = (a.anchor.y / pr) * s;
-      const cx = this.x + this.offset;
-      const cy = this.y - this.canvasTop;
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(this.facing, 1);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      const f = clamp(this.frame, 0, a.frames - 1);
-      const cols = a.columns ?? a.frames;
-      const sx = (f % cols) * a.frameWidth;
-      const sy = Math.floor(f / cols) * a.frameHeight;
-      ctx.drawImage(a.img, sx, sy, a.frameWidth, a.frameHeight, -ax, -ay, dw, dh);
-      ctx.restore();
-      const left = this.facing === 1 ? cx - ax : cx - (dw - ax);
-      this.dirty = [Math.floor(left) - 2, Math.floor(cy - ay) - 2, Math.ceil(dw) + 4, Math.ceil(dh) + 4];
+      const T = this.canvasTop;
+      if (!fade) {
+        this.dirty = this.drawSprite(ctx, this.anim, this.frame, this.x + this.offset, this.y - T, this.facing);
+      } else {
+        // Blend: old frame at (1-u), new at u, added together ("lighter") on
+        // a scratch canvas so overlapping parts stay solid black.
+        const u = smoothstep(clamp(fade.t / FADE, 0, 1));
+        const c = (this.fadeCanvas ??= document.createElement("canvas"));
+        if (c.width !== this.canvas.width || c.height !== this.canvas.height) {
+          c.width = this.canvas.width;
+          c.height = this.canvas.height;
+        }
+        const fc = c.getContext("2d")!;
+        fc.setTransform(1, 0, 0, 1, 0, 0);
+        fc.clearRect(0, 0, c.width, c.height);
+        fc.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        fc.globalCompositeOperation = "lighter";
+        fc.globalAlpha = 1 - u;
+        const r0 = this.drawSprite(fc, fade.anim, fade.frame, fade.x + fade.offset, fade.y - T, fade.facing);
+        fc.globalAlpha = u;
+        const r1 = this.drawSprite(fc, this.anim, this.frame, this.x + this.offset, this.y - T, this.facing);
+        fc.globalAlpha = 1;
+        fc.globalCompositeOperation = "source-over";
+        const x0 = Math.max(0, Math.min(r0[0], r1[0]));
+        const y0 = Math.max(0, Math.min(r0[1], r1[1]));
+        const x1 = Math.min(this.canvasW, Math.max(r0[0] + r0[2], r1[0] + r1[2]));
+        const y1 = Math.min(this.canvasH, Math.max(r0[1] + r0[3], r1[1] + r1[3]));
+        if (x1 > x0 && y1 > y0) {
+          const d = this.dpr;
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.drawImage(c, x0 * d, y0 * d, (x1 - x0) * d, (y1 - y0) * d, x0 * d, y0 * d, (x1 - x0) * d, (y1 - y0) * d);
+          ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+          this.dirty = [x0, y0, x1 - x0, y1 - y0];
+        }
+      }
     }
     if (this.opts.debug) this.drawDebug(true);
   }
