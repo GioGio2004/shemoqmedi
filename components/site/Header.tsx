@@ -12,7 +12,7 @@ export function Header() {
     <MenuProvider>
       <header className="site-header fixed inset-x-0 top-0 z-50">
         <div className="container-site flex h-20 items-center gap-3 md:h-[88px] lg:gap-6">
-          <Wordmark className="shrink-0" />
+          <Wordmark className="shrink-0" live />
           <MenuSearchField className="hidden min-w-0 flex-1 lg:mx-auto lg:flex lg:max-w-[560px]" />
           <div className="ml-auto flex items-center gap-2 sm:gap-3 lg:ml-0">
             <MobileSearchButton className="lg:hidden" />

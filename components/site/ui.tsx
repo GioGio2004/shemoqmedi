@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { NavCrow } from "./NavCrow";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -78,17 +79,24 @@ export function PillLink({
   );
 }
 
-/** Stacked wordmark, Kencho-style. Placeholder until the real mark exists. */
-export function Wordmark({ className }: { className?: string }) {
+/**
+ * Stacked wordmark, Kencho-style. `live` (the site header only) turns the
+ * crow mark into the live crow (NavCrow); when it flies away, the text slides
+ * over its spot. Elsewhere (sign-in, 404) the mark stays still.
+ */
+export function Wordmark({ className, live = false }: { className?: string; live?: boolean }) {
   return (
     <Link
       href="/"
       aria-label="shemoqmedi, home"
-      className={cn("flex items-center gap-3 text-black", className)}
+      className={cn("flex items-center gap-3 text-black [--crow-slot:50px] min-[360px]:[--crow-slot:68px]", className)}
     >
-      {/* Above the fold on every page (often the LCP element), so never lazy. */}
-      <Image src="/brand/crow.png" alt="" width={179} height={200} fetchPriority="low" className="h-auto w-[34px]" />
-      <span className="flex flex-col leading-none">
+      {live ? (
+        <NavCrow />
+      ) : (
+        <Image src="/brand/crow.png" alt="" width={34} height={38} sizes="34px" loading="eager" className="h-auto w-[34px]" />
+      )}
+      <span className="flex flex-col leading-none transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [[data-crow=away]>&]:translate-x-[calc(-1*var(--crow-slot)-0.75rem)]">
         <span className="text-[18px] font-bold tracking-[-0.055em] uppercase">Shemoqmedi</span>
         <span className="mt-[5px] text-[9px] font-semibold tracking-[0.27em] uppercase">Space</span>
       </span>

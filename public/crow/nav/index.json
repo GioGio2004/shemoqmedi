@@ -1,0 +1,9 @@
+{
+  "pixelRatio": 2,
+  "animations": {
+    "idle": "/crow/nav/idle.json",
+    "takeoff": "/crow/nav/takeoff.json",
+    "rest": "/crow/nav/rest.json",
+    "stretch": "/crow/nav/stretch.json"
+  }
+}

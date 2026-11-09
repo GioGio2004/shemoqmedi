@@ -65,15 +65,23 @@ async function loadAnim(url: string): Promise<Anim> {
   const meta = (await (await fetch(url)).json()) as AnimMeta;
   const img = new Image();
   img.decoding = "async";
-  img.src = meta.src;
-  await img.decode();
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`crow sprite failed: ${meta.src}`));
+    img.src = meta.src;
+  });
+  // decode() can wait until a background tab is shown again; don't block on it.
+  await Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 300))]);
   return { ...meta, img };
 }
 
-/** Loads every sheet listed in /crow/index.json; `only` limits the set. */
-export async function loadSprites(only: AnimName[] = FOOTER): Promise<Sprites | null> {
+/**
+ * Loads the sheets listed in `${base}/index.json`; `only` limits the set.
+ * The navbar uses the small set in /crow/nav (a 48 px crow).
+ */
+export async function loadSprites(only: AnimName[] = FOOTER, base = "/crow"): Promise<Sprites | null> {
   try {
-    const index = (await (await fetch("/crow/index.json")).json()) as {
+    const index = (await (await fetch(`${base}/index.json`)).json()) as {
       animations: Partial<Record<AnimName, string>>;
     };
     const names = (Object.keys(index.animations) as AnimName[]).filter((n) => !only || only.includes(n));
@@ -84,6 +92,20 @@ export async function loadSprites(only: AnimName[] = FOOTER): Promise<Sprites | 
     anims.forEach((a) => a && (out[a.name] = a));
     if (only.some((n) => REQUIRED.includes(n) && !out[n])) return null;
     return out as Sprites;
+  } catch {
+    return null;
+  }
+}
+
+const indexes = new Map<string, Promise<{ animations: Partial<Record<AnimName, string>> }>>();
+
+/** One sheet, or null; for sets that load more animations later. */
+export async function loadAnimation(name: AnimName, base = "/crow"): Promise<Anim | null> {
+  try {
+    if (!indexes.has(base)) indexes.set(base, fetch(`${base}/index.json`).then((r) => r.json()));
+    const index = await indexes.get(base)!;
+    const url = index.animations[name];
+    return url ? await loadAnim(url) : null;
   } catch {
     return null;
   }

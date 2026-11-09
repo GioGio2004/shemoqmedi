@@ -73,6 +73,12 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Crow sprite sheets: rebuilt rarely, so let browsers keep them a day
+        // and revalidate in the background for a week.
+        source: "/crow/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
         // Any other host (shemoqmedi-hqja.vercel.app and other *.vercel.app
         // aliases, localhost) serves a duplicate of the site: keep it out of
         // the index. The value is a regex, hence the escaped dots.

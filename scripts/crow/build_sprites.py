@@ -727,16 +727,24 @@ def encode(sheet: np.ndarray, nframes: int) -> tuple[bytes, str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", type=Path, help="also write PNG previews on grey here")
+    ap.add_argument("--set", default="", help="write to public/crow/<set>/ (e.g. nav) instead of public/crow/")
+    ap.add_argument("--height", type=float, default=TARGET_H, help="standing crow height in sprite px (2x)")
+    ap.add_argument("--only", default="", help="comma-separated animations to build")
     args = ap.parse_args()
+    global OUT
+    out_dir = OUT / args.set if args.set else OUT
+    url_dir = f"/crow/{args.set}" if args.set else "/crow"
+    target_h = args.height
+    wanted = [n for n in args.only.split(",") if n] or ORDER
 
     clips: dict[str, Clip] = {}
-    for name in ORDER:
+    for name in wanted:
         if name in SPEC and (RAW / SPEC[name].file).exists():
             clips[name] = SPEC[name]
         elif name in FORAGE and (RAW / FORAGE[name].file).exists():
             clips[name] = FORAGE[name]
-    if "walk" not in clips:
-        print("No walk source found in assets/crow-raw/.", file=sys.stderr)
+    if not clips:
+        print("No source clips found in assets/crow-raw/.", file=sys.stderr)
         return 1
 
     print("Analysing:")
@@ -747,7 +755,7 @@ def main() -> int:
 
     # Scale: clips from the same file share the walk's standing height (same
     # camera), other files are scaled by their own standing height.
-    ref = {an["walk"].clip.file: an["walk"].stand_h}
+    ref = {an["walk"].clip.file: an["walk"].stand_h} if "walk" in an else {}
     for file in {a.clip.file for a in an.values()} - set(ref):
         same = [a for a in an.values() if a.clip.file == file and not a.clip.target_h]
         if not same:
@@ -758,10 +766,11 @@ def main() -> int:
         if a.clip.target_h:
             # Own scale (the peek is a close-up): tallest visible bust.
             tallest = max(a.frames[i].alpha.shape[0] - a.frames[i].y0 for i in a.seq)
-            a.scale = a.clip.target_h / tallest
+            a.scale = a.clip.target_h * target_h / TARGET_H / tallest
         else:
-            a.scale = TARGET_H / ref[a.clip.file]
+            a.scale = target_h / ref[a.clip.file]
 
+    OUT = out_dir
     OUT.mkdir(parents=True, exist_ok=True)
     for old in OUT.glob("*"):
         if old.suffix in (".webp", ".json"):
@@ -904,7 +913,7 @@ def main() -> int:
         (OUT / f"{name}.webp").write_bytes(data)
         info = {
             "name": name,
-            "src": f"/crow/{name}.webp",
+            "src": f"{url_dir}/{name}.webp",
             "frames": len(frames),
             "columns": cols,  # frame k is at column k % columns, row k // columns
             "frameWidth": W,
@@ -920,7 +929,7 @@ def main() -> int:
             **meta,
         }
         (OUT / f"{name}.json").write_text(json.dumps(info, indent=2) + "\n")
-        index["animations"][name] = f"/crow/{name}.json"
+        index["animations"][name] = f"{url_dir}/{name}.json"
         print(f"  {name:8s} {len(frames):3d} frames  {len(data) / 1000:6.1f} KB  {how}")
         for n in a.notes:
             print(f"           - {n}")
