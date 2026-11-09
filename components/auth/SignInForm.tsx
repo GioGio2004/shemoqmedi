@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { GoogleOneTap, useAuth, useSignIn } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
+import { GoogleOneTap, useSignIn } from "@clerk/nextjs";
 import {
   CodeInput,
   Divider,
   Field,
   FormError,
   GoogleButton,
+  StuckSession,
   SubmitButton,
   TextButton,
   errorMessage,
   inputClass,
+  isSessionExists,
   safeRedirect,
+  useAfterAuth,
 } from "./AuthUI";
 
 type Step =
@@ -24,9 +27,9 @@ type Step =
 
 export function SignInForm() {
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn } = useAuth();
-  const router = useRouter();
   const redirect = safeRedirect(useSearchParams().get("redirect_url"), "/account");
+  // Already logged in (or just logged in): on to `redirect`, via the task page if Clerk needs one.
+  const { go, stuck } = useAfterAuth(redirect);
 
   const [step, setStep] = useState<Step>({ kind: "credentials" });
   const [email, setEmail] = useState("");
@@ -37,17 +40,18 @@ export function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Already logged in: skip the form.
-  useEffect(() => {
-    if (isSignedIn) router.replace(redirect);
-  }, [isSignedIn, redirect, router]);
-
   const ready = isLoaded && !!signIn;
 
   async function finish(sessionId: string | null) {
     if (!setActive || !sessionId) throw new Error("No session");
     await setActive({ session: sessionId });
-    router.replace(redirect);
+    go();
+  }
+
+  /** Shows a Clerk error; "already logged in" just moves on instead. */
+  function fail(err: unknown) {
+    if (isSessionExists(err)) return go();
+    setError(errorMessage(err));
   }
 
   async function sendSecondFactorCode() {
@@ -77,7 +81,7 @@ export function SignInForm() {
       }
       setError("This account needs another way to log in. Try an email code.");
     } catch (err) {
-      setError(errorMessage(err));
+      fail(err);
     } finally {
       setPending(null);
     }
@@ -102,7 +106,7 @@ export function SignInForm() {
       setCode("");
       setStep({ kind: "code", factor: "first", emailAddressId: factor.emailAddressId });
     } catch (err) {
-      setError(errorMessage(err));
+      fail(err);
     } finally {
       setPending(null);
     }
@@ -121,7 +125,7 @@ export function SignInForm() {
       if (result.status === "complete") return await finish(result.createdSessionId);
       setError("Could not finish logging in. Please start again.");
     } catch (err) {
-      setError(errorMessage(err));
+      fail(err);
     } finally {
       setPending(null);
     }
@@ -137,7 +141,7 @@ export function SignInForm() {
       else await sendSecondFactorCode();
       setNotice("A new code is on its way.");
     } catch (err) {
-      setError(errorMessage(err));
+      fail(err);
     } finally {
       setPending(null);
     }
@@ -154,10 +158,12 @@ export function SignInForm() {
         redirectUrlComplete: redirect,
       });
     } catch (err) {
-      setError(errorMessage(err));
+      fail(err);
       setPending(null);
     }
   }
+
+  if (stuck) return <StuckSession redirect={redirect} />;
 
   if (step.kind === "code") {
     return (

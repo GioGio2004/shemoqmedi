@@ -1,4 +1,5 @@
-import type { PublicListing } from "@/convex-helpers-api";
+import type { JuryReview, PublicListing } from "@/convex-helpers-api";
+import { JuryReviews } from "@/components/jury/JuryReviews";
 import { LIMITS, PILLARS, VOTING_DAYS } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
 
@@ -15,9 +16,9 @@ function combine(jury: number | null, community: number | null) {
 /**
  * Final score header, then the four pillars as translucent blue squares that
  * float together. Each square shows the pillar's combined score with the
- * jury and community numbers under it.
+ * jury and community numbers under it. Below them, each juror's review.
  */
-export function ScoreBreakdown({ listing }: { listing: PublicListing }) {
+export function ScoreBreakdown({ listing, reviews = [] }: { listing: PublicListing; reviews?: JuryReview[] }) {
   const tiles = PILLARS.map((p) => {
     const jury = listing.editorialScores?.[p.key] ?? null;
     const community = listing.communityScores?.[p.key] ?? null;
@@ -91,6 +92,8 @@ export function ScoreBreakdown({ listing }: { listing: PublicListing }) {
           extended to {VOTING_DAYS + LIMITS.votingExtensionDays} days if the jury needs more time.
         </p>
       )}
+
+      <JuryReviews reviews={reviews} />
     </div>
   );
 }

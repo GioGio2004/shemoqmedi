@@ -15,7 +15,15 @@ const isProtectedRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   if (!isProtectedRoute(req)) return;
 
-  const { userId } = await auth();
+  // Pending (a task such as a password reset is left): finish it first. By
+  // default Clerk reports a pending session as signed out, which sent people
+  // to /sign-in, where Clerk then refused to log them in again.
+  const { userId, sessionStatus } = await auth({ treatPendingAsSignedOut: false });
+  if (userId && sessionStatus === "pending") {
+    const url = new URL("/session-tasks", req.url);
+    url.searchParams.set("redirect_url", req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(url);
+  }
   if (!userId) {
     // Our own sign-in page (not Clerk's hosted one), then back here.
     const url = new URL("/sign-in", req.url);
@@ -40,6 +48,7 @@ export const config = {
     "/sign-in/:path*",
     "/sign-up/:path*",
     "/sso-callback/:path*",
+    "/session-tasks/:path*",
     "/(api|trpc)(.*)",
   ],
 };

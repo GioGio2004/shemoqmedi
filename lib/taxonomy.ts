@@ -162,8 +162,7 @@ export const LIMITS = {
   /** Entries in a juror's Experience and Work sections. */
   juryExperience: 8,
   juryWork: 8,
-  /** Jury evaluation comment (mirrors the backend). */
-  juryCommentMin: 20,
+  /** Jury evaluation comment, optional (mirrors the backend). */
   juryComment: 1000,
   juryTitle: 80,
   juryBio: 400,

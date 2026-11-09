@@ -61,10 +61,6 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || blocked) return;
-    if (length < LIMITS.juryCommentMin) {
-      setError(`Write at least ${LIMITS.juryCommentMin} characters about the site.`);
-      return;
-    }
     setBusy(true);
     setError(null);
     try {
@@ -143,8 +139,10 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
               </p>
               <label className="grid gap-2">
                 <span className="flex items-baseline justify-between">
-                  <span className="eyebrow text-black">Comment</span>
-                  <span className={cn("font-mono text-[11px] tabular-nums", length < LIMITS.juryCommentMin ? "text-black/40" : "text-black/55")}>
+                  <span className="eyebrow text-black">
+                    Comment <span className="text-black/45">(optional)</span>
+                  </span>
+                  <span className="font-mono text-[11px] text-black/55 tabular-nums">
                     {length}/{LIMITS.juryComment}
                   </span>
                 </span>
@@ -154,7 +152,6 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
                   value={comment}
                   onChange={(e) => {
                     setSavedAt(null);
-                    // A "too short" error from an earlier try must not stay up while they type.
                     setError(null);
                     setComment(e.target.value);
                   }}
@@ -162,17 +159,10 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
                   className="w-full resize-y rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-black/35 focus:border-black"
                 />
               </label>
-              {error ? (
+              {error && (
                 <p role="alert" className="text-sm font-medium">
                   {error}
                 </p>
-              ) : (
-                length > 0 &&
-                length < LIMITS.juryCommentMin && (
-                  <p className="text-xs text-black/55">
-                    {LIMITS.juryCommentMin - length} more {LIMITS.juryCommentMin - length === 1 ? "character" : "characters"} to go.
-                  </p>
-                )
               )}
               <button
                 type="submit"

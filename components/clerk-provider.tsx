@@ -10,6 +10,12 @@ export function ClerkProvider({ children, appearance, ...props }: ClerkProviderP
     <ClerkNextJSProvider
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
+      // A session with a task left (pending) finishes it here before the site counts it as signed in.
+      taskUrls={{
+        "choose-organization": "/session-tasks",
+        "reset-password": "/session-tasks",
+        "setup-mfa": "/session-tasks",
+      }}
       appearance={{
         theme: shadcn,
         variables: {

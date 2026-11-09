@@ -13,7 +13,6 @@ import { PillLink, Tag } from "@/components/site/ui";
 import { getJuryReviews, getListing, getPublicSlugs, withRef } from "@/lib/listings";
 import { outboundRel } from "@/lib/ref";
 import { JuryLauncher } from "@/components/jury/JuryLauncher";
-import { JuryReviews } from "@/components/jury/JuryReviews";
 import { resolveListingSlug } from "@/lib/slugRedirect";
 import { categoryName, categoryPhrase, collectionHref, regionName, technologySlug } from "@/lib/collections";
 import { formatDay, scheduledFor, wonOn } from "@/lib/sotd";
@@ -434,8 +433,6 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
-      <JuryReviews reviews={juryReviews} />
-
       {/* Details */}
       <section aria-label="Details" className="container-site mt-12">
         <dl className="grid gap-px overflow-hidden rounded-3xl border border-black/10 bg-black/10 sm:grid-cols-2 lg:grid-cols-4">
@@ -500,7 +497,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
       {/* Scores + voting */}
       <section aria-label="Scores" className="container-site mt-12 pb-24">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-          <ScoreBreakdown listing={listing} />
+          <ScoreBreakdown listing={listing} reviews={juryReviews} />
 
           <div className="grid content-start gap-6">
             {inVoting ? (

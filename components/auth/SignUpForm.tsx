@@ -1,28 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { GoogleOneTap, useAuth, useSignUp } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
+import { GoogleOneTap, useSignUp } from "@clerk/nextjs";
 import {
   CodeInput,
   Divider,
   Field,
   FormError,
   GoogleButton,
+  StuckSession,
   SubmitButton,
   TextButton,
   errorMessage,
   inputClass,
+  isSessionExists,
   safeRedirect,
+  useAfterAuth,
 } from "./AuthUI";
 
 // New accounts go straight to the listing form unless another page sent them.
 export function SignUpForm() {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const { isSignedIn } = useAuth();
-  const router = useRouter();
   const redirect = safeRedirect(useSearchParams().get("redirect_url"), "/submit");
+  const { go, stuck } = useAfterAuth(redirect);
 
   const [step, setStep] = useState<"details" | "verify">("details");
   const [firstName, setFirstName] = useState("");
@@ -34,10 +36,6 @@ export function SignUpForm() {
   const [pending, setPending] = useState<null | "form" | "google" | "resend">(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isSignedIn) router.replace(redirect);
-  }, [isSignedIn, redirect, router]);
 
   const ready = isLoaded && !!signUp;
 
@@ -57,6 +55,7 @@ export function SignUpForm() {
       setCode("");
       setStep("verify");
     } catch (err) {
+      if (isSessionExists(err)) return go();
       setError(errorMessage(err));
     } finally {
       setPending(null);
@@ -72,7 +71,7 @@ export function SignUpForm() {
       const result = await signUp.attemptEmailAddressVerification({ code });
       if (result.status === "complete" && setActive) {
         await setActive({ session: result.createdSessionId });
-        router.replace(redirect);
+        go();
         return;
       }
       setError(
@@ -81,6 +80,7 @@ export function SignUpForm() {
           : "Could not finish creating the account. Please start again.",
       );
     } catch (err) {
+      if (isSessionExists(err)) return go();
       setError(errorMessage(err));
     } finally {
       setPending(null);
@@ -96,6 +96,7 @@ export function SignUpForm() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setNotice("A new code is on its way.");
     } catch (err) {
+      if (isSessionExists(err)) return go();
       setError(errorMessage(err));
     } finally {
       setPending(null);
@@ -113,10 +114,13 @@ export function SignUpForm() {
         redirectUrlComplete: redirect,
       });
     } catch (err) {
+      if (isSessionExists(err)) return go();
       setError(errorMessage(err));
       setPending(null);
     }
   }
+
+  if (stuck) return <StuckSession redirect={redirect} />;
 
   if (step === "verify") {
     return (

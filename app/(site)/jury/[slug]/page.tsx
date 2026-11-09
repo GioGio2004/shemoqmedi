@@ -228,7 +228,9 @@ export default async function JurorPage({ params }: Params) {
                     {formatScore(r.average)}
                   </p>
                 </div>
-                <p className="text-[15px] leading-relaxed whitespace-pre-line text-black/80">{r.comment}</p>
+                {r.comment && (
+                  <p className="text-[15px] leading-relaxed whitespace-pre-line text-black/80">{r.comment}</p>
+                )}
                 <p className={`${mono} text-black/45`}>{formatDate(r.updatedAt)}</p>
               </li>
             ))}

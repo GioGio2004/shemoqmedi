@@ -1,3 +1,8 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { ArrowIcon } from "@/components/site/ui";
 import { cn } from "@/lib/utils";
@@ -155,6 +160,98 @@ export function CodeInput({
       className={cn(inputClass, "text-center font-mono text-2xl tracking-[0.5em]")}
       aria-label="Six-digit code"
     />
+  );
+}
+
+/**
+ * Where Clerk sends a session that still has a task to finish (reset a
+ * password, set up 2FA, pick an organization). Such a "pending" session is
+ * signed in for Clerk's API but signed out for the site, so without this page
+ * people were stuck between /account and "You are already logged in".
+ */
+export const TASKS_PATH = "/session-tasks";
+
+export function tasksHref(redirect: string) {
+  return `${TASKS_PATH}?redirect_url=${encodeURIComponent(redirect)}`;
+}
+
+/** The "already logged in" error from Clerk. */
+export function isSessionExists(err: unknown) {
+  return isClerkAPIResponseError(err) && err.errors[0]?.code === "session_exists";
+}
+
+const BOUNCE_KEY = "auth-bounces";
+
+/**
+ * Counts automatic redirects off the log-in page. If the server keeps sending
+ * a signed-in browser back here (its session cookie never arrives), the page
+ * stops redirecting after a few tries instead of looping.
+ */
+function bounced(): boolean {
+  try {
+    const now = Date.now();
+    const recent = (JSON.parse(sessionStorage.getItem(BOUNCE_KEY) ?? "[]") as number[]).filter((t) => now - t < 20_000);
+    recent.push(now);
+    sessionStorage.setItem(BOUNCE_KEY, JSON.stringify(recent));
+    return recent.length > 2;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * For the log-in and sign-up pages: once a session exists, go to `redirect`,
+ * or first to the task page while the session is pending. Returns `go` (call
+ * it after setActive, or on Clerk's "already logged in" error) and `stuck`
+ * (the redirect keeps bouncing back: offer to log out instead).
+ */
+export function useAfterAuth(redirect: string) {
+  const { isSignedIn, sessionId } = useAuth({ treatPendingAsSignedOut: false });
+  const clerk = useClerk();
+  const router = useRouter();
+  const [stuck, setStuck] = useState(false);
+
+  const go = useCallback(() => {
+    if (bounced()) {
+      setStuck(true);
+      return;
+    }
+    const pending = clerk.session?.status === "pending" || !!clerk.session?.currentTask;
+    router.replace(pending ? tasksHref(redirect) : redirect);
+  }, [clerk, redirect, router]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- only sets state when the redirect loops
+    if (isSignedIn) go();
+  }, [isSignedIn, sessionId, go]);
+
+  return { go, stuck };
+}
+
+/** Shown when a signed-in browser keeps landing on the log-in page. */
+export function StuckSession({ redirect }: { redirect: string }) {
+  const { signOut } = useClerk();
+  const [busy, setBusy] = useState(false);
+  return (
+    <div role="alert" className="grid gap-4 rounded-2xl border border-black px-4 py-4 text-sm leading-snug">
+      <p>You are logged in, but this browser could not confirm it. Log out, then log in again.</p>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          try {
+            sessionStorage.removeItem(BOUNCE_KEY);
+          } catch {
+            // storage blocked: nothing to clear
+          }
+          void signOut({ redirectUrl: `/sign-in?redirect_url=${encodeURIComponent(redirect)}` });
+        }}
+        className="min-h-[46px] rounded-full bg-black px-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
+      >
+        {busy ? "Logging out…" : "Log out"}
+      </button>
+    </div>
   );
 }
 
