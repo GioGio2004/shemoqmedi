@@ -98,7 +98,7 @@ export function Wordmark({ className, live = false }: { className?: string; live
       {live ? (
         <NavCrow />
       ) : (
-        <Image src="/brand/crow-wings.png" alt="" width={400} height={394} sizes="40px" loading="eager" className="h-[38px] w-auto" />
+        <Image src="/brand/crow-standing.png" alt="" width={400} height={298} sizes="52px" loading="eager" className="h-[38px] w-auto" />
       )}
       <span
         className={cn(
