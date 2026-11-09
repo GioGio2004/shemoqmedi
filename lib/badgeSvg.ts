@@ -1,5 +1,5 @@
 import type { AwardSlug } from "@/lib/taxonomy";
-import { CROW, GLYPHS, SEAL_ARC, SEAL_WORD, TAG_TITLE, UNITS_PER_EM } from "@/lib/badgeArt";
+import { CROW, CROW_HEIGHT, GLYPHS, SEAL_ARC, SEAL_WORD, TAG_TITLE, UNITS_PER_EM } from "@/lib/badgeArt";
 import {
   SEAL_SIZE,
   SIGNATURE_THEME,
@@ -79,6 +79,12 @@ const SEAL_SMALL: Record<AwardSlug, string> = {
 };
 
 const TRACKING = 0.3; // em, small caps (measured from the artwork)
+
+/** The crow `width` wide at x, its claws just touching the perch line whose top is at `perchTop`. */
+function crowAt(x: number, width: number, perchTop: number) {
+  const s = width / 1000;
+  return `translate(${x} ${Math.round((perchTop + 1.2 - CROW_HEIGHT * s) * 100) / 100}) scale(${s})`;
+}
 const r2 = (v: number) => Math.round(v * 100) / 100;
 
 /**
@@ -116,7 +122,7 @@ function seal({ tier, period, date }: BadgeInput, p: Palette): BadgePart[] {
       part: "crow",
       tag: "path",
       use: "crow",
-      attrs: { fill: p.crow, transform: "translate(134 96.32) scale(0.24)", d: CROW },
+      attrs: { fill: p.crow, transform: crowAt(134, 240, 274), d: CROW },
     },
     { part: "perch", tag: "rect", attrs: { x: 100, y: 274, width: 312, height: 3, fill: p.ink } },
     { part: "small", tag: "text", text: small.line, attrs: { fill: p.ink } },
@@ -145,7 +151,7 @@ function tag({ tier, period, date }: BadgeInput, p: Palette): { width: number; p
         part: "crow",
         tag: "path",
         use: "crow",
-        attrs: { fill: p.crow, transform: "translate(30 18.09) scale(0.084)", d: CROW },
+        attrs: { fill: p.crow, transform: crowAt(30, 84, 80), d: CROW },
       },
       { part: "perch", tag: "rect", attrs: { x: 30, y: 80, width: 84, height: 2, fill: p.ink } },
       { part: "title", tag: "path", attrs: { fill: p.ink, d: title.d } },
@@ -176,7 +182,7 @@ const esc = (s: string) =>
  * badge. Off for people who ask for reduced motion.
  */
 const MOTION_CSS = `
-.p-crow{transform-box:fill-box;transform-origin:62% 100%}
+.p-crow{transform-box:fill-box;transform-origin:55% 100%}
 @media (prefers-reduced-motion:no-preference){
 .p-crow{animation:hop .9s cubic-bezier(.3,0,.3,1) .5s 1,nod 7s ease-in-out 3.5s infinite}
 }

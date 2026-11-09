@@ -290,7 +290,7 @@ html[data-menu-open] .site-header {
   transform-box: view-box;
 }
 .badge-art .badge-crow {
-  transform-origin: 62% 100%; /* its feet */
+  transform-origin: 55% 100%; /* its claws */
 }
 
 @media (prefers-reduced-motion: no-preference) {
