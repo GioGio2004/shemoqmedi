@@ -197,6 +197,10 @@ SPEC = {
     # head to the camera and back), not a feather shake. Starts and ends on
     # the reference pose. Frame 51's tips touch the top edge.
     "stretch": Clip("stretch", "ruffle.mp4", step=2, anchor="feet", loop=False, feather={"top": 24}),
+    # turn.mp4 (Flow): faces right 0-44, turns through a front view (68-72)
+    # to face left by ~100, then turns back. 44-100 is one whole turn-around;
+    # played mirrored it turns the other way.
+    "turn": Clip("turn", "turn.mp4", seq=list(range(44, 101)), anchor="feet", loop=False, beak=False),
     # rest.mp4: settles low 38-105, rests 105-128 (after 128 the head turns to
     # the camera and the beak vanishes). The settle is played backwards to get
     # up again: hold between marks "loop" and "rise", then play on to the end.

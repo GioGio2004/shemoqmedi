@@ -1,0 +1,24 @@
+{
+  "name": "turn",
+  "src": "/crow/nav/turn.webp",
+  "frames": 57,
+  "columns": 19,
+  "frameWidth": 188,
+  "frameHeight": 108,
+  "fps": 24.0,
+  "anchor": {
+    "x": 100,
+    "y": 102
+  },
+  "pixelRatio": 2,
+  "loop": false,
+  "pingpong": false,
+  "reverseAfter": false,
+  "bounds": {
+    "left": -48.1,
+    "top": -49.2,
+    "right": 41.2,
+    "bottom": 0.2
+  },
+  "source": "turn.mp4"
+}

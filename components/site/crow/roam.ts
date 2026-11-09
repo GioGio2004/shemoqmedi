@@ -33,7 +33,7 @@
 import { loadAnimation, type Anim, type AnimName } from "./sprites";
 import { measureWorld } from "./world";
 
-export type RoamState = "PERCH" | "REST" | "STRETCH" | "PECK" | "WALK" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
+export type RoamState = "PERCH" | "REST" | "STRETCH" | "PECK" | "WALK" | "TURN" | "TAKEOFF" | "FLY" | "LAND" | "OFF";
 type Space = "page" | "view";
 
 export type RoamSprites = { idle: Anim; takeoff: Anim } & Partial<Record<AnimName, Anim>>;
@@ -72,6 +72,7 @@ const Z_FLIGHT = "55"; // above the header while flying and at home
 const Z_PERCH = "20"; // sitting on the page: under the header, sticky bars, the menu
 const WALK_PLAY = 1.4; // walk sheet playback speed (the feet still match the ground)
 const WALK_MIN_W = 160; // CSS px: a perch at least this wide is walked along
+const TURN_PLAY = 1.5; // turn-around playback speed
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
@@ -134,6 +135,10 @@ export class CrowRoamer {
   private walkNext = false;
   private walkTo = 0;
   private walkDir: 1 | -1 = 1;
+  /** A turn-around in place: the feet stay at turnFeet; then perch or walk on. */
+  private turnFrom: 1 | -1 = 1;
+  private turnFeet = 0;
+  private turnThen: "perch" | "walk" = "perch";
   private airborne: boolean | null = null;
   /** A "Surprise me" flight: where to go once it's off screen. */
   private surpriseTo: Promise<string | null> | null = null;
@@ -260,6 +265,12 @@ export class CrowRoamer {
 
   private onScroll = () => {
     this.lastScroll = performance.now();
+    // Sitting on the page: check this frame whether a sticky bar now covers it.
+    if (this.running && !this.raf && this.isSitting() && isPage(this.spot)) {
+      clearTimeout(this.timer);
+      this.timer = 0;
+      this.raf = requestAnimationFrame(this.tick);
+    }
   };
 
   private onResize = () => {
@@ -296,7 +307,14 @@ export class CrowRoamer {
   }
 
   private busy() {
-    return !!this.fade || this.state === "TAKEOFF" || this.state === "FLY" || this.state === "LAND" || this.state === "WALK";
+    return (
+      !!this.fade ||
+      this.state === "TAKEOFF" ||
+      this.state === "FLY" ||
+      this.state === "LAND" ||
+      this.state === "WALK" ||
+      this.state === "TURN"
+    );
   }
 
   private schedule() {
@@ -603,6 +621,8 @@ export class CrowRoamer {
     if (this.isSitting() && this.spotMoved(this.spot)) {
       return this.spotVisible(this.spot) && this.moved(this.spot as PageSpot) ? this.leave() : this.vanish();
     }
+    // A sticky bar (or the header) slid over it: up and away, above the bar.
+    if (this.isSitting() && isPage(this.spot) && this.spot.y - window.scrollY - this.crowH < this.ceiling() + 2) return this.leave();
     // Its perch stopped being one (the walkthrough paused, the vote closed): off it goes.
     if (this.isSitting() && this.spot.kind === "card" && !this.spot.el.hasAttribute("data-crow-perch")) return this.leave();
     switch (this.state) {
@@ -667,6 +687,23 @@ export class CrowRoamer {
         this.restFor = this.opts.debug ? 2 : rand(6, 12);
         this.pecks = Math.random() < 0.5 ? 2 : 3;
         this.set(what === "rest" ? "REST" : what === "pickup" ? "PECK" : "STRETCH");
+        break;
+      }
+      case "TURN": {
+        const a = s.turn!;
+        if (this.spot.kind === "home") [this.turnFeet, this.y] = this.homePoint();
+        const k = Math.floor(this.t * a.fps * TURN_PLAY);
+        if (k < a.frames) {
+          this.x = this.turnFeet - this.shift(this.turnFrom);
+          this.show("turn", k, this.turnFrom);
+          break;
+        }
+        // Turned: the same stance, facing the other way.
+        const face: 1 | -1 = this.turnFrom === 1 ? -1 : 1;
+        this.x = this.turnFeet - this.shift(face);
+        this.show("idle", 0, face);
+        if (this.turnThen === "walk") this.set("WALK");
+        else this.toPerch(rand(1.5, 3.5));
         break;
       }
       case "WALK": {
@@ -816,8 +853,9 @@ export class CrowRoamer {
           this.x = ax;
           this.y = ty;
           this.spot = this.target;
-          if (this.spot.kind === "home") {
-            // At home it faces the name (right); a quick blend turns it round.
+          // At home it faces the name (right). Landed facing left: it turns round.
+          const turnHome = this.spot.kind === "home" && this.pose.facing === -1 && !!s.turn;
+          if (this.spot.kind === "home" && !turnHome) {
             [this.x, this.y] = this.homePoint();
             this.show("idle", 0, 1);
           }
@@ -828,6 +866,7 @@ export class CrowRoamer {
           if (this.spot.kind === "home") this.firstHome = false;
           if (perchKind(this.spot)) this.stay = this.opts.debug ? 8 : rand(14, 24);
           this.need("walk");
+          this.need("turn");
           this.walkNext = this.walkable(this.spot);
           if (perchKind(this.spot) === "countdown") this.need("pickup");
           if (isPage(this.spot) && this.spot.el.hasAttribute("data-crow-goto")) {
@@ -835,6 +874,7 @@ export class CrowRoamer {
             this.stay = this.opts.debug ? 8 : rand(30, 60); // it came here on purpose: it stays
           }
           this.toPerch(rand(1.5, 3.5));
+          if (turnHome) this.startTurn(this.homePoint()[0], "perch");
         }
         break;
       }
@@ -901,8 +941,18 @@ export class CrowRoamer {
     if (room(dir) < 40) return false;
     this.walkDir = dir;
     this.walkTo = feet + dir * Math.min(room(dir), rand(90, 220));
-    this.set("WALK");
+    if (dir !== this.pose.facing && this.sprites.turn) this.startTurn(feet, "walk");
+    else this.set("WALK");
     return true;
+  }
+
+  /** Turn round on the spot (feet at `feet`, in the current space), then perch or walk. */
+  private startTurn(feet: number, then: "perch" | "walk") {
+    this.turnFrom = this.pose.facing;
+    this.turnFeet = feet;
+    this.turnThen = then;
+    this.x = feet - this.shift(this.turnFrom);
+    this.set("TURN");
   }
 
   private toPerch(wait: number) {
@@ -933,6 +983,7 @@ export class CrowRoamer {
 
   /** Back from off screen: fly in from the nearer side to a spot in view, or home. */
   private appear() {
+    this.need("turn");
     const goto = this.gotoDone ? null : this.gotoSpot();
     const spots = goto || this.firstArrival ? [] : this.spotsInView();
     this.target = goto ?? (spots.length && Math.random() < 0.75 ? weighted(spots) : { kind: "home" });
@@ -1069,7 +1120,7 @@ export class CrowRoamer {
     // only written when they change, so a sitting crow costs nothing.
     const atHome = this.spot.kind === "home" && this.isSitting();
     const [x, y] = atHome ? this.homePoint() : [this.x, this.y];
-    const sittingOnPage = this.isSitting() && !atHome;
+    const sittingOnPage = (this.isSitting() || this.state === "TURN") && !atHome;
     const ox = x - this.boxW * FEET_X;
     const oy = y - this.boxH * FEET_Y;
     const place = `${this.space}|${sittingOnPage}|${ox.toFixed(1)}|${oy.toFixed(1)}`;

@@ -6,6 +6,7 @@
     "rest": "/crow/nav/rest.json",
     "stretch": "/crow/nav/stretch.json",
     "pickup": "/crow/nav/pickup.json",
-    "walk": "/crow/nav/walk.json"
+    "walk": "/crow/nav/walk.json",
+    "turn": "/crow/nav/turn.json"
   }
 }
