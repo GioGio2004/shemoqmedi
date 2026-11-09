@@ -349,6 +349,13 @@ const pill = (on: boolean) =>
 
 // ── Form ────────────────────────────────────────────────────────────────────
 
+/** The slug from a pasted /sites/<slug> URL, or the text itself. */
+function redesignSlug(raw: string) {
+  const value = raw.trim();
+  const m = value.match(/\/sites\/([^/?#\s]+)/i);
+  return (m ? m[1] : value).toLowerCase();
+}
+
 export function ListingForm() {
   const router = useRouter();
   const { user } = useUser();
@@ -369,6 +376,9 @@ export function ListingForm() {
   const [creditTouched, setCreditTouched] = useState(false);
   const [creditUrl, setCreditUrl] = useState("");
   const [isStartup, setIsStartup] = useState(false);
+  // A significant redesign of a site already on Shemoqmedi: its page URL or slug.
+  const [isRedesign, setIsRedesign] = useState(false);
+  const [redesignOf, setRedesignOf] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [extras, setExtras] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
@@ -457,6 +467,7 @@ export function ListingForm() {
         creditName: data.creditName,
         creditUrl: data.creditUrl || undefined,
         isStartup,
+        redesignOf: isRedesign ? redesignSlug(redesignOf) || undefined : undefined,
         // Express Fast-Track is not open yet; the backend rejects it.
         submissionTier: "standard",
         coverId,
@@ -496,6 +507,24 @@ export function ListingForm() {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://paperweather.studio"
           />
+          <label className="mt-3 flex items-start gap-2.5 text-sm text-black/70">
+            <input type="checkbox" checked={isRedesign} onChange={(e) => setIsRedesign(e.target.checked)} className="mt-1 accent-black" />
+            <span>
+              This site was on Shemoqmedi before and has been significantly redesigned.
+              <span className="block text-xs text-black/55">
+                It comes in as a new entry linked to the old one. Award winners can return 12 months after their last award.
+              </span>
+            </span>
+          </label>
+          {isRedesign && (
+            <input
+              aria-label="The earlier entry's Shemoqmedi page"
+              className={`${input} mt-3`}
+              value={redesignOf}
+              onChange={(e) => setRedesignOf(e.target.value)}
+              placeholder="https://www.shemoqmedi.space/sites/paper-weather"
+            />
+          )}
         </Field>
 
         <Field

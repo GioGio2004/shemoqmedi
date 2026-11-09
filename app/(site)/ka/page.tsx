@@ -7,7 +7,7 @@ import { PillLink } from "@/components/site/ui";
 import { MIN_INDEXABLE } from "@/lib/collections";
 import { getPublicListings } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
-import { LIMITS, VOTING_DAYS } from "@/lib/taxonomy";
+import { AWARD_RULES } from "@/lib/taxonomy";
 
 // The one Georgian page: a hand-written landing page for Georgian searches
 // ("საუკეთესო ქართული საიტები"), listing the sites made in Georgia. The rest
@@ -57,13 +57,23 @@ export const dynamic = "force-static";
 export const revalidate = 300;
 
 const AWARDS = [
-  { name: "დღის საიტი", en: "Site of the Day", rule: "საბოლოო ქულა 8.5 ან მეტი." },
+  {
+    name: "საპატიო მოხსენიება",
+    en: "Honorable Mention",
+    rule: "ყოველი საიტი, რომელიც კვირის ჯგუფში 6.5 ან მეტ ქულას იღებს (ვერცხლის ყვავი).",
+  },
+  {
+    name: "დღის საიტი",
+    en: "Site of the Day",
+    rule: "7.0 ან მეტი ქულის საიტები რიგში დგებიან; ყოველდღე ერთი საიტი იმარჯვებს და მხოლოდ ერთხელ (შავი ყვავი).",
+  },
+  { name: "თვის საიტი", en: "Site of the Month", rule: "თვის დღის საიტებიდან საუკეთესო, ჟიურის ხელახალი შეფასებით (წითელი ყვავი)." },
+  { name: "წლის საიტი", en: "Site of the Year", rule: "წლის თორმეტი თვის საიტიდან საუკეთესო, იანვარში (ოქროს ყვავი)." },
   {
     name: "საუკეთესო სოლო ნამუშევარი",
     en: "Best Solo Creation",
     rule: "8.2 ან მეტი ქულა საიტისთვის, რომელიც ერთმა ადამიანმა შექმნა.",
   },
-  { name: "საპატიო მოხსენიება", en: "Honorable Mention", rule: "საბოლოო ქულა 7.5 ან მეტი." },
 ];
 
 const section = "grid gap-4 border-t border-black/10 py-12 md:grid-cols-12 md:gap-10 md:py-16";
@@ -164,14 +174,14 @@ export default async function GeorgianPage() {
           </h2>
           <div className={prose}>
             <p>
-              ყოველ საიტს ჟიური ხელით ამოწმებს, სანამ ის გამოქვეყნდება. ამის შემდეგ იწყება {VOTING_DAYS}-დღიანი
-              კენჭისყრა: ჟიური და ბეჯის მქონე ავტორები საიტს 1-დან 10-მდე აფასებენ ოთხი კრიტერიუმით:
-              <strong> დიზაინი, მოხმარების სიმარტივე, კრეატიულობა და კოდი</strong>. თუ საიტს{" "}
-              {LIMITS.juryMinEvaluations}-ზე ნაკლები ჟიურის შეფასება აქვს, კენჭისყრა ერთხელ კიდევ{" "}
-              {LIMITS.votingExtensionDays} დღით გრძელდება. საკუთარ საიტს ვერავინ შეაფასებს.
+              ყოველ საიტს ჟიური ხელით ამოწმებს, სანამ ის გამოქვეყნდება. საიტები ყოველკვირეულ ჯგუფებად
+              გროვდება და ჟიური მათ მომდევნო კვირას აფასებს 1-დან 10-მდე ოთხი კრიტერიუმით:
+              <strong> დიზაინი (40%), მოხმარების სიმარტივე (30%), კრეატიულობა (20%) და კონტენტი (10%)</strong>.
+              ჯილდოსთვის საიტს მინიმუმ {AWARD_RULES.minVotes} ჟიურის შეფასება სჭირდება. ჟიურის წევრი საკუთარ ან
+              თავისი კომპანიის საიტს ვერ შეაფასებს.
             </p>
             <p>
-              საბოლოო ქულაში ჟიურის შეფასება 60%-ს შეადგენს, საზოგადოების შეფასება კი 40%-ს. კენჭისყრის დასრულების
+              ჯილდოებს მხოლოდ ჟიური წყვეტს; საზოგადოების შეფასება საიტზე ინფორმაციისთვის ჩანს. კენჭისყრის დასრულების
               შემდეგ საუკეთესო საიტები ჯილდოს იღებენ:
             </p>
             <dl className="grid gap-4">

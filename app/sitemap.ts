@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import type { PublicListing } from "@/convex-helpers-api";
 import { MIN_INDEXABLE, routedCollections } from "@/lib/collections";
 import { SOTD_PATH, sotdWinners } from "@/lib/sotd";
-import { getCreators, getJurorSlugs, getPublicListings, getPublicSlugs } from "@/lib/listings";
+import { getAwardSlugs, getCreators, getJurorSlugs, getPublicListings, getPublicSlugs } from "@/lib/listings";
 import { listingImageUrls } from "@/lib/imageSeo";
 import { absoluteUrl } from "@/lib/site";
 
@@ -12,11 +12,12 @@ export const dynamic = "force-static";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [sites, creators, listings, jurors] = await Promise.all([
+  const [sites, creators, listings, jurors, awards] = await Promise.all([
     getPublicSlugs(),
     getCreators(),
     getPublicListings(),
     getJurorSlugs(),
+    getAwardSlugs(),
   ]);
 
   // PublicListing has no updatedAt; publicSlugs carries it.
@@ -106,6 +107,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(j.updatedAt),
       changeFrequency: "weekly" as const,
       priority: 0.4,
+    })),
+    // One page per award (badges link here).
+    ...awards.map((a) => ({
+      url: absoluteUrl(`/awards/${a.slug}`),
+      lastModified: new Date(a.createdAt),
+      changeFrequency: "yearly" as const,
+      priority: 0.5,
     })),
   ];
 }

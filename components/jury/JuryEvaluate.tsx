@@ -6,17 +6,18 @@ import { ClerkProvider } from "@/components/clerk-provider";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { api, type Pillars } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
-import { LIMITS, PILLARS } from "@/lib/taxonomy";
+import { LIMITS, PILLARS, weightedScore } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
 import { JurorAvatar } from "./JurorAvatar";
 
-const START: Pillars = { design: 8, usability: 8, creativity: 8, code: 8 };
+const START: Pillars = { design: 8, usability: 8, creativity: 8, content: 8 };
 
 /** The floating Evaluate button and panel, for jury members only. */
 function Evaluate({ slug, title }: { slug: string; title: string }) {
   const me = useQuery(api.jury.me, {});
   const state = useQuery(api.jury.myEvaluation, me ? { slug } : "skip");
   const save = useMutation(api.jury.evaluate);
+  const declare = useMutation(api.conflicts.declare);
 
   const [open, setOpen] = useState(false);
   const [scores, setScores] = useState<Pillars>(START);
@@ -53,7 +54,7 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
 
   if (!me) return null;
 
-  const average = (scores.design + scores.usability + scores.creativity + scores.code) / 4;
+  const average = weightedScore(scores);
   const length = comment.trim().length;
   const blocked = state?.blocked ?? null;
   const hasSaved = Boolean(state?.evaluation);
@@ -177,6 +178,28 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
                   voting closes.
                 </p>
               )}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  const reason = prompt(
+                    "Did you build this site, or does it belong to your company? Say how (it stays private). Your score for it will be removed.",
+                  );
+                  if (reason === null) return;
+                  setBusy(true);
+                  setError(null);
+                  try {
+                    await declare({ slug, reason: reason.trim() || "I built this site or it belongs to my company." });
+                  } catch (err) {
+                    setError(friendlyError(err));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                className="justify-self-start text-xs text-black/55 underline underline-offset-4 hover:text-black"
+              >
+                I have a conflict of interest with this site
+              </button>
             </form>
           )}
         </div>

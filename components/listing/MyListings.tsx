@@ -13,7 +13,6 @@ import {
 import { api, type ListingStatus, type OwnListing } from "@/convex-helpers-api";
 import { AwardBadge, ScoreBadge } from "@/components/listing/Badges";
 import { Countdown } from "@/components/listing/Countdown";
-import { badgeHref, earnedBadge } from "@/lib/badges";
 
 const STATUS: Record<ListingStatus, string> = {
   pending: "In review",
@@ -162,12 +161,9 @@ function List() {
                   View ↗
                 </Link>
               )}
-              {PUBLIC.has(l.status) && (
-                <Link
-                  href={badgeHref(l.slug, earnedBadge(l))}
-                  className="font-medium underline underline-offset-4"
-                >
-                  Get badge
+              {PUBLIC.has(l.status) && l.awards.length > 0 && (
+                <Link href="/account/badges" className="font-medium underline underline-offset-4">
+                  Get badges
                 </Link>
               )}
               <button

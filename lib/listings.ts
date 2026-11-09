@@ -11,6 +11,7 @@ import {
   type JuryReview,
   type PublicCreator,
   type PublicListing,
+  type PublicAward,
 } from "@/convex-helpers-api";
 import { allCollections } from "@/lib/collections";
 
@@ -124,4 +125,28 @@ export function latestBsc(listings: PublicListing[]) {
     listings.filter((l) => l.awards.includes("BSC")).sort((a, b) => (b.awardedAt ?? 0) - (a.awardedAt ?? 0))[0] ??
     null
   );
+}
+
+/** An active award (/awards/<slug>); null when revoked or unknown. */
+export const getAward = cache((slug: string): Promise<PublicAward | null> =>
+  safe("awards.getBySlug", () => fetchQuery(api.awards.getBySlug, { slug }), null),
+);
+
+/**
+ * A site's award history for its page. Like the jury reviews it never
+ * throws: a failed read renders the page without the history.
+ */
+export const getListingAwards = cache(async (slug: string): Promise<PublicAward[]> => {
+  try {
+    return await fetchQuery(api.awards.forListing, { slug });
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("awards.forListing failed:", error);
+    return [];
+  }
+});
+
+/** Award slugs for the sitemap and static params. */
+export function getAwardSlugs(): Promise<{ slug: string; createdAt: number }[]> {
+  return safe("awards.publicSlugs", () => fetchQuery(api.awards.publicSlugs, {}), []);
 }

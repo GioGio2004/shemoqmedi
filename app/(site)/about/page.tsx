@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
-import { LIMITS, VOTING_DAYS } from "@/lib/taxonomy";
 
 const title = "About Shemoqmedi: Website Awards Made in Georgia";
 const description =
@@ -46,13 +45,12 @@ const sections: InfoSection[] = [
           appears. Sites that are unfinished, broken or not original are declined with a short note explaining why.
         </p>
         <p>
-          Approved sites go live with a {VOTING_DAYS}-day voting window, extended once by{" "}
-          {LIMITS.votingExtensionDays} days if fewer than {LIMITS.juryMinEvaluations} jurors have scored it. During that
-          time the jury gives its score and creators with a Shemoqmedi badge score the site on four pillars: design,
-          usability, creativity and code. Nobody can score their own site. When the window
-          closes, the best sites win <Link href="/site-of-the-day">Site of the Day</Link>,{" "}
-          <Link href="/collections/bsc">Best Solo Creation</Link> or{" "}
-          <Link href="/collections/hm">Honorable Mention</Link>. The details are on{" "}
+          Approved sites go live in weekly batches, and the jury scores each batch the following week on four weighted
+          pillars: design, usability, creativity and content. Jurors never score their own sites or their
+          company&apos;s. The best sites win <Link href="/collections/hm">Honorable Mention</Link> and{" "}
+          <Link href="/site-of-the-day">Site of the Day</Link> (one a day), then{" "}
+          <Link href="/collections/sotm">Site of the Month</Link> and{" "}
+          <Link href="/collections/soty">Site of the Year</Link>. The details are on{" "}
           <Link href="/how-we-score">How we score</Link>.
         </p>
       </>

@@ -10,7 +10,7 @@ import type { AwardSlug, CreatorTier, JuryCategory, RegionSlug } from "@/lib/tax
 import type { RegisterArgs, UploadAuth } from "@/lib/imagekitUpload";
 import type { RegisterVideoArgs } from "@/lib/videoUpload";
 
-export type Pillars = { design: number; usability: number; creativity: number; code: number };
+export type Pillars = { design: number; usability: number; creativity: number; content: number };
 
 export type ListingStatus = "pending" | "in_voting" | "awarded" | "archived" | "rejected";
 export type PublicStatus = "in_voting" | "awarded" | "archived";
@@ -39,7 +39,7 @@ export type PublicListing = {
   finalScore: number | null; // 60% jury + 40% community
   publishedAt: number;
   votingEndsAt: number;
-  /** Voting was extended a week because fewer than 5 jurors had evaluated it after 7 days. Optional during rollout. */
+  /** Legacy (before weekly batches): voting was extended a week for the jury. */
   votingExtended?: boolean;
   awardedAt: number | null;
   /**
@@ -48,6 +48,12 @@ export type PublicListing = {
    * scheduled for that day. Optional until the backend with it is deployed.
    */
   sotdDay?: string | null;
+  /** Jury votes in the score; awards need the configured minimum. Optional until the backend with it is deployed. */
+  juryVotes?: number;
+  /** Built by the Shemoqmedi team: never eligible for awards. */
+  byTeam?: boolean;
+  /** A significant redesign of the listing with this slug. */
+  redesignOf?: string | null;
   isClaimed: boolean;
   /** Shown in the Startups collection and filter. */
   isStartup: boolean;
@@ -87,7 +93,8 @@ export type PublicCreator = {
   links?: string[];
   bio: string | null;
   isClaimed: boolean;
-  awards: { SOTD: number; BSC: number; HM: number };
+  /** SOTY and SOTM are optional until the backend with them is deployed. */
+  awards: { SOTY?: number; SOTM?: number; SOTD: number; BSC: number; HM: number };
   nominations: number;
 };
 
@@ -179,6 +186,41 @@ export type JurorProfileArgs = {
   bio?: string;
   experience?: JurorExperience[]; // [] clears; absent keeps
   work?: JurorWork[]; // [] clears; absent keeps
+  interests?: string[]; // categories for the jury digest; [] clears; absent keeps
+};
+
+/** One award (tier and the day, month or year it was won for). */
+export type PublicAward = {
+  slug: string; // /awards/<slug>, badge /badge/<slug>
+  tier: AwardSlug;
+  name: string;
+  period: string; // SOTD "2026-11-12", SOTM "2026-11", SOTY "2026", HM/BSC the batch week
+  date: string; // Tbilisi day it was announced
+  score: number | null;
+  listing: {
+    slug: string;
+    title: string;
+    url: string;
+    creditName: string;
+    creatorSlug: string | null;
+    coverUrl: string | null;
+  };
+};
+
+export type RoundCard = {
+  id: string;
+  kind: "SOTM" | "SOTY";
+  period: string;
+  closesAt: number;
+  candidates: {
+    slug: string;
+    title: string;
+    url: string;
+    creditName: string;
+    coverUrl: string | null;
+    blocked: string | null; // conflict of interest
+    myScores: Pillars | null;
+  }[];
 };
 
 export type ConvexUser = {
@@ -213,6 +255,8 @@ export type SubmitArgs = {
   creditUrl?: string;
   submissionTier: "standard" | "express";
   isStartup?: boolean;
+  /** Slug of the earlier listing when this is a significant redesign of a site already in the showcase. */
+  redesignOf?: string;
   coverId: MediaId;
   galleryIds?: MediaId[];
   videoId?: MediaId;
@@ -271,7 +315,7 @@ export type PublicApiType = {
     reviewsForListing: Q<{ slug: string }, JuryReview[]>;
     /** The signed-in user's jury profile, or null if they are not on the jury. */
     /** hasPresetPhoto: the photo prepared with the invitation is still the one shown. */
-    me: Q<Empty, (JurorPublic & { hasPresetPhoto: boolean }) | null>;
+    me: Q<Empty, (JurorPublic & { hasPresetPhoto: boolean; interests?: string[] }) | null>;
     /** The juror changed/removed their photo: drop the invitation's preset photo. */
     dropPresetPhoto: M<Empty, null>;
     myEvaluation: Q<
@@ -294,6 +338,33 @@ export type PublicApiType = {
     /** Anyone can preview a link; claiming needs a signed-in user. */
     resolve: Q<{ token: string }, ClaimResolution>;
     claim: M<{ token: string }, { kind: "juror" | "bundle" | "listing"; redirect: string }>;
+  };
+  awards: {
+    /** An active award by its slug (/awards/<slug> and the badge image); null when revoked or unknown. */
+    getBySlug: Q<{ slug: string }, PublicAward | null>;
+    /** A site's award history, newest first. */
+    forListing: Q<{ slug: string }, PublicAward[]>;
+    /** Every active award of one tier, newest first. */
+    listPublic: Q<{ tier: AwardSlug; limit?: number }, PublicAward[]>;
+    publicSlugs: Q<Empty, { slug: string; createdAt: number }[]>;
+    /** The signed-in owner's awards (badge embed codes). */
+    mine: Q<Empty, PublicAward[]>;
+  };
+  rounds: {
+    /** Open Site of the Month / Year rounds the signed-in juror can score; null for non-jurors. */
+    open: Q<Empty, RoundCard[] | null>;
+    vote: M<{ roundId: string; slug: string; scores: Pillars }, null>;
+  };
+  conflicts: {
+    /** A juror declares they built the site or it belongs to their company. */
+    declare: M<{ slug: string; reason: string }, null>;
+  };
+  digest: {
+    /** Sites in voting that no juror follows by category (visible to every juror); null for non-jurors. */
+    generalQueue: Q<
+      Empty,
+      { slug: string; title: string; creditName: string; coverUrl: string | null; votingEndsAt: number }[] | null
+    >;
   };
   claims: {
     submit: M<

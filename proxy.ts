@@ -10,6 +10,7 @@ const isProtectedRoute = createRouteMatcher([
   "/submit(.*)",
   "/vote(.*)",
   "/jury/profile(.*)",
+  "/jury/rounds(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -45,6 +46,7 @@ export const config = {
     "/vote/:path*",
     "/claim/:path*",
     "/jury/profile/:path*",
+    "/jury/rounds/:path*",
     "/sign-in/:path*",
     "/sign-up/:path*",
     "/sso-callback/:path*",

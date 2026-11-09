@@ -1,28 +1,18 @@
 import type { JuryReview, PublicListing } from "@/convex-helpers-api";
 import { JuryReviews } from "@/components/jury/JuryReviews";
-import { LIMITS, PILLARS, VOTING_DAYS } from "@/lib/taxonomy";
+import { AWARD_RULES, PILLARS } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
 
-// Same weighting the backend uses for the final score (convex/lib/scoring.ts
-// in the admin repo): jury 60% + community 40%, or whichever one exists.
-const JURY_WEIGHT = 0.6;
-const COMMUNITY_WEIGHT = 0.4;
-
-function combine(jury: number | null, community: number | null) {
-  if (jury !== null && community !== null) return jury * JURY_WEIGHT + community * COMMUNITY_WEIGHT;
-  return jury ?? community;
-}
-
 /**
- * Final score header, then the four pillars as translucent blue squares that
- * float together. Each square shows the pillar's combined score with the
- * jury and community numbers under it. Below them, each juror's review.
+ * Final score header (the jury's weighted score; the community score is shown
+ * beside it for interest), then the four pillars as translucent blue squares
+ * that float together, with each pillar's weight. Below them, each juror's review.
  */
 export function ScoreBreakdown({ listing, reviews = [] }: { listing: PublicListing; reviews?: JuryReview[] }) {
   const tiles = PILLARS.map((p) => {
     const jury = listing.editorialScores?.[p.key] ?? null;
     const community = listing.communityScores?.[p.key] ?? null;
-    return { ...p, jury, community, score: combine(jury, community) };
+    return { ...p, jury, community, score: jury };
   });
 
   return (
@@ -36,11 +26,11 @@ export function ScoreBreakdown({ listing, reviews = [] }: { listing: PublicListi
           </p>
         </div>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[11px] tracking-[0.06em] uppercase">
-          <dt className="text-black/55">Jury · 60%</dt>
-          <dd className="text-right tabular-nums">{formatScore(listing.editorialAverage)}</dd>
-          <dt className="text-black/55">Community · 40%</dt>
+          <dt className="text-black/55">Jury votes</dt>
+          <dd className="text-right tabular-nums">{listing.juryVotes ?? "—"}</dd>
+          <dt className="text-black/55">Community score</dt>
           <dd className="text-right tabular-nums">{formatScore(listing.communityAverage)}</dd>
-          <dt className="text-black/55">Votes</dt>
+          <dt className="text-black/55">Community votes</dt>
           <dd className="text-right tabular-nums">{listing.communityVotesCount}</dd>
         </dl>
       </div>
@@ -54,7 +44,7 @@ export function ScoreBreakdown({ listing, reviews = [] }: { listing: PublicListi
           >
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-[11px] font-semibold tracking-[0.08em] uppercase">{tile.name}</span>
-              <span className="font-mono text-[10px] text-white/60">0{i + 1}</span>
+              <span className="font-mono text-[10px] text-white/60">{Math.round(tile.weight * 100)}%</span>
             </div>
 
             <div>
@@ -88,8 +78,8 @@ export function ScoreBreakdown({ listing, reviews = [] }: { listing: PublicListi
 
       {listing.finalScore === null && (
         <p className="mt-6 text-sm text-black/55">
-          Not scored yet. The jury and the community score every nominee during its {VOTING_DAYS}-day window,
-          extended to {VOTING_DAYS + LIMITS.votingExtensionDays} days if the jury needs more time.
+          Not scored yet. The jury scores each weekly batch during the following week; a site needs{" "}
+          {AWARD_RULES.minVotes} jury votes to be eligible for awards.
         </p>
       )}
 

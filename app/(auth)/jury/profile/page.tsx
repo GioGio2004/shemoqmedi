@@ -34,6 +34,9 @@ export default async function JuryProfilePage({ searchParams }: { searchParams: 
                   Sites in voting
                 </PillLink>
               )}
+              <PillLink href="/jury/rounds" variant="outline">
+                Month &amp; year rounds
+              </PillLink>
             </div>
           }
         />

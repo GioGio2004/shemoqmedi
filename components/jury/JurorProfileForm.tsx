@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api, type JurorExperience, type JurorProfileArgs, type JurorWork } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
 import { isImageKit } from "@/lib/imageLoader";
-import { LIMITS } from "@/lib/taxonomy";
+import { CATEGORIES, CATEGORY_GROUPS, LIMITS } from "@/lib/taxonomy";
 import { ArrowIcon } from "@/components/site/ui";
 import { JurorAvatar } from "./JurorAvatar";
 import { JuryCard } from "./JuryCard";
@@ -174,6 +174,44 @@ function PhotoField({ current, preset, adopt }: { current: string | null; preset
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * Categories the juror follows: their daily digest lists new sites in these.
+ * Sites in categories no juror follows go to the general queue, which every
+ * juror sees.
+ */
+function InterestsField({ value, onChange }: { value: string[]; onChange: (value: string[]) => void }) {
+  const toggle = (slug: string) => onChange(value.includes(slug) ? value.filter((s) => s !== slug) : [...value, slug]);
+  return (
+    <fieldset className="grid gap-4">
+      <legend className={label}>Categories you follow</legend>
+      <p className="-mt-2 text-xs text-black/55">
+        Your daily email lists new sites in these, plus the general queue (sites no juror follows yet).
+      </p>
+      {CATEGORY_GROUPS.map((group) => (
+        <div key={group.name} className="grid gap-2">
+          <p className="text-xs font-medium text-black/55">{group.name}</p>
+          <div className="flex flex-wrap gap-2">
+            {group.slugs.map((slug) => {
+              const on = value.includes(slug);
+              return (
+                <button
+                  key={slug}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggle(slug)}
+                  className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${on ? "border-black bg-black text-white" : "border-black/14 hover:border-black"}`}
+                >
+                  {CATEGORIES.find((c) => c.slug === slug)?.name ?? slug}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </fieldset>
   );
 }
 
@@ -390,6 +428,7 @@ function ProfileFields({
         // Always sent: [] clears the section.
         experience,
         work,
+        ...(form.interests !== undefined ? { interests: form.interests } : {}),
       });
       setSaved(true);
     } catch (err) {
@@ -455,6 +494,15 @@ function ProfileFields({
       </label>
       <ExperienceEditor rows={form.experience ?? []} onChange={setExperience} />
       <WorkEditor rows={form.work ?? []} onChange={setWork} />
+      {form.interests !== undefined && (
+        <InterestsField
+          value={form.interests}
+          onChange={(interests) => {
+            setSaved(false);
+            setForm((f) => ({ ...f, interests }));
+          }}
+        />
+      )}
       {error && (
         <p role="alert" className="text-sm font-medium">
           {error}
@@ -501,6 +549,7 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
         bio: me.bio ?? undefined,
         experience: me.experience ?? [],
         work: me.work ?? [],
+        interests: me.interests ?? [],
       }}
       photo={{ current: me.imageUrl, preset: me.hasPresetPhoto, adopt: claimed }}
       submitLabel="Save profile"

@@ -10,18 +10,18 @@ import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ScreenshotGallery } from "@/components/listing/ScreenshotGallery";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
-import { getJuryReviews, getListing, getPublicSlugs, withRef } from "@/lib/listings";
+import { getJuryReviews, getListing, getListingAwards, getPublicSlugs, withRef } from "@/lib/listings";
 import { outboundRel } from "@/lib/ref";
 import { JuryLauncher } from "@/components/jury/JuryLauncher";
 import { resolveListingSlug } from "@/lib/slugRedirect";
 import { categoryName, categoryPhrase, collectionHref, regionName, technologySlug } from "@/lib/collections";
-import { formatDay, scheduledFor, wonOn } from "@/lib/sotd";
+import { formatDay, wonOn } from "@/lib/sotd";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { AWARDS, listingCategories } from "@/lib/taxonomy";
 import { listingImageUrls, screenshotCaption } from "@/lib/imageSeo";
-import { badgeHref, earnedBadge } from "@/lib/badges";
+import { badgeLabel } from "@/lib/badgeSvg";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -292,15 +292,11 @@ function buildJsonLd(listing: PublicListing, meta: { title: string; description:
   };
 }
 
-const BADGE_NAMES = { sotd: "Site of the Day", bsc: "Best Solo Creation", hm: "Honorable Mention", nominee: "Official Nominee" };
-const badgeName = (listing: PublicListing) => BADGE_NAMES[earnedBadge(listing)];
 
 /** "Voting closed" line for listings outside their window. */
 function closedLabel(listing: PublicListing) {
   const sotd = wonOn(listing);
   if (sotd) return `Site of the Day ${formatDay(sotd)}`;
-  const next = scheduledFor(listing);
-  if (next) return `Site of the Day on ${formatDay(next)}`;
   if (listing.status === "awarded" && listing.awardedAt) {
     return `Awarded ${formatDate(listing.awardedAt)}`;
   }
@@ -319,7 +315,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
   const liveUrl = withRef(listing.url);
   const rel = outboundRel(listing);
-  const juryReviews = await getJuryReviews(listing.slug);
+  const [juryReviews, awardHistory] = await Promise.all([getJuryReviews(listing.slug), getListingAwards(listing.slug)]);
   const categories = listingCategories(listing);
   const inVoting = listing.status === "in_voting";
   const jsonLd = buildJsonLd(listing, {
@@ -388,9 +384,16 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
               <span className={monoPill}>{closedLabel(listing)}</span>
             )}
           </li>
-          {inVoting && listing.votingExtended && (
+          {listing.byTeam && (
             <li>
-              <span className={monoPill}>Extended a week for the jury</span>
+              <span className={monoPill}>By the Shemoqmedi team</span>
+            </li>
+          )}
+          {listing.redesignOf && (
+            <li>
+              <Link href={`/sites/${listing.redesignOf}`} className={`${pill} transition-colors hover:border-black`}>
+                Redesign of an earlier entry
+              </Link>
             </li>
           )}
         </ul>
@@ -525,17 +528,27 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
               </div>
             )}
 
-            {listing.isClaimed && (
+            {awardHistory.length > 0 && (
               <div className="rounded-3xl border border-black/10 p-6 md:p-8">
-                <p className="eyebrow">For the creator</p>
-                <p className="mt-3 text-base leading-relaxed font-medium tracking-[-0.01em]">
-                  Made {listing.title}? Put your {badgeName(listing)} badge on your site. It links back to these scores.
-                </p>
-                <div className="mt-6">
-                  <PillLink href={badgeHref(listing.slug, earnedBadge(listing))} variant="outline">
-                    Get your badge
-                  </PillLink>
-                </div>
+                <p className="eyebrow">Award history</p>
+                <ol className="mt-4 grid gap-3">
+                  {awardHistory.map((a) => (
+                    <li key={a.slug}>
+                      <Link href={`/awards/${a.slug}`} className="group flex items-center gap-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- the award's own SVG badge */}
+                        <img src={`/badge/${a.slug}?theme=light`} alt="" width={150} height={44} className="shrink-0" />
+                        <span className="text-sm group-hover:underline group-hover:underline-offset-4">
+                          {badgeLabel(a.tier, a.period, a.date)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+                {listing.isClaimed && (
+                  <p className="mt-5 text-xs leading-relaxed text-black/55">
+                    Made {listing.title}? Its badges are on <Link href="/account/badges" className="underline underline-offset-4">your account</Link>.
+                  </p>
+                )}
               </div>
             )}
 

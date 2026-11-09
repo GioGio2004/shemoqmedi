@@ -103,18 +103,42 @@ export const CREATOR_TIERS = [
   { slug: "agency", name: "Agency / team", badge: "Agency" },
 ] as const;
 
+/**
+ * Highest first (mirrors the backend). Tiers: Site of the Year > Site of the
+ * Month > Site of the Day > Honorable Mention; Best Solo Creation is a side
+ * award for solo makers. `color` is the crow on the tier's badge.
+ */
 export const AWARDS = [
-  { slug: "SOTD", name: "Site of the Day", short: "SOTD" },
-  { slug: "BSC", name: "Best Solo Creation", short: "BSC" },
-  { slug: "HM", name: "Honorable Mention", short: "HM" },
+  { slug: "SOTY", name: "Site of the Year", short: "SOTY", color: "#B8902B", crow: "gold" },
+  { slug: "SOTM", name: "Site of the Month", short: "SOTM", color: "#D22B20", crow: "red" },
+  { slug: "SOTD", name: "Site of the Day", short: "SOTD", color: "#000000", crow: "black" },
+  { slug: "BSC", name: "Best Solo Creation", short: "BSC", color: "#000000", crow: "black" },
+  { slug: "HM", name: "Honorable Mention", short: "HM", color: "#8E9196", crow: "silver" },
 ] as const;
 
+/** Jury pillars and their weight in the final score (mirrors the backend). */
 export const PILLARS = [
-  { key: "design", name: "Design" },
-  { key: "usability", name: "Usability" },
-  { key: "creativity", name: "Creativity" },
-  { key: "code", name: "Code" },
+  { key: "design", name: "Design", weight: 0.4 },
+  { key: "usability", name: "Usability", weight: 0.3 },
+  { key: "creativity", name: "Creativity", weight: 0.2 },
+  { key: "content", name: "Content", weight: 0.1 },
 ] as const;
+
+/** A vote's weighted score: Design 40% + Usability 30% + Creativity 20% + Content 10%. */
+export function weightedScore(scores: Record<(typeof PILLARS)[number]["key"], number>) {
+  return PILLARS.reduce((sum, p) => sum + scores[p.key] * p.weight, 0);
+}
+
+/** The award rules shown on the site (defaults of the backend's award settings). */
+export const AWARD_RULES = {
+  minVotes: 3,
+  honorableMentionMin: 6.5,
+  sotdMin: 7.0,
+  bscMin: 8.2,
+  monthlyRoundDays: 5,
+  yearlyRoundDays: 10,
+  resubmitMonths: 12,
+} as const;
 
 /** Jury panels (mirrors the backend's JURY_CATEGORIES). */
 export const JURY_CATEGORIES = [
@@ -156,9 +180,6 @@ export const LIMITS = {
   technologies: 6,
   /** Categories per listing (the first is the primary one). */
   categories: 3,
-  /** Jury evaluations a site should get; with fewer after 7 days voting is extended once by 7 days. */
-  juryMinEvaluations: 5,
-  votingExtensionDays: 7,
   /** Entries in a juror's Experience and Work sections. */
   juryExperience: 8,
   juryWork: 8,

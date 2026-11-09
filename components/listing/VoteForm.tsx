@@ -5,11 +5,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Authenticated, AuthLoading, Unauthenticated, useMutation, useQuery } from "convex/react";
 import { api, type Pillars } from "@/convex-helpers-api";
-import { PILLARS, type PillarKey } from "@/lib/taxonomy";
+import { PILLARS, type PillarKey, weightedScore } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
 import { ArrowIcon } from "@/components/site/ui";
 
-const DEFAULT_SCORES: Pillars = { design: 7, usability: 7, creativity: 7, code: 7 };
+const DEFAULT_SCORES: Pillars = { design: 7, usability: 7, creativity: 7, content: 7 };
 
 const panel = "rounded-3xl border border-black/10 p-6 md:p-8";
 const mono = "font-mono text-[11px] tracking-[0.06em] uppercase tabular-nums";
@@ -34,8 +34,9 @@ function withDrafts(scores: Pillars, drafts: Partial<Record<PillarKey, string>>)
   return out;
 }
 
+/** Weighted like the jury's score: Design 40%, Usability 30%, Creativity 20%, Content 10%. */
 function average(scores: Pillars) {
-  return (scores.design + scores.usability + scores.creativity + scores.code) / 4;
+  return weightedScore(scores);
 }
 
 
@@ -289,13 +290,12 @@ function NotEligible({
   if (kind === "badge") {
     return (
       <div className={panel}>
-        <p className="eyebrow">Badge holders vote</p>
+        <p className="eyebrow">Listed creators vote</p>
         <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
-          Voting is open to creators with a Shemoqmedi badge.
+          Community voting is open to creators with a site listed here.
         </p>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-black/60">
-          Get one by having a site of your own listed here: an Official Nominee badge or any award
-          counts.
+          It opens once a site of your own is listed here, with or without an award.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
           <Link

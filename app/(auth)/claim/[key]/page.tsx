@@ -106,7 +106,7 @@ export default async function ClaimPage({
           lede={
             isCreator
               ? "Verify that this creator profile is yours to manage your credits and listings."
-              : "Verify your profile, add team credits, and unlock your official nominee badge. The same form can be used to request removal of a listing."
+              : "Verify your profile, add team credits, and get the badges of any awards it wins. The same form can be used to request removal of a listing."
           }
           action={
             <PillLink href={target.href} variant="outline">

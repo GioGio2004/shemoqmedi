@@ -1,14 +1,14 @@
 import type { PublicListing } from "@/convex-helpers-api";
 
-// Site of the Day: one site a day (UTC calendar days), never the same one
-// twice. The backend gives each winner its day (`sotdDay`) and adds "SOTD"
-// to its awards when the day comes; until then the site is scheduled.
+// Site of the Day: one site a day (Tbilisi calendar days, UTC+4 all year),
+// never the same one twice. The backend announces each day's winner from the
+// queue at the announce time; `sotdDay` is the day a site won.
 
 export const SOTD_PATH = "/site-of-the-day";
 
-/** Today as a UTC calendar day, "2026-11-09". */
+/** Today in Tbilisi (UTC+4, no daylight saving), "2026-11-09". */
 export function utcToday(now = Date.now()) {
-  return new Date(now).toISOString().slice(0, 10);
+  return new Date(now + 4 * 3_600_000).toISOString().slice(0, 10);
 }
 
 /** "2026-11-09" -> "9 November 2026". */

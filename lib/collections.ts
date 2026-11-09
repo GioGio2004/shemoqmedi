@@ -5,8 +5,6 @@ import {
   CREATOR_TIERS,
   REGIONS,
   TECHNOLOGIES,
-  LIMITS,
-  VOTING_DAYS,
   listingCategories,
 } from "@/lib/taxonomy";
 
@@ -143,9 +141,11 @@ function build(): Collection[] {
     });
   }
   const AWARD_INTRO: Record<(typeof AWARDS)[number]["slug"], string> = {
-    SOTD: "One website a day: the best scored after their jury and community voting window.",
+    SOTY: "The best website of each year, chosen by the jury from the twelve Sites of the Month.",
+    SOTM: "The best website of each month, chosen by the jury from that month's Sites of the Day.",
+    SOTD: "One website a day, from the jury's best-scored sites. Never the same site twice.",
     BSC: "The finest websites built by one person, without an agency budget.",
-    HM: "Websites that came close to Site of the Day after their voting window.",
+    HM: "Websites the jury scored 6.50 or more in their weekly batch.",
   };
   for (const a of AWARDS) {
     out.push({
@@ -158,9 +158,9 @@ function build(): Collection[] {
       description:
         a.slug === "BSC"
           ? "Best Solo Creation: the finest websites built by one person, without an agency budget."
-          : `Every ${a.name} winner on Shemoqmedi, with jury and community scores for ${PILLARS_LINE}.`,
+          : `Every ${a.name} winner on Shemoqmedi, with the jury's scores for ${PILLARS_LINE}.`,
       summarize: (n, list) =>
-        `${n} ${a.name} ${n === 1 ? "winner" : "winners"}: ${list}. With jury and community scores for ${PILLARS_LINE}.`,
+        `${n} ${a.name} ${n === 1 ? "winner" : "winners"}: ${list}. With the jury's scores for ${PILLARS_LINE}.`,
       match: (l) => l.awards.includes(a.slug),
     });
   }
@@ -169,9 +169,9 @@ function build(): Collection[] {
     kind: "status",
     name: "Nominees",
     heading: "This week's nominees",
-    intro: `Websites in voting right now: ${VOTING_DAYS} days, extended to ${VOTING_DAYS + LIMITS.votingExtensionDays} if the jury needs more time. Badge holders score them.`,
+    intro: "Websites in voting right now. Each weekly batch is scored by the jury the week after it is approved; badge holders can vote too.",
     title: `Live Nominees: Vote on This Week's Best Websites (${year()})`,
-    description: `Websites in voting right now: ${VOTING_DAYS} days, extended to ${VOTING_DAYS + LIMITS.votingExtensionDays} if the jury needs more time. Badge holders score them.`,
+    description: "Websites in voting right now. Each weekly batch is scored by the jury the week after it is approved; badge holders can vote too.",
     summarize: null, // changes every week; the fixed line stays accurate
     match: (l) => l.status === "in_voting",
   });
