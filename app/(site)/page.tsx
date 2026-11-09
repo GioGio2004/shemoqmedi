@@ -66,7 +66,7 @@ export default async function Home() {
         "@id": `${SITE_URL}/#organization`,
         name: SITE_NAME,
         url: `${SITE_URL}/`,
-        logo: { "@type": "ImageObject", url: absoluteUrl("/brand/crow.png"), width: 179, height: 200 },
+        logo: { "@type": "ImageObject", url: absoluteUrl("/brand/crow-wings.png"), width: 400, height: 394 },
       },
       {
         "@type": "WebSite",

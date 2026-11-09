@@ -95,15 +95,15 @@ export function NavCrow() {
       ref={slot}
       className="nav-crow relative block h-[32px] w-[50px] shrink-0 min-[360px]:h-[44px] min-[360px]:w-[68px] motion-reduce:w-[40px]"
     >
-      {/* The still mark, where the live crow's head will be. */}
+      {/* The still mark (the crow with its wings raised) until the live crow arrives. */}
       <Image
-        src="/brand/crow.png"
+        src="/brand/crow-wings.png"
         alt=""
-        width={34}
-        height={38}
-        sizes="34px"
+        width={400}
+        height={394}
+        sizes="44px"
         loading="eager"
-        className="absolute top-0 right-[3px] h-auto w-[34px] transition-opacity duration-300 [[data-live=true]_&]:opacity-0"
+        className="absolute bottom-0 left-1/2 h-full w-auto -translate-x-1/2 transition-opacity duration-300 [[data-live=true]_&]:opacity-0"
       />
     </span>
   );
