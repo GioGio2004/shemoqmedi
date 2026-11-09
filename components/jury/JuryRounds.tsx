@@ -6,14 +6,14 @@ import { useMutation, useQuery } from "convex/react";
 import { api, type Pillars, type RoundCard } from "@/convex-helpers-api";
 import { MediaImage as Image } from "@/components/site/MediaImage";
 import { friendlyError } from "@/lib/errors";
-import { PILLARS, weightedScore } from "@/lib/taxonomy";
+import { PILLARS, toPillars, weightedScore } from "@/lib/taxonomy";
 
 const START: Pillars = { design: 8, usability: 8, creativity: 8, content: 8 };
 const ROUND_NAME = { SOTM: "Site of the Month", SOTY: "Site of the Year" } as const;
 
 function Candidate({ roundId, c }: { roundId: string; c: RoundCard["candidates"][number] }) {
   const vote = useMutation(api.rounds.vote);
-  const [scores, setScores] = useState<Pillars>(c.myScores ?? START);
+  const [scores, setScores] = useState<Pillars>(c.myScores ? toPillars(c.myScores) : START);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 

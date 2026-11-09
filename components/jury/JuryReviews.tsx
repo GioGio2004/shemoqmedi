@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { JuryReview } from "@/convex-helpers-api";
-import { PILLARS } from "@/lib/taxonomy";
+import { PILLARS, toPillars } from "@/lib/taxonomy";
 import { formatDate, formatScore } from "@/lib/format";
 import { JurorAvatar } from "./JurorAvatar";
 
@@ -60,7 +60,7 @@ export function JuryReviews({ reviews }: { reviews: JuryReview[] }) {
               {PILLARS.map((p) => (
                 <div key={p.key} className="flex gap-1.5">
                   <dt>{p.name}</dt>
-                  <dd className="text-black">{r.scores[p.key].toFixed(1)}</dd>
+                  <dd className="text-black">{toPillars(r.scores)[p.key].toFixed(1)}</dd>
                 </div>
               ))}
             </dl>

@@ -6,7 +6,7 @@ import { ClerkProvider } from "@/components/clerk-provider";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { api, type Pillars } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
-import { LIMITS, PILLARS, weightedScore } from "@/lib/taxonomy";
+import { LIMITS, PILLARS, toPillars, weightedScore } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
 import { JurorAvatar } from "./JurorAvatar";
 
@@ -35,7 +35,7 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
     loaded.current = true;
     if (state.evaluation) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time load of the saved evaluation
-      setScores(state.evaluation.scores);
+      setScores(toPillars(state.evaluation.scores));
       setComment(state.evaluation.comment);
     }
   }, [state]);

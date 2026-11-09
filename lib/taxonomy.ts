@@ -126,6 +126,23 @@ export const PILLARS = [
   { key: "content", name: "Content", weight: 0.1 },
 ] as const;
 
+type PillarScores = Record<(typeof PILLARS)[number]["key"], number>;
+
+/**
+ * Pillar scores from the server, in the current shape. A backend from before
+ * the Content pillar sends `code` instead of `content` (seen when the site
+ * deploys before the backend does); a missing pillar reads as 0 rather than
+ * crashing the page.
+ */
+export function toPillars(raw: Partial<PillarScores> & { code?: number }): PillarScores {
+  return {
+    design: raw.design ?? 0,
+    usability: raw.usability ?? 0,
+    creativity: raw.creativity ?? 0,
+    content: raw.content ?? raw.code ?? 0,
+  };
+}
+
 /** A vote's weighted score: Design 40% + Usability 30% + Creativity 20% + Content 10%. */
 export function weightedScore(scores: Record<(typeof PILLARS)[number]["key"], number>) {
   return PILLARS.reduce((sum, p) => sum + scores[p.key] * p.weight, 0);

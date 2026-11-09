@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Authenticated, AuthLoading, Unauthenticated, useMutation, useQuery } from "convex/react";
 import { api, type Pillars } from "@/convex-helpers-api";
-import { PILLARS, type PillarKey, weightedScore } from "@/lib/taxonomy";
+import { PILLARS, type PillarKey, weightedScore, toPillars } from "@/lib/taxonomy";
 import { formatScore } from "@/lib/format";
 import { ArrowIcon } from "@/components/site/ui";
 
@@ -143,7 +143,7 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
         <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
           You&apos;ve already scored {title}.
         </p>
-        <ScoreList scores={existing.scores} />
+        <ScoreList scores={toPillars(existing.scores)} />
         <BackLink slug={slug} />
       </div>
     );
