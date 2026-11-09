@@ -13,7 +13,7 @@
  * Special perches (data-crow-perch="badge" | "countdown" | "video"): the SOTD
  * badge, a vote's countdown in its last day (it pecks at it) and a playing
  * walkthrough. They're picked more often, and it leaves once one stops being
- * a perch (the video paused). Airborne it casts a softer, wider shadow.
+ * a perch (the video paused).
  * Tap it while it sits on the page: a ruffle, a hop across the screen, or
  * now and then it flies off to a featured site ("Surprise me").
  *
@@ -88,10 +88,6 @@ const weighted = (xs: Spot[]) => {
   for (let i = 0; i < xs.length; i++) if ((r -= w[i]) < 0) return xs[i];
   return xs[xs.length - 1];
 };
-// Its shadow is always there (depth): close and firm when it stands, lower,
-// wider and softer once airborne, easing between the two.
-const SHADOW_SIT = "drop-shadow(0 4px 4px rgb(0 0 0 / 0.3))";
-const SHADOW_AIR = "drop-shadow(0 14px 10px rgb(0 0 0 / 0.22))";
 
 interface Pose {
   anim: AnimName;
@@ -138,8 +134,7 @@ export class CrowRoamer {
   /** A turn-around in place: the feet stay at turnFeet; then perch or walk on. */
   private turnFrom: 1 | -1 = 1;
   private turnFeet = 0;
-  private turnThen: "perch" | "walk" = "perch";
-  private airborne: boolean | null = null;
+  private turnThen: "perch" | "walk" | "takeoff" = "perch";
   /** A "Surprise me" flight: where to go once it's off screen. */
   private surpriseTo: Promise<string | null> | null = null;
   private hoverRaf = 0;
@@ -168,7 +163,7 @@ export class CrowRoamer {
     const c = document.createElement("canvas");
     c.setAttribute("aria-hidden", "true");
     c.className = "crow-roam";
-    c.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;will-change:transform;transition:filter .35s ease";
+    c.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;will-change:transform";
     document.body.appendChild(c);
     this.canvas = c;
     this.ctx = c.getContext("2d")!;
@@ -400,7 +395,9 @@ export class CrowRoamer {
     this.target = spots.length
       ? weighted(spots)
       : { kind: "air", x: side === 1 ? window.innerWidth + 90 : -90, y: vy - rand(60, 140) };
-    this.set("TAKEOFF");
+    // Facing away from it: turn round first, then take off.
+    if (side !== this.pose.facing && this.sprites.turn && isPage(this.spot)) this.startTurn(this.spot.x, "takeoff");
+    else this.set("TAKEOFF");
     this.wake();
   }
 
@@ -703,6 +700,7 @@ export class CrowRoamer {
         this.x = this.turnFeet - this.shift(face);
         this.show("idle", 0, face);
         if (this.turnThen === "walk") this.set("WALK");
+        else if (this.turnThen === "takeoff") this.set("TAKEOFF");
         else this.toPerch(rand(1.5, 3.5));
         break;
       }
@@ -721,9 +719,9 @@ export class CrowRoamer {
         this.x = feet - this.shift(this.walkDir);
         this.show("walk", Math.floor(this.t * a.fps * WALK_PLAY) % a.frames, this.walkDir);
         if (done) {
-          this.toPerch(rand(0.6, 1.4));
-          // Walked: next it flies (a special perch keeps its longer visit).
-          if (!perchKind(spot)) this.stay = 0;
+          // Walked: straight on into the take-off (a special perch keeps its longer visit).
+          if (perchKind(spot)) this.toPerch(rand(0.6, 1.4));
+          else return this.leave();
         }
         break;
       }
@@ -947,7 +945,7 @@ export class CrowRoamer {
   }
 
   /** Turn round on the spot (feet at `feet`, in the current space), then perch or walk. */
-  private startTurn(feet: number, then: "perch" | "walk") {
+  private startTurn(feet: number, then: "perch" | "walk" | "takeoff") {
     this.turnFrom = this.pose.facing;
     this.turnFeet = feet;
     this.turnThen = then;
@@ -970,9 +968,11 @@ export class CrowRoamer {
     const ahead = spots.filter((p) => Math.sign(this.point(p)[0] - window.scrollX - vx) === this.pose.facing);
     const r = Math.random();
     const vy = this.toView(this.x, this.y)[1];
-    if (this.spot.kind !== "home" && r < 0.3) this.target = { kind: "home" };
-    else if (ahead.length && r < 0.75) this.target = weighted(ahead);
-    else if (spots.length && r < 0.85) this.target = weighted(spots);
+    // Only ever the way it faces: home if that's ahead, a spot ahead, or off screen ahead.
+    const hx = this.homePoint()[0] - (this.homeSpace === "page" ? window.scrollX : 0);
+    const homeAhead = Math.sign(hx - vx) === this.pose.facing;
+    if (this.spot.kind !== "home" && homeAhead && r < 0.3) this.target = { kind: "home" };
+    else if (ahead.length && r < 0.85) this.target = weighted(ahead);
     else this.target = { kind: "air", x: this.pose.facing === 1 ? window.innerWidth + 90 : -90, y: vy - rand(60, 160) };
     this.set("TAKEOFF");
   }
@@ -1110,17 +1110,12 @@ export class CrowRoamer {
     }
     if (!show) return;
 
-    const air = this.state === "FLY" || this.state === "LAND";
-    if (air !== this.airborne) {
-      this.airborne = air;
-      c.style.filter = air ? SHADOW_AIR : SHADOW_SIT;
-    }
 
     // Where the box goes: fixed (view) or in the document (page). Styles are
     // only written when they change, so a sitting crow costs nothing.
     const atHome = this.spot.kind === "home" && this.isSitting();
     const [x, y] = atHome ? this.homePoint() : [this.x, this.y];
-    const sittingOnPage = (this.isSitting() || this.state === "TURN") && !atHome;
+    const sittingOnPage = isPage(this.spot) && (this.isSitting() || this.state === "TURN");
     const ox = x - this.boxW * FEET_X;
     const oy = y - this.boxH * FEET_Y;
     const place = `${this.space}|${sittingOnPage}|${ox.toFixed(1)}|${oy.toFixed(1)}`;
