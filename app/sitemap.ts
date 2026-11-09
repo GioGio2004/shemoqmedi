@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import type { PublicListing } from "@/convex-helpers-api";
-import { allCollections, MIN_INDEXABLE } from "@/lib/collections";
+import { MIN_INDEXABLE, routedCollections } from "@/lib/collections";
+import { SOTD_PATH, sotdWinners } from "@/lib/sotd";
 import { getCreators, getJurorSlugs, getPublicListings, getPublicSlugs } from "@/lib/listings";
 import { listingImageUrls } from "@/lib/imageSeo";
 import { absoluteUrl } from "@/lib/site";
@@ -63,7 +64,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : {}),
     },
     // Thin collections are noindex until they fill up, so they stay out.
-    ...allCollections().flatMap((c) => {
+    // The dated Site of the Day archive: indexable once it has a few winners.
+    ...(() => {
+      const winners = sotdWinners(listings);
+      if (winners.length < MIN_INDEXABLE) return [];
+      return [{ url: absoluteUrl(SOTD_PATH), lastModified: newest(winners), changeFrequency: "daily" as const, priority: 0.8 }];
+    })(),
+    ...routedCollections().flatMap((c) => {
       const items = listings.filter(c.match);
       if (items.length < MIN_INDEXABLE) return [];
       return [

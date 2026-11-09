@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
         source: "/:locale(en|ka|ru)/:page(account|submit|sites|creators|collections|badges|vote|claim)/:rest*",
         destination: "/:page/:rest*",
       },
+      // Site of the Day became a dated archive of its own.
+      { source: "/collections/sotd", destination: "/site-of-the-day" },
       // Category pages became programmatic collections.
       { source: "/category/:slug", destination: "/collections/:slug" },
       { source: "/:locale(en|ka|ru)/category/:slug", destination: "/collections/:slug" },

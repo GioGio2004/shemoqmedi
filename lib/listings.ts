@@ -118,22 +118,10 @@ export function withRef(url: string) {
   }
 }
 
-/** Latest Site of the Day and latest Best Solo Creation, for the home hero. */
-export function heroPicks(listings: PublicListing[]) {
-  const byAward = (award: string) =>
-    listings
-      .filter((l) => l.awards.includes(award as PublicListing["awards"][number]))
-      .sort((a, b) => (b.awardedAt ?? 0) - (a.awardedAt ?? 0))[0] ?? null;
-  const bsc = byAward("BSC");
-  const sotd =
-    byAward("SOTD") ??
-    // No SOTD yet: the most recent other award winner, else the top-scored nominee.
-    listings
-      .filter((l) => l.awards.length > 0 && l.slug !== bsc?.slug)
-      .sort((a, b) => (b.awardedAt ?? 0) - (a.awardedAt ?? 0))[0] ??
-    listings
-      .filter((l) => l.status === "in_voting" && l.finalScore !== null && l.slug !== bsc?.slug)
-      .sort((a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0))[0] ??
-    null;
-  return { sotd, bsc };
+/** The latest Best Solo Creation, for the home hero (today's site comes from lib/sotd). */
+export function latestBsc(listings: PublicListing[]) {
+  return (
+    listings.filter((l) => l.awards.includes("BSC")).sort((a, b) => (b.awardedAt ?? 0) - (a.awardedAt ?? 0))[0] ??
+    null
+  );
 }

@@ -42,6 +42,12 @@ export type PublicListing = {
   /** Voting was extended a week because fewer than 5 jurors had evaluated it after 7 days. Optional during rollout. */
   votingExtended?: boolean;
   awardedAt: number | null;
+  /**
+   * Site of the Day ("YYYY-MM-DD", UTC): one site a day, never twice. With
+   * "SOTD" in awards it is the day the site won; without, the site is
+   * scheduled for that day. Optional until the backend with it is deployed.
+   */
+  sotdDay?: string | null;
   isClaimed: boolean;
   /** Shown in the Startups collection and filter. */
   isStartup: boolean;

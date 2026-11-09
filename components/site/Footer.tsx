@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getCollectionCounts } from "@/lib/listings";
+import { collectionHref } from "@/lib/collections";
 
 type FooterLink = { label: string; href: string };
 
@@ -30,7 +31,7 @@ const COLLECTIONS: { tag: string; label: string }[] = [
 const MAX_COLLECTION_LINKS = 7;
 const toLink = (c: { tag: string; label: string }): FooterLink => ({
   label: c.label,
-  href: `/collections/${c.tag}`,
+  href: collectionHref(c.tag),
 });
 
 const ABOUT: FooterLink[] = [

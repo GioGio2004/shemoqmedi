@@ -143,7 +143,7 @@ function build(): Collection[] {
     });
   }
   const AWARD_INTRO: Record<(typeof AWARDS)[number]["slug"], string> = {
-    SOTD: "The highest-scoring websites after their jury and community voting window.",
+    SOTD: "One website a day: the best scored after their jury and community voting window.",
     BSC: "The finest websites built by one person, without an agency budget.",
     HM: "Websites that came close to Site of the Day after their voting window.",
   };
@@ -193,6 +193,22 @@ function build(): Collection[] {
 
 export function allCollections(): Collection[] {
   return build();
+}
+
+/**
+ * Tags with a dedicated page instead of /collections/<tag>: Site of the Day
+ * is the dated archive (next.config.ts redirects /collections/sotd there).
+ */
+const OWN_PAGE: Record<string, string> = { sotd: "/site-of-the-day" };
+
+/** Where a collection lives. */
+export function collectionHref(tag: string) {
+  return OWN_PAGE[tag] ?? `/collections/${tag}`;
+}
+
+/** The collections served by /collections/<tag> (static params, sitemap). */
+export function routedCollections(): Collection[] {
+  return build().filter((c) => !(c.tag in OWN_PAGE));
 }
 
 export function getCollection(tag: string): Collection | null {

@@ -44,7 +44,11 @@ const PILLARS = [
 ];
 
 const AWARDS = [
-  { name: "Site of the Day", rule: `Final score of ${SOTD} or more.`, href: "/collections/sotd" },
+  {
+    name: "Site of the Day",
+    rule: `Final score of ${SOTD} or more. One winner a day, never the same site twice: winners take the next free day, in the order their voting closes.`,
+    href: "/site-of-the-day",
+  },
   {
     name: "Best Solo Creation",
     rule: `Final score of ${BSC} or more, for a site made by one person. It can be won together with Site of the Day.`,

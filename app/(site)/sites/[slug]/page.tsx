@@ -15,7 +15,8 @@ import { outboundRel } from "@/lib/ref";
 import { JuryLauncher } from "@/components/jury/JuryLauncher";
 import { JuryReviews } from "@/components/jury/JuryReviews";
 import { resolveListingSlug } from "@/lib/slugRedirect";
-import { categoryName, categoryPhrase, regionName, technologySlug } from "@/lib/collections";
+import { categoryName, categoryPhrase, collectionHref, regionName, technologySlug } from "@/lib/collections";
+import { formatDay, scheduledFor, wonOn } from "@/lib/sotd";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
@@ -297,6 +298,10 @@ const badgeName = (listing: PublicListing) => BADGE_NAMES[earnedBadge(listing)];
 
 /** "Voting closed" line for listings outside their window. */
 function closedLabel(listing: PublicListing) {
+  const sotd = wonOn(listing);
+  if (sotd) return `Site of the Day ${formatDay(sotd)}`;
+  const next = scheduledFor(listing);
+  if (next) return `Site of the Day on ${formatDay(next)}`;
   if (listing.status === "awarded" && listing.awardedAt) {
     return `Awarded ${formatDate(listing.awardedAt)}`;
   }
@@ -364,7 +369,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         <ul className="flex flex-wrap items-center gap-2">
           {listing.awards.map((award) => (
             <li key={award}>
-              <Link href={`/collections/${award.toLowerCase()}`} className="group inline-flex">
+              <Link href={collectionHref(award.toLowerCase())} className="group inline-flex">
                 <AwardBadge award={award} full className="transition-colors group-hover:bg-black/80" />
               </Link>
             </li>

@@ -6,6 +6,8 @@ import { PillLink, Tag } from "@/components/site/ui";
 import {
   allCollections,
   collectionDescription,
+  collectionHref,
+  routedCollections,
   getCollection,
   MIN_INDEXABLE,
   type Collection,
@@ -23,13 +25,13 @@ export const dynamicParams = false;
 type Params = { params: Promise<{ tag: string }> };
 
 export function generateStaticParams() {
-  return allCollections().map((c) => ({ tag: c.tag }));
+  return routedCollections().map((c) => ({ tag: c.tag }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { tag } = await params;
   const collection = getCollection(tag);
-  if (!collection) return {};
+  if (!collection || collectionHref(tag) !== `/collections/${tag}`) return {};
   // getPublicListings is cache()d, so the page below reuses this read.
   const hits = (await getPublicListings()).filter(collection.match);
   const description = collectionDescription(collection, hits);
@@ -92,7 +94,7 @@ function headingSize(heading: string) {
 export default async function CollectionPage({ params }: Params) {
   const { tag } = await params;
   const collection = getCollection(tag);
-  if (!collection) notFound();
+  if (!collection || collectionHref(tag) !== `/collections/${tag}`) notFound();
 
   const all = await getPublicListings();
   const listings = all.filter(collection.match);
@@ -157,7 +159,7 @@ export default async function CollectionPage({ params }: Params) {
           <ul className="flex flex-wrap gap-2">
             {related.map((c) => (
               <li key={c.tag}>
-                <Tag href={`/collections/${c.tag}`}>{c.name}</Tag>
+                <Tag href={collectionHref(c.tag)}>{c.name}</Tag>
               </li>
             ))}
           </ul>

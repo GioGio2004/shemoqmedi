@@ -2,33 +2,38 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import Link from "next/link";
 import type { PublicListing } from "@/convex-helpers-api";
 import { PillLink } from "@/components/site/ui";
-import { heroPicks, withRef } from "@/lib/listings";
+import { latestBsc, withRef } from "@/lib/listings";
+import { SOTD_PATH, formatDay, todaysPick, utcToday } from "@/lib/sotd";
 import { outboundRel } from "@/lib/ref";
 import { awardName } from "@/lib/collections";
 import { AwardBadge, ScoreBadge } from "./Badges";
 
-type Frame = { label: string; listing: PublicListing };
-
-/** Honest label for the left frame: heroPicks falls back when there is no SOTD yet. */
-function leftLabel(listing: PublicListing) {
-  if (listing.awards.includes("SOTD")) return "Site of the Day";
-  if (listing.awards.length > 0) return "Featured";
-  return "Top nominee";
-}
+type Frame = { label: string; listing: PublicListing; href?: string };
 
 function frames(listings: PublicListing[]): Frame[] {
-  const { sotd, bsc } = heroPicks(listings);
-  if (sotd && bsc && sotd.slug === bsc.slug) {
-    return [{ label: "Site of the Day · Best Solo Creation", listing: sotd }];
-  }
+  const today = utcToday();
+  const bsc = latestBsc(listings);
+  // Today's Site of the Day; on a day without one, a different featured site
+  // each day (never a past winner), so this frame never sits on one site.
+  const pick = todaysPick(listings, { today, exclude: bsc ? [bsc.slug] : [] });
   const out: Frame[] = [];
-  if (sotd) out.push({ label: leftLabel(sotd), listing: sotd });
+  if (pick?.kind === "sotd") {
+    const both = bsc?.slug === pick.listing.slug;
+    out.push({
+      label: `Site of the Day${both ? " · Best Solo Creation" : ""} · ${formatDay(today, "short")}`,
+      listing: pick.listing,
+      href: SOTD_PATH,
+    });
+    if (both) return out;
+  } else if (pick) {
+    out.push({ label: "Featured today", listing: pick.listing });
+  }
   if (bsc) out.push({ label: "Best Solo Creation", listing: bsc });
   return out;
 }
 
 /**
- * The two headline sites side by side: latest Site of the Day (left) and
+ * The two headline sites side by side: today's Site of the Day (left) and
  * latest Best Solo Creation (right). Server component, zero client JS of its own.
  * Below the fold (under the slider and the page heading), so its images load
  * lazily and leave the bandwidth to the slider's first slide.
@@ -40,20 +45,23 @@ export function HeroShowcase({ listings }: { listings: PublicListing[] }) {
   return (
     <section aria-label="Featured websites" className="container-site pb-16 md:pb-24">
       <div className={items.length > 1 ? "grid gap-8 lg:grid-cols-2" : "grid gap-8"}>
-        {items.map(({ label, listing }) => (
-          <HeroFrame key={listing.slug} label={label} listing={listing} wide={items.length === 1} />
+        {items.map(({ label, listing, href }) => (
+          <HeroFrame key={listing.slug} label={label} labelHref={href} listing={listing} wide={items.length === 1} />
         ))}
       </div>
     </section>
   );
 }
 
-function HeroFrame({
+export function HeroFrame({
   label,
+  labelHref,
   listing,
   wide,
 }: {
   label: string;
+  /** Makes the label a link (the Site of the Day archive). */
+  labelHref?: string;
   listing: PublicListing;
   wide: boolean;
 }) {
@@ -87,7 +95,13 @@ function HeroFrame({
 
       <div className="flex flex-1 flex-col gap-6 px-2 pt-6 pb-2 md:px-3">
         <div className="flex items-start justify-between gap-6">
-          <p className="eyebrow">{label}</p>
+          {labelHref ? (
+            <Link href={labelHref} className="eyebrow hover:underline hover:underline-offset-4">
+              {label}
+            </Link>
+          ) : (
+            <p className="eyebrow">{label}</p>
+          )}
           {listing.finalScore !== null && (
             <p className="flex shrink-0 items-baseline gap-2">
               <span className="sr-only">{scoreLabel}:</span>

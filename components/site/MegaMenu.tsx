@@ -20,7 +20,7 @@ import { ArrowIcon } from "./ui";
 export const EXPLORE = [
   { label: "Directory", href: "/" },
   { label: "Live voting", href: "/collections/nominees" },
-  { label: "Site of the Day", href: "/collections/sotd" },
+  { label: "Site of the Day", href: "/site-of-the-day" },
   { label: "Best Solo Creation", href: "/collections/bsc" },
   { label: "Honorable mentions", href: "/collections/hm" },
   { label: "Startups", href: "/collections/startups" },

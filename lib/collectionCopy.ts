@@ -180,8 +180,8 @@ export const COLLECTION_ABOUT: Record<string, string[]> = {
 
   // ── Awards and status ────────────────────────────────────────────────────
   sotd: [
-    "Site of the Day is Shemoqmedi's highest award. It goes to websites that reach a final score of 8.5 or more when their voting window closes, where the jury's score counts for 60% and the community's for 40%.",
-    "Each score is the average of four pillars: design, usability, creativity and code. Winning sites usually combine a strong idea with flawless execution, being beautiful, easy to use, original and well built at the same time. Winners receive a badge they can display on their own site. This collection is the archive of every Site of the Day, newest first.",
+    "Site of the Day is Shemoqmedi's highest award. It goes to websites that reach a final score of 8.5 or more when their voting window closes, where the jury's score counts for 60% and the community's for 40%. There is one winner a day, and a site can win it only once: when several sites qualify, each takes the next free day, in the order their voting closed.",
+    "Each score is the average of four pillars: design, usability, creativity and code. Winning sites usually combine a strong idea with flawless execution, being beautiful, easy to use, original and well built at the same time. Winners receive a badge they can display on their own site. This page is the archive of every Site of the Day, newest day first.",
   ],
   bsc: [
     "Best Solo Creation is awarded to websites designed and built by one person, without a studio or agency team. A solo site wins it with a final score of 8.2 or more once jury and community voting closes.",

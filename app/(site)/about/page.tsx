@@ -50,7 +50,7 @@ const sections: InfoSection[] = [
           {LIMITS.votingExtensionDays} days if fewer than {LIMITS.juryMinEvaluations} jurors have scored it. During that
           time the jury gives its score and creators with a Shemoqmedi badge score the site on four pillars: design,
           usability, creativity and code. Nobody can score their own site. When the window
-          closes, the best sites win <Link href="/collections/sotd">Site of the Day</Link>,{" "}
+          closes, the best sites win <Link href="/site-of-the-day">Site of the Day</Link>,{" "}
           <Link href="/collections/bsc">Best Solo Creation</Link> or{" "}
           <Link href="/collections/hm">Honorable Mention</Link>. The details are on{" "}
           <Link href="/how-we-score">How we score</Link>.
