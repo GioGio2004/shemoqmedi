@@ -81,14 +81,17 @@ export function PillLink({
 
 /**
  * Stacked wordmark, Kencho-style. `live` (the site header only) turns the
- * crow mark into the live crow (NavCrow); when it flies away, the text slides
- * over its spot. Elsewhere (sign-in, 404) the mark stays still.
+ * crow mark into the live crow (NavCrow). While the crow is home the name is
+ * hidden; when it flies off, the name slides into its spot. With reduced
+ * motion or no JavaScript the still mark and the name show as usual.
+ * Elsewhere (sign-in, 404) the mark stays still.
  */
 export function Wordmark({ className, live = false }: { className?: string; live?: boolean }) {
   return (
     <Link
       href="/"
       aria-label="shemoqmedi, home"
+      data-crow={live ? "home" : undefined}
       className={cn("flex items-center gap-3 text-black [--crow-slot:50px] min-[360px]:[--crow-slot:68px]", className)}
     >
       {live ? (
@@ -96,7 +99,18 @@ export function Wordmark({ className, live = false }: { className?: string; live
       ) : (
         <Image src="/brand/crow.png" alt="" width={34} height={38} sizes="34px" loading="eager" className="h-auto w-[34px]" />
       )}
-      <span className="flex flex-col leading-none transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] [[data-crow=away]>&]:translate-x-[calc(-1*var(--crow-slot)-0.75rem)]">
+      {live && (
+        <noscript>
+          <style>{`[data-crow="home"]>.crow-name{opacity:1}`}</style>
+        </noscript>
+      )}
+      <span
+        className={cn(
+          "crow-name flex flex-col leading-none",
+          live &&
+            "opacity-0 transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:opacity-100 [[data-crow=away]>&]:translate-x-[calc(-1*var(--crow-slot)-0.75rem)] [[data-crow=away]>&]:opacity-100 [[data-crow=static]>&]:opacity-100",
+        )}
+      >
         <span className="text-[18px] font-bold tracking-[-0.055em] uppercase">Shemoqmedi</span>
         <span className="mt-[5px] text-[9px] font-semibold tracking-[0.27em] uppercase">Space</span>
       </span>

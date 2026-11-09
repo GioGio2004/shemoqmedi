@@ -29,7 +29,8 @@ export function ListingCard({
 
   return (
     <article className="group relative">
-      <div className="relative aspect-video overflow-hidden rounded-2xl border border-black/8 bg-white">
+      {/* data-crow-perch: the site's crow may land on this card's top edge. */}
+      <div data-crow-perch="" className="relative aspect-video overflow-hidden rounded-2xl border border-black/8 bg-white">
         <Link href={`/sites/${listing.slug}`} aria-label={listing.title} className="absolute inset-0 block">
           {listing.coverUrl && (
             <Image

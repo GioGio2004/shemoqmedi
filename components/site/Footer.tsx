@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getCollectionCounts } from "@/lib/listings";
-import { LivingCrow } from "@/components/site/LivingCrow";
 
 type FooterLink = { label: string; href: string };
 
@@ -111,7 +110,7 @@ export async function Footer() {
       </div>
 
       <div className="container-site overflow-hidden">
-        {/* One span per letter: the crow measures them to find its perches. */}
+        {/* One span per letter: the crow can land on top of them (crow/world.ts). */}
         <p
           aria-hidden="true"
           data-crow-wordmark=""
@@ -149,7 +148,6 @@ export async function Footer() {
         <p>The web&apos;s finest, listed by the people who build it.</p>
       </div>
 
-      <LivingCrow />
     </footer>
   );
 }
