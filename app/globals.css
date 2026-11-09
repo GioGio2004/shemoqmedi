@@ -70,6 +70,9 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    /* No rubber-band bounce at the top or bottom (iPhone): the page would be
+       dragged away from the fixed navbar, taking the perched crow with it. */
+    overscroll-behavior-y: none;
   }
   body {
     @apply bg-white font-sans text-black antialiased;
@@ -77,6 +80,7 @@
        part of the document while it sits on the page). clip, not hidden:
        no scroll container, sticky elements keep working. */
     overflow-x: clip;
+    overscroll-behavior-y: none;
   }
   :where(a, button, input, textarea, select, summary):focus-visible {
     outline: 2px solid var(--black);
@@ -175,6 +179,25 @@
     -webkit-backdrop-filter: blur(24px) saturate(1.6);
     backdrop-filter: blur(24px) saturate(1.6);
     border-bottom-color: rgb(0 0 0 / 0.08);
+  }
+}
+
+/* Phones: Safari doesn't blur inside a scroll-driven animation, so the glass
+   there is near-solid white, or the page shows straight through it. */
+@keyframes header-solidify-phone {
+  to {
+    background: rgb(255 255 255 / 0.94);
+    border-bottom-color: rgb(0 0 0 / 0.08);
+  }
+}
+@media (max-width: 767px) {
+  .site-header {
+    animation-name: header-solidify-phone;
+  }
+  @supports not (animation-timeline: scroll()) {
+    .site-header {
+      background: rgb(255 255 255 / 0.94);
+    }
   }
 }
 
