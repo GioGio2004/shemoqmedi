@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { UserButton } from "@clerk/nextjs";
-import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
 import { JuryProfile } from "@/components/jury/JurorProfileForm";
@@ -16,7 +15,6 @@ export default async function JuryProfilePage({ searchParams }: { searchParams: 
   const { claimed } = await searchParams;
   return (
     <>
-      <Header />
       <main id="main-content">
         <PageHero
           prelude={claimed ? "welcome to the" : "your"}

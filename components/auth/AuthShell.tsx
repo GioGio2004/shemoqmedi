@@ -1,9 +1,7 @@
-import { Wordmark } from "@/components/site/ui";
-
 /**
- * Frame shared by the log-in and sign-up pages. The crow lives here too: in
- * the logo, and it lands on the letters of the big title (one span per
- * letter, measured by crow/world.ts).
+ * Frame shared by the log-in and sign-up pages, under the site's one fixed
+ * navbar (app/layout.tsx). The crow lands on the letters of the big title
+ * (one span per letter, measured by crow/world.ts).
  */
 export function AuthShell({
   prelude,
@@ -20,10 +18,9 @@ export function AuthShell({
   const goto = crowLetter ? title.toLowerCase().lastIndexOf(crowLetter.toLowerCase()) : -1;
   return (
     <div className="min-h-dvh">
-      <header className="container-site flex h-20 items-center md:h-[88px]">
-        <Wordmark live />
-      </header>
-      <main className="container-site grid items-center gap-12 pt-6 pb-20 lg:grid-cols-[1.1fr_auto] lg:gap-20 lg:pt-16">
+      {/* Room for the fixed navbar. */}
+      <div aria-hidden="true" className="h-20 md:h-[88px]" />
+      <main id="main-content" className="container-site grid items-center gap-12 pt-6 pb-20 lg:grid-cols-[1.1fr_auto] lg:gap-20 lg:pt-16">
         <div>
           <p className="text-[clamp(2.5rem,6.5vw,5.5rem)] leading-none font-medium tracking-[-0.05em] lowercase">
             {prelude}

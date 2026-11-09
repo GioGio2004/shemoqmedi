@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { MediaImage as Image } from "@/components/site/MediaImage";
 import { notFound } from "next/navigation";
 import type { PublicListing } from "@/convex-helpers-api";
-import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { Countdown } from "@/components/listing/Countdown";
 import { VoteForm } from "@/components/listing/VoteForm";
@@ -41,7 +40,6 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
-      <Header />
       <main id="main-content">
         <PageHero
           prelude="cast your vote"

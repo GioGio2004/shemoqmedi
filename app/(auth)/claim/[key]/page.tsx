@@ -3,7 +3,6 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { ClaimForm } from "@/components/listing/ClaimForm";
 import { ClaimToken } from "@/components/claim/ClaimToken";
@@ -71,7 +70,6 @@ export default async function ClaimPage({
   if (CLAIM_TOKEN.test(key)) {
     return (
       <>
-        <Header />
         <main id="main-content">
           <ClaimToken token={key} auto={query.auto === "1"} />
         </main>
@@ -100,7 +98,6 @@ export default async function ClaimPage({
 
   return (
     <>
-      <Header />
       <main id="main-content">
         <PageHero
           prelude={isCreator ? "claim your profile" : "claim this project"}

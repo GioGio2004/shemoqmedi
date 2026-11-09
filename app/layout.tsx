@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { Header } from "@/components/site/Header";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,6 +47,8 @@ export const viewport: Viewport = {
 
 // No auth or data providers here: public pages ship no client JS of their
 // own. Clerk + Convex are mounted only in the (auth) route group.
+// The one Header lives here, above every route group, so the navbar (and
+// the crow in it) stays put across all pages, log-in and account included.
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -54,6 +57,7 @@ export default function RootLayout({
     // during page changes, so a new page opens at the top instead of gliding up.
     <html lang="en" data-scroll-behavior="smooth">
       <body className={inter.variable}>
+        <Header />
         {children}
       </body>
     </html>

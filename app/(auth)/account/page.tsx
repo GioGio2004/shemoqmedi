@@ -4,7 +4,6 @@ import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
-import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { MyListings } from "@/components/listing/MyListings";
 import { PillLink } from "@/components/site/ui";
@@ -35,7 +34,6 @@ export default async function AccountPage({
 
   return (
     <>
-      <Header />
       <main id="main-content">
         <PageHero
           prelude="your account"

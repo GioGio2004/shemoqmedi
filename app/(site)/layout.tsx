@@ -1,6 +1,5 @@
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
-import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 
 // Analytics run on the public pages only. The (auth) pages are left out on
@@ -9,7 +8,6 @@ import { Footer } from "@/components/site/Footer";
 export default function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
-      <Header />
       <main id="main-content">{children}</main>
       <Footer />
       <Analytics />

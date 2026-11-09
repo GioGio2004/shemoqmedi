@@ -18,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4 text-center">
+    <main id="main-content" className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4 text-center">
       <h1 className="text-xl font-semibold">Something broke.</h1>
       <Button onClick={reset}>Try again</Button>
     </main>

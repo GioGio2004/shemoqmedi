@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/site/Header";
 import { PageHero } from "@/components/listing/PageHero";
 import { ListingForm } from "@/components/listing/ListingForm";
 
@@ -9,7 +8,6 @@ export const metadata: Metadata = { title: "Submit a site", robots: { index: fal
 export default function SubmitPage() {
   return (
     <>
-      <Header />
       <main id="main-content">
         <PageHero
           prelude="list your work"

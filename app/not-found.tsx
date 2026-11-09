@@ -1,12 +1,11 @@
-import { PillLink, Wordmark } from "@/components/site/ui";
+import { PillLink } from "@/components/site/ui";
 
 export default function NotFound() {
   return (
     <div className="min-h-dvh">
-      <header className="container-site flex h-20 items-center md:h-[88px]">
-        <Wordmark />
-      </header>
-      <main className="container-site pt-16 pb-24">
+      {/* Room for the fixed navbar (app/layout.tsx). */}
+      <div aria-hidden="true" className="h-20 md:h-[88px]" />
+      <main id="main-content" className="container-site pt-16 pb-24">
         <p className="text-[clamp(1.75rem,4vw,3.5rem)] leading-none font-medium tracking-[-0.045em] lowercase">
           page not found
         </p>
