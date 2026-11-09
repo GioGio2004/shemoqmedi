@@ -130,6 +130,7 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
                     value={scores[p.key]}
                     onChange={(e) => {
                       setSavedAt(null);
+                      setError(null);
                       setScores((s) => ({ ...s, [p.key]: Math.round(Number(e.target.value) * 10) / 10 }));
                     }}
                     className="w-full cursor-pointer accent-black"
@@ -153,16 +154,25 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
                   value={comment}
                   onChange={(e) => {
                     setSavedAt(null);
+                    // A "too short" error from an earlier try must not stay up while they type.
+                    setError(null);
                     setComment(e.target.value);
                   }}
                   placeholder="What stands out, and what could be better? Shown on this page with your name."
                   className="w-full resize-y rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-black/35 focus:border-black"
                 />
               </label>
-              {error && (
+              {error ? (
                 <p role="alert" className="text-sm font-medium">
                   {error}
                 </p>
+              ) : (
+                length > 0 &&
+                length < LIMITS.juryCommentMin && (
+                  <p className="text-xs text-black/55">
+                    {LIMITS.juryCommentMin - length} more {LIMITS.juryCommentMin - length === 1 ? "character" : "characters"} to go.
+                  </p>
+                )
               )}
               <button
                 type="submit"

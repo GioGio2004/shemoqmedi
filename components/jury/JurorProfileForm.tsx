@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api, type JurorExperience, type JurorProfileArgs, type JurorWork } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
+import { isImageKit } from "@/lib/imageLoader";
 import { LIMITS } from "@/lib/taxonomy";
 import { ArrowIcon } from "@/components/site/ui";
 import { JurorAvatar } from "./JurorAvatar";
@@ -17,14 +18,37 @@ const label = "eyebrow text-black";
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMAGE = 10 * 1024 * 1024; // Clerk's limit for profile images
 
+/** Clerk unsafeMetadata key: the preset photo URL last copied to the account. */
+const COPIED_KEY = "juryPhotoCopied";
+
+/** Downloads an image (ImageKit and Convex storage both allow CORS) as a File for Clerk. */
+async function imageFile(url: string): Promise<File> {
+  // ImageKit picks the format per request; ask for a JPG Clerk always accepts.
+  let src = url;
+  if (isImageKit(url)) {
+    const u = new URL(url);
+    if (!u.searchParams.has("tr")) u.searchParams.set("tr", "f-jpg,q-90");
+    src = u.toString();
+  }
+  const res = await fetch(src);
+  if (!res.ok) throw new Error(`Photo download failed (${res.status})`);
+  const blob = await res.blob();
+  if (!IMAGE_TYPES.includes(blob.type)) throw new Error(`Unsupported photo type ${blob.type}`);
+  return new File([blob], `jury-photo.${blob.type.split("/")[1]}`, { type: blob.type });
+}
+
 /**
  * Profile photo. `current` is what the jury pages show right now: the photo
  * prepared with the invitation (`preset`) while the juror keeps it, else their
  * account (Clerk) photo, else a grey placeholder. Changing or removing it
  * saves to the Clerk account and drops the preset, so the juror's own choice
  * shows from then on.
+ *
+ * The preset also becomes the account photo (header, sign-in), once per
+ * preset: right after claiming (`adopt`), or whenever the account has no photo
+ * of its own. An account that has one gets a button to switch instead.
  */
-function PhotoField({ current, preset }: { current: string | null; preset: boolean }) {
+function PhotoField({ current, preset, adopt }: { current: string | null; preset: boolean; adopt?: boolean }) {
   const { user } = useUser();
   const dropPreset = useMutation(api.jury.dropPresetPhoto);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -34,6 +58,30 @@ function PhotoField({ current, preset }: { current: string | null; preset: boole
   // photo through the webhook a moment later. undefined: nothing changed yet.
   const [local, setLocal] = useState<string | null | undefined>(undefined);
   const shown = local !== undefined ? local : current;
+  const [copied, setCopied] = useState(false);
+  const autoCopy = useRef(false);
+
+  const presetUrl = preset && current ? current : null;
+  const alreadyCopied = !!presetUrl && user?.unsafeMetadata?.[COPIED_KEY] === presetUrl;
+  const canCopy = !!presetUrl && !!user && !alreadyCopied && !copied && local === undefined;
+
+  /** Makes the preset the Clerk account photo too, and remembers it. */
+  async function copyToAccount(url: string) {
+    if (!user) return;
+    await user.setProfileImage({ file: await imageFile(url) });
+    await user.update({ unsafeMetadata: { ...user.unsafeMetadata, [COPIED_KEY]: url } });
+    await user.reload();
+    setCopied(true);
+  }
+
+  useEffect(() => {
+    if (!canCopy || autoCopy.current || !presetUrl || !user) return;
+    if (!adopt && user.hasImage) return; // their own photo stays unless they ask
+    autoCopy.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after the upload, not synchronously
+    copyToAccount(presetUrl).catch((err) => console.error("Copying the jury photo to the account failed:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the account loads
+  }, [canCopy, presetUrl, user, adopt]);
 
   async function change(file: File | null) {
     if (!user) return;
@@ -85,10 +133,32 @@ function PhotoField({ current, preset }: { current: string | null; preset: boole
             )}
           </div>
           <p className="text-xs text-black/55">
-            {preset && local === undefined
-              ? "This is the photo prepared for your jury profile. Change it any time."
-              : "Square works best. Saved to your account; it can take a minute to appear on the site."}
+            {copied
+              ? "This photo is now your account photo too."
+              : preset && local === undefined
+                ? "This is the photo prepared for your jury profile. Change it any time."
+                : "Square works best. Saved to your account; it can take a minute to appear on the site."}
           </p>
+          {canCopy && user?.hasImage && !adopt && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError(null);
+                try {
+                  await copyToAccount(presetUrl!);
+                } catch {
+                  setError("The photo could not be copied to your account. Please try again.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className="justify-self-start text-xs text-black/55 underline underline-offset-4 hover:text-black disabled:opacity-50"
+            >
+              Use it as my account photo too
+            </button>
+          )}
           {error && (
             <p role="alert" className="text-xs font-medium">
               {error}
@@ -275,7 +345,7 @@ function ProfileFields({
   onSave,
 }: {
   initial: JurorProfileArgs;
-  photo: { current: string | null; preset: boolean };
+  photo: { current: string | null; preset: boolean; adopt?: boolean };
   submitLabel: string;
   onSave: (profile: JurorProfileArgs) => Promise<void>;
 }) {
@@ -331,7 +401,7 @@ function ProfileFields({
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6">
-      <PhotoField current={photo.current} preset={photo.preset} />
+      <PhotoField current={photo.current} preset={photo.preset} adopt={photo.adopt} />
       <div className="grid gap-6 md:grid-cols-2">
         <label className="grid gap-2">
           <span className={label}>Name</span>
@@ -432,7 +502,7 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
         experience: me.experience ?? [],
         work: me.work ?? [],
       }}
-      photo={{ current: me.imageUrl, preset: me.hasPresetPhoto }}
+      photo={{ current: me.imageUrl, preset: me.hasPresetPhoto, adopt: claimed }}
       submitLabel="Save profile"
       onSave={async (profile) => {
         await update(profile);
