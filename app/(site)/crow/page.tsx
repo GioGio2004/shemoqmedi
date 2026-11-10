@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BadgeArt, BadgeDefs } from "@/components/badges/BadgeArt";
 import { BadgeReveal } from "@/components/badges/BadgeReveal";
-import { CrowWalk, type WalkItem } from "@/components/crow-page/CrowWalk";
-import { SpriteCrow } from "@/components/crow-page/SpriteCrow";
 import { PillLink } from "@/components/site/ui";
 import { awardName } from "@/lib/badgeInfo";
-import { getPublicListings } from "@/lib/listings";
 import { SITE_NAME } from "@/lib/site";
 import type { AwardSlug } from "@/lib/taxonomy";
 
@@ -29,31 +26,24 @@ export const metadata: Metadata = {
   },
 };
 
-// Static; the walk's sites refresh hourly.
 export const dynamic = "force-static";
-export const revalidate = 3600;
 
-/** Jury awards, highest first: what the crow keeps (First 100 is honorary, not kept). */
-const KEEP: AwardSlug[] = ["SOTY", "SOTM", "SOTD", "BSC", "HM"];
-const WALK_MAX = 18;
-
-/** Sites for the walk: mostly listings it passes by, with the award winners spread among them. */
-async function walkItems(): Promise<WalkItem[]> {
-  const listings = (await getPublicListings()).filter((l) => l.coverUrl && !l.byTeam);
-  const top = (awards: AwardSlug[]) => KEEP.find((a) => awards.includes(a)) ?? null;
-  const won = listings.filter((l) => top(l.awards)).slice(0, 6);
-  const rest = listings.filter((l) => !top(l.awards)).slice(0, WALK_MAX - won.length);
-  const out: WalkItem[] = [];
-  const every = Math.max(2, Math.floor((won.length + rest.length) / Math.max(1, won.length)));
-  let w = 0;
-  let r = 0;
-  while (w < won.length || r < rest.length) {
-    // A winner every few sites, never first: the crow looks before it keeps.
-    const pick = (out.length % every === every - 1 && w < won.length) || r >= rest.length ? won[w++] : rest[r++];
-    const award = top(pick.awards);
-    out.push({ slug: pick.slug, title: pick.title, coverUrl: pick.coverUrl!, award: award && awardName(award) });
-  }
-  return out;
+/**
+ * A big title the site's crow (components/site/crow/roam.ts) can stand on:
+ * one span per letter. `goto` is the letter it flies to as soon as the page
+ * opens; the others are perches it may visit later.
+ */
+function CrowTitle({ text, goto }: { text: string; goto?: number }) {
+  return (
+    <span data-crow-wordmark="" className="block">
+      {text.split("").map((ch, i) => (
+        <span key={i} aria-hidden="true" data-crow-letter="" data-crow-goto={i === goto ? "" : undefined}>
+          {ch}
+        </span>
+      ))}
+      <span data-crow-baseline="" aria-hidden="true" className="inline-block h-0 w-0" />
+    </span>
+  );
 }
 
 /** A statement whose words light up as it scrolls through (app/globals.css .crow-words). */
@@ -126,9 +116,7 @@ const CROWS: { tier: AwardSlug; period: string; date: string; name: string }[] =
   { tier: "SOTY", period: "2026", date: "2027-01-20", name: "Gold" },
 ];
 
-export default async function CrowPage() {
-  const items = await walkItems();
-
+export default function CrowPage() {
   return (
     <>
       <noscript>
@@ -136,26 +124,21 @@ export default async function CrowPage() {
       </noscript>
       <BadgeDefs />
 
-      {/* Hero: the crow on its line, under the name. */}
+      {/* Hero. The site's own crow flies straight to the E as the page opens (data-crow-goto). */}
       <header className="container-site pt-32 md:pt-40">
         <p className="block text-[clamp(1.75rem,4vw,3.5rem)] leading-none font-medium tracking-[-0.045em] lowercase">
           our mascot
         </p>
-        <h1 className="mt-2 text-[clamp(3.75rem,13.5vw,13.5rem)] leading-[0.86] font-semibold tracking-[-0.065em] uppercase">
-          The crow
+        <h1
+          aria-label="The crow"
+          // Room above the letters for the crow to stand on them.
+          className="mt-[clamp(3.25rem,6vw,5rem)] text-[clamp(3.75rem,13.5vw,13.5rem)] leading-[0.86] font-semibold tracking-[-0.065em] uppercase"
+        >
+          <CrowTitle text="The crow" goto={2} />
         </h1>
-        {/* Under xl the title is too wide to share its line: the crow gets room of its own. */}
-        <div className="relative mt-28 md:mt-48 xl:mt-10">
-          <div className="absolute right-0 bottom-full h-[130px] w-[200px] md:h-[230px] md:w-[340px]">
-            <SpriteCrow routine="perch" height={84} feet={[0.55, 1]} flip className="md:hidden" />
-            <SpriteCrow routine="perch" height={150} feet={[0.55, 1]} flip className="hidden md:block" />
-          </div>
-          <div className="h-px bg-black" />
-        </div>
-        <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="mt-10 flex flex-col gap-6 border-t border-black/10 pt-8 md:flex-row md:items-end md:justify-between">
           <p className="max-w-md text-sm leading-relaxed text-black/60">
-            Shemoqmedi (შემოქმედი) is Georgian for <em>creator</em>. The crow is how we find them. Tap it: it has
-            something to say.
+            Shemoqmedi (შემოქმედი) is Georgian for <em>creator</em>. The crow is how we find them.
           </p>
           <p className="eyebrow">Scroll</p>
         </div>
@@ -171,35 +154,24 @@ export default async function CrowPage() {
         </p>
       </section>
 
-      {items.length >= 6 && <CrowWalk items={items} />}
-
       {/* The myth, and what is true. */}
-      <section aria-labelledby="glitter-title" className="container-site py-24 md:py-36">
-        <div className="grid gap-10 md:grid-cols-12">
-          <div className="md:col-span-5">
-            <div className="relative h-[150px] w-[200px] overflow-hidden md:h-[190px] md:w-[240px]">
-              <SpriteCrow routine="peek" height={100} feet={[0.5, 1]} className="md:hidden" />
-              <SpriteCrow routine="peek" height={124} feet={[0.5, 1]} className="hidden md:block" />
-            </div>
-            <div className="h-px w-[200px] bg-black md:w-[240px]" />
-          </div>
-          <div className="md:col-span-7">
-            <h2
-              id="glitter-title"
-              className="text-[clamp(2rem,4.4vw,3.75rem)] leading-[1] font-semibold tracking-[-0.055em]"
-            >
-              Not everything that glitters
-            </h2>
-            <div className="mt-6 grid max-w-xl gap-4 text-[15px] leading-relaxed text-black/70">
-              <p>
-                The old story says crows and magpies steal anything shiny. It is mostly folklore: in a 2014 study at
-                the University of Exeter, magpies were wary of shiny objects, not drawn to them.
-              </p>
-              <p>
-                Crows don&apos;t grab whatever sparkles. They look, they test, they choose. So do we: a site is
-                never listed for its effects alone. It is kept for being good.
-              </p>
-            </div>
+      <section aria-labelledby="glitter-title" className="container-site border-t border-black/10 py-24 md:py-36">
+        <div className="grid gap-6 md:grid-cols-12 md:gap-10">
+          <h2
+            id="glitter-title"
+            className="text-[clamp(2rem,4.4vw,3.75rem)] leading-[1] font-semibold tracking-[-0.055em] md:col-span-5"
+          >
+            Not everything that glitters
+          </h2>
+          <div className="grid max-w-xl gap-4 text-[15px] leading-relaxed text-black/70 md:col-span-7">
+            <p>
+              The old story says crows and magpies steal anything shiny. It is mostly folklore: in a 2014 study at the
+              University of Exeter, magpies were wary of shiny objects, not drawn to them.
+            </p>
+            <p>
+              Crows don&apos;t grab whatever sparkles. They look, they test, they choose. So do we: a site is never
+              listed for its effects alone. It is kept for being good.
+            </p>
           </div>
         </div>
       </section>
@@ -248,6 +220,8 @@ export default async function CrowPage() {
           {LORE.map((l, i) => (
             <li
               key={l.title}
+              // A card the crow may land on (components/site/crow/roam.ts).
+              data-crow-perch=""
               className="crow-rise flex flex-col gap-4 rounded-3xl border border-black/10 p-6 md:p-8"
               style={{ "--i": i } as React.CSSProperties}
             >
@@ -306,9 +280,11 @@ export default async function CrowPage() {
       <section aria-labelledby="now-title" className="container-site border-t border-black/10 pt-24 md:pt-36">
         <h2
           id="now-title"
+          aria-label="Why now?"
           className="text-[clamp(3.75rem,13.5vw,13.5rem)] leading-[0.86] font-semibold tracking-[-0.065em] uppercase"
         >
-          Why now?
+          {/* The crow may stop on these letters too. */}
+          <CrowTitle text="Why now?" />
         </h2>
         <div className="mt-14 grid gap-10 md:mt-20 md:grid-cols-12">
           <p className="text-[clamp(1.75rem,3.4vw,3rem)] leading-[1.05] font-semibold tracking-[-0.05em] md:col-span-6">
@@ -327,17 +303,10 @@ export default async function CrowPage() {
         </div>
       </section>
 
-      {/* The end: the crow is off to look for more. */}
-      <section aria-labelledby="end-title" className="relative overflow-hidden">
-        <div className="container-site pt-40 pb-8 md:pt-56">
-          <div className="relative">
-            <div className="absolute bottom-full left-0 h-[150px] w-[220px] md:h-[200px] md:w-[300px]">
-              <SpriteCrow routine="takeoff" height={100} feet={[0.45, 1]} delay={600} className="md:hidden" />
-              <SpriteCrow routine="takeoff" height={130} feet={[0.45, 1]} delay={600} className="hidden md:block" />
-            </div>
-            <div className="h-px bg-black" />
-          </div>
-          <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+      {/* The end. */}
+      <section aria-labelledby="end-title">
+        <div className="container-site pt-32 pb-8 md:pt-48">
+          <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
             <h2
               id="end-title"
               className="max-w-2xl text-[clamp(2rem,5vw,4.25rem)] leading-[0.98] font-semibold tracking-[-0.055em]"

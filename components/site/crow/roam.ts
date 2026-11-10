@@ -204,10 +204,27 @@ export class CrowRoamer {
   /** A client-side page change: anything on the old page is gone. */
   routeChanged() {
     this.gotoDone = false;
-    if (this.state === "OFF") return;
-    if (this.space === "page" && !(this.spot.kind === "home" && this.isSitting())) this.vanish();
-    else if (this.spot.kind === "home" && this.isSitting()) [this.x, this.y] = this.homePoint();
-    this.render();
+    if (this.state !== "OFF") {
+      if (this.space === "page" && !(this.spot.kind === "home" && this.isSitting())) this.vanish();
+      else if (this.spot.kind === "home" && this.isSitting()) [this.x, this.y] = this.homePoint();
+      this.render();
+    }
+    // A page with a must-visit spot (/crow, the log-in I): the crow heads there
+    // now. Away, it flies straight in; flying home or off, it turns towards
+    // the spot in the air; resting at home, it gets up (then the PERCH check
+    // takes it from the logo to the spot).
+    if (!document.querySelector("[data-crow-goto]")) return;
+    if (this.state === "OFF") this.wait = Math.min(this.wait, 0.35);
+    else if (this.state === "FLY" && !isPage(this.target)) {
+      const g = this.gotoSpot();
+      if (!g) return;
+      if (this.target.kind === "home") this.opts.onHome(false);
+      this.target = g;
+      this.startFlight(this.flight.k0 + Math.floor(this.t * this.sprites.takeoff.fps));
+    } else if (this.spot.kind === "home" && (this.state === "REST" || this.state === "STRETCH")) this.toPerch(0);
+    else return;
+    this.stop();
+    this.schedule();
   }
 
   get debugState() {
