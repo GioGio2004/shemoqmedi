@@ -28,6 +28,7 @@ export const EXPLORE = [
   { label: "Jury", href: "/jury" },
   { label: "Badges", href: "/badges" },
   { label: "How we score", href: "/how-we-score" },
+  { label: "The crow", href: "/crow" },
 ] as const;
 
 const TECH_IN_MENU = TECHNOLOGIES.filter((t) => !["custom-cms", "custom-audio", "typescript", "mcp", "ai"].includes(t.slug));

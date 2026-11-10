@@ -216,6 +216,9 @@ export default async function BadgesPage() {
           <Link href="/how-we-score" className="text-sm underline underline-offset-4">
             How awards are decided
           </Link>
+          <Link href="/crow" className="text-sm underline underline-offset-4">
+            Why a crow
+          </Link>
         </div>
       </section>
     </>

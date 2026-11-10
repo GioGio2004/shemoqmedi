@@ -10,6 +10,7 @@ export const INFO_PAGES = [
   { href: "/about", label: "About" },
   { href: "/how-we-score", label: "How we score" },
   { href: "/jury", label: "The jury" },
+  { href: "/crow", label: "The crow" },
 ] as const;
 
 /**

@@ -38,6 +38,7 @@ const ABOUT: FooterLink[] = [
   { label: "About", href: "/about" },
   { label: "How we score", href: "/how-we-score" },
   { label: "The jury", href: "/jury" },
+  { label: "The crow", href: "/crow" },
   { label: "ქართულად", href: "/ka" },
 ];
 
