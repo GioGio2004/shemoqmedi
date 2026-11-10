@@ -76,14 +76,16 @@ async function loadAnim(url: string): Promise<Anim> {
 }
 
 /**
- * Bump when a set's index.json changes (an animation added): /crow is cached
- * for a day, so browsers would keep the old list.
+ * Bump when a set's sprites.json changes (an animation added): /crow/* is
+ * cached for a day, so browsers would keep the old list. Not index.json:
+ * Vercel serves a folder's index.json at the folder's own path, which would
+ * hide the /crow page.
  */
-const INDEX_VERSION = 4;
-const indexUrl = (base: string) => `${base}/index.json?v=${INDEX_VERSION}`;
+const INDEX_VERSION = 5;
+const indexUrl = (base: string) => `${base}/sprites.json?v=${INDEX_VERSION}`;
 
 /**
- * Loads the sheets listed in `${base}/index.json`; `only` limits the set.
+ * Loads the sheets listed in `${base}/sprites.json`; `only` limits the set.
  * The navbar uses the small set in /crow/nav (a 48 px crow).
  */
 export async function loadSprites(only: AnimName[] = FOOTER, base = "/crow"): Promise<Sprites | null> {

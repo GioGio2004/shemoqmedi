@@ -16,7 +16,7 @@ so the site works today and gets better as soon as the real clips land.
 Output, in public/crow/:
     <name>.webp   horizontal sprite sheet, RGBA, crow ~160 px tall (2x)
     <name>.json   frames, frameWidth, frameHeight, fps, anchor, ...
-    index.json    which animations exist + the shared frame geometry
+    sprites.json  which animations exist + the shared frame geometry
 
 Every animation shares one frame size and one anchor (the point between the
 feet on the ground), so poses line up exactly when the player switches.
@@ -949,7 +949,7 @@ def main() -> int:
                 cv2.line(prev, (x + AX, y), (x + AX, y + H), (255, 0, 0), 1)
             cv2.imwrite(str(args.preview / f"{name}.png"), prev)
 
-    (OUT / "index.json").write_text(json.dumps(index, indent=2) + "\n")
+    (OUT / "sprites.json").write_text(json.dumps(index, indent=2) + "\n")
 
     fallback = [n for n in clips if clips[n].file == "forage.mp4"]
     if fallback:
