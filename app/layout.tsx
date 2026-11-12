@@ -32,12 +32,19 @@ export const metadata: Metadata = {
   openGraph: { type: "website", locale: "en_US", siteName: SITE_NAME },
   // Title, description and image are copied from each page's openGraph.
   twitter: { card: "summary_large_image" },
+  // The crow. New file names (icons/crow-*) so search engines and browsers
+  // fetch them fresh instead of keeping the old cached icon. Google wants a
+  // square icon in a multiple of 48 px: the 192 px one.
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/icons/crow-favicon.ico", sizes: "any" },
+      { url: "/icons/crow-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/crow-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/icons/crow-favicon.ico",
+    apple: { url: "/icons/crow-180.png", sizes: "180x180" },
   },
-  manifest: "/site.webmanifest",
+  manifest: "/crow.webmanifest",
 };
 
 export const viewport: Viewport = {
