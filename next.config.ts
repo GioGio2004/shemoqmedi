@@ -5,6 +5,11 @@ import type { NextConfig } from "next";
 const CANONICAL_HOST = "www.shemoqmedi.space";
 const APEX_HOST = "shemoqmedi.space";
 
+// Other sites that may show this one inside a frame. Giorgi's portfolio opens
+// the live site in its work section; the second address is the same portfolio
+// on its Vercel address. Everything else is refused (clickjacking protection).
+const FRAME_ANCESTORS = ["https://khvichia.shemoqmedi.space", "https://khvichia-shemoqmedi-space.vercel.app"];
+
 const nextConfig: NextConfig = {
   experimental: {
     // Turbopack's on-disk dev cache survives restarts, and on Windows it
@@ -69,9 +74,12 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
-          // Clickjacking protection. Widen this if the admin app ever needs
-          // to embed the site in an iframe.
-          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          // Clickjacking protection: only this site itself and the pages
+          // listed in FRAME_ANCESTORS may show it inside a frame.
+          {
+            key: "Content-Security-Policy",
+            value: `frame-ancestors 'self' ${FRAME_ANCESTORS.join(" ")}`,
+          },
         ],
       },
       {
