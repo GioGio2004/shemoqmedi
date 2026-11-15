@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import { PillLink } from "@/components/site/ui";
+
+// Its own title instead of the home page's, so a 404 never reads like the home page.
+export const metadata: Metadata = {
+  title: "Page not found",
+  description: "This page does not exist on Shemoqmedi.",
+  robots: { index: false },
+};
 
 export default function NotFound() {
   return (

@@ -20,7 +20,7 @@ import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { isImageKit, optimizedImageUrl } from "@/lib/imageLoader";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { AWARDS, listingCategories } from "@/lib/taxonomy";
-import { listingImageUrls, screenshotCaption } from "@/lib/imageSeo";
+import { listingImageUrls, screenshotCaption, listingVideo } from "@/lib/imageSeo";
 import { badgeLabel, badgePath } from "@/lib/badgeInfo";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
@@ -210,7 +210,7 @@ const pill =
 const monoPill = `${pill} font-mono tabular-nums`;
 
 /**
- * WebPage + CreativeWork + BreadcrumbList. No rating markup: Google shows
+ * WebPage + CreativeWork (+ VideoObject) + BreadcrumbList. No rating markup: Google shows
  * review stars only for specific types (not CreativeWork), and the final
  * score is jury-weighted, not an average of user ratings.
  */
@@ -220,6 +220,7 @@ function buildJsonLd(listing: PublicListing, meta: { title: string; description:
   const published = new Date(listing.publishedAt).toISOString();
   const images = listingImageUrls(listing);
   const awards = rankedAwards(listing);
+  const video = listingVideo(listing);
   // One entity for the site's maker, shared by the work and its screenshots.
   const creator = {
     "@type": listing.creatorTier === "solo" ? "Person" : "Organization",
@@ -272,8 +273,22 @@ function buildJsonLd(listing: PublicListing, meta: { title: string; description:
         datePublished: published,
         creator,
         ...(awards.length > 0 ? { award: awards.map((a) => `${SITE_NAME} ${a.name}`) } : {}),
+        ...(video ? { video: { "@id": `${pageUrl}#video` } } : {}),
         mainEntityOfPage: { "@id": pageUrl },
       },
+      // The walkthrough recording (same data as the video sitemap entry).
+      ...(video
+        ? [
+            {
+              "@type": "VideoObject",
+              "@id": `${pageUrl}#video`,
+              ...video,
+              creator,
+              publisher: { "@id": `${SITE_URL}/#organization` },
+              isFamilyFriendly: true,
+            },
+          ]
+        : []),
       {
         "@type": "BreadcrumbList",
         "@id": `${pageUrl}#breadcrumb`,

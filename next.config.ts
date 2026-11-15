@@ -20,9 +20,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     // Old URLs reach their final answer in one hop. Only paths with a live
-    // page redirect; dead Voloo pages (/menu/*, /venues/*, /privacy,
-    // /terms, ...) fall through to a real 404 (app/not-found.tsx, noindex)
-    // instead of redirecting to the home page, which Google treats as a soft 404.
+    // page redirect; dead Voloo pages (/menu/*, /venues/*, the templates, ...)
+    // answer 410 Gone from proxy.ts (lib/gone.ts) instead of redirecting to the
+    // home page, which Google treats as a soft 404.
     const legacy = [
       // The site used to be localized under /en, /ka and /ru. It is English-only
       // now; /ka is the hand-written Georgian landing page (app/(site)/ka).
@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
         source: "/:locale(en|ka|ru)/:page(account|submit|sites|creators|collections|badges|vote|claim)/:rest*",
         destination: "/:page/:rest*",
       },
+      // The legal pages were localized too; the English ones are the live copies.
+      { source: "/:locale(en|ka|ru)/:page(privacy|terms)", destination: "/:page" },
       // Site of the Day became a dated archive of its own.
       { source: "/collections/sotd", destination: "/site-of-the-day" },
       // Category pages became programmatic collections.
@@ -81,6 +83,12 @@ const nextConfig: NextConfig = {
             value: `frame-ancestors 'self' ${FRAME_ANCESTORS.join(" ")}`,
           },
         ],
+      },
+      {
+        // The Georgian landing page. The root layout's <html lang> is "en" for
+        // every page; Bing reads Content-Language for the page's language.
+        source: "/ka",
+        headers: [{ key: "Content-Language", value: "ka" }],
       },
       {
         // Crow sprite sheets: rebuilt rarely, so let browsers keep them a day

@@ -20,6 +20,15 @@ export type CollectionKind = "category" | "technology" | "region" | "award" | "s
  */
 export const MIN_INDEXABLE = 2;
 
+/**
+ * The bar for /collections/<tag> pages (and the Georgian pair /ka): a "Best X
+ * websites" page with two or three entries reads as thin to search engines and
+ * drags the whole site's quality down. Until a collection has this many
+ * listings it is noindex,follow and out of the sitemap. The Site of the Day
+ * archive keeps MIN_INDEXABLE: it gains a winner every day.
+ */
+export const MIN_INDEXABLE_COLLECTION = 5;
+
 export type Collection = {
   tag: string;
   kind: CollectionKind;

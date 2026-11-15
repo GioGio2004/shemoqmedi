@@ -12,3 +12,13 @@ export const SITE_NAME = "Shemoqmedi";
 export function absoluteUrl(path = "/") {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/**
+ * Official social profiles. Shown in the footer and listed as the
+ * Organization's sameAs, which tells search engines these accounts and this
+ * site are the same "Shemoqmedi" (and not the monastery of the same name).
+ */
+export const SOCIAL_PROFILES: { label: string; href: string }[] = [
+  { label: "Instagram", href: "https://www.instagram.com/shemoqmedi.voloostudio/" },
+  { label: "Facebook", href: "https://www.facebook.com/profile.php?id=61587244665349" },
+];

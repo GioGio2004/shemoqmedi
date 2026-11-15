@@ -4,7 +4,7 @@ import { Noto_Sans_Georgian } from "next/font/google";
 import { PageHero } from "@/components/listing/PageHero";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { PillLink } from "@/components/site/ui";
-import { MIN_INDEXABLE } from "@/lib/collections";
+import { MIN_INDEXABLE_COLLECTION } from "@/lib/collections";
 import { getPublicListings } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { AWARD_RULES } from "@/lib/taxonomy";
@@ -30,7 +30,7 @@ const description =
 
 export async function generateMetadata(): Promise<Metadata> {
   // Paired with /collections/georgia only while that page is indexable.
-  const paired = (await getPublicListings()).filter((l) => l.region === "georgia").length >= MIN_INDEXABLE;
+  const paired = (await getPublicListings()).filter((l) => l.region === "georgia").length >= MIN_INDEXABLE_COLLECTION;
   return {
     title,
     description,

@@ -15,3 +15,26 @@ export function listingImageUrls(listing: Pick<PublicListing, "coverUrl" | "gall
 export function screenshotCaption(title: string, i: number, count: number) {
   return `${title} website, ${i === 0 ? "main screenshot" : `screenshot ${i + 1} of ${count}`}`;
 }
+
+/**
+ * The listing's walkthrough video, described for search engines: VideoObject
+ * data on the listing page and a <video:video> entry in the sitemap. Google
+ * needs a title, a description, a thumbnail and the upload date; contentUrl is
+ * the file itself (Cloudflare R2). Null when the listing has no video or no
+ * cover to use as the thumbnail.
+ */
+export function listingVideo(
+  listing: Pick<PublicListing, "videoUrl" | "coverUrl" | "title" | "creditName" | "tagline" | "publishedAt">,
+) {
+  if (!listing.videoUrl || !listing.coverUrl) return null;
+  const tagline = listing.tagline.trim();
+  return {
+    name: `${listing.title} website walkthrough`,
+    description: `A screen recording of the ${listing.title} website by ${listing.creditName}${
+      tagline ? `: ${tagline}` : "."
+    }`,
+    thumbnailUrl: listing.coverUrl,
+    contentUrl: listing.videoUrl,
+    uploadDate: new Date(listing.publishedAt).toISOString(),
+  };
+}

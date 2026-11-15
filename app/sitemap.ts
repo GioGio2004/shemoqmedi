@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 import type { PublicListing } from "@/convex-helpers-api";
-import { MIN_INDEXABLE, routedCollections } from "@/lib/collections";
+import { MIN_INDEXABLE, MIN_INDEXABLE_COLLECTION, routedCollections } from "@/lib/collections";
 import { SOTD_PATH, sotdWinners } from "@/lib/sotd";
 import { getAwardSlugs, getCreators, getJurorSlugs, getPublicListings, getPublicSlugs } from "@/lib/listings";
-import { listingImageUrls } from "@/lib/imageSeo";
+import { listingImageUrls, listingVideo } from "@/lib/imageSeo";
 import { absoluteUrl } from "@/lib/site";
 
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -30,6 +30,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // the covers of their sites (lib/imageSeo.ts).
   const bySlug = new Map(listings.map((l) => [l.slug, l]));
   const imagesOf = (l: PublicListing | undefined) => (l ? listingImageUrls(l) : []);
+  // Video sitemap: the walkthrough recording on its site page (same data as
+  // the page's VideoObject).
+  const videosOf = (l: PublicListing | undefined) => {
+    const video = l ? listingVideo(l) : null;
+    return video
+      ? [
+          {
+            title: video.name,
+            description: video.description,
+            thumbnail_loc: video.thumbnailUrl,
+            content_loc: video.contentUrl,
+            publication_date: video.uploadDate,
+            family_friendly: "yes" as const,
+          },
+        ]
+      : [];
+  };
   const creatorCovers = (slug: string) =>
     listings.flatMap((l) => (l.creator?.slug === slug && l.coverUrl ? [l.coverUrl] : []));
 
@@ -61,7 +78,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: newest(listings.filter((l) => l.region === "georgia")),
       changeFrequency: "weekly",
       priority: 0.6,
-      ...(listings.filter((l) => l.region === "georgia").length >= MIN_INDEXABLE
+      ...(listings.filter((l) => l.region === "georgia").length >= MIN_INDEXABLE_COLLECTION
         ? { alternates: { languages: { ka: absoluteUrl("/ka"), en: absoluteUrl("/collections/georgia") } } }
         : {}),
     },
@@ -74,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })(),
     ...routedCollections().flatMap((c) => {
       const items = listings.filter(c.match);
-      if (items.length < MIN_INDEXABLE) return [];
+      if (items.length < MIN_INDEXABLE_COLLECTION) return [];
       return [
         {
           url: absoluteUrl(`/collections/${c.tag}`),
@@ -94,6 +111,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
       images: imagesOf(bySlug.get(s.slug)),
+      videos: videosOf(bySlug.get(s.slug)),
     })),
     ...creators.map((c) => ({
       url: absoluteUrl(`/creators/${c.slug}`),

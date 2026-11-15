@@ -2,6 +2,7 @@ import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getCollectionCounts } from "@/lib/listings";
 import { collectionHref } from "@/lib/collections";
+import { SOCIAL_PROFILES } from "@/lib/site";
 
 type FooterLink = { label: string; href: string };
 
@@ -88,7 +89,7 @@ export async function Footer() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 md:col-span-7">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-5 md:col-span-7">
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>
               <p className="eyebrow mb-4">{col.title}</p>
@@ -108,6 +109,18 @@ export async function Footer() {
               </ul>
             </nav>
           ))}
+          <nav aria-label="Follow">
+            <p className="eyebrow mb-4">Follow</p>
+            <ul className="grid gap-2 text-sm">
+              {SOCIAL_PROFILES.map((profile) => (
+                <li key={profile.href}>
+                  <a href={profile.href} target="_blank" rel="me noopener" className="hover:underline">
+                    {profile.label} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </div>
 

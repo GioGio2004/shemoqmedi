@@ -9,7 +9,7 @@ import {
   collectionHref,
   routedCollections,
   getCollection,
-  MIN_INDEXABLE,
+  MIN_INDEXABLE_COLLECTION,
   type Collection,
 } from "@/lib/collections";
 import { COLLECTION_ABOUT } from "@/lib/collectionCopy";
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       canonical: url,
       // /ka is the Georgian version of the Georgia collection (paired only
       // while this page is indexable; hreflang to a noindex page is an error).
-      ...(collection.tag === "georgia" && hits.length >= MIN_INDEXABLE
+      ...(collection.tag === "georgia" && hits.length >= MIN_INDEXABLE_COLLECTION
         ? { languages: { en: url, ka: absoluteUrl("/ka"), "x-default": url } }
         : {}),
     },
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     },
     // Thin pages stay reachable and pass their links on, but are not indexed
     // until they fill up (they are left out of the sitemap too).
-    ...(hits.length < MIN_INDEXABLE ? { robots: { index: false, follow: true } } : {}),
+    ...(hits.length < MIN_INDEXABLE_COLLECTION ? { robots: { index: false, follow: true } } : {}),
   };
 }
 

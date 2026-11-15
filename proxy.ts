@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { GONE_HTML, isGonePath } from "@/lib/gone";
 
 // Pages that need a signed-in user. Everything else is public.
 // /claim is not here: a /claim/<token> link must open for people who have no
@@ -13,7 +14,7 @@ const isProtectedRoute = createRouteMatcher([
   "/jury/rounds(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const clerk = clerkMiddleware(async (auth, req) => {
   if (!isProtectedRoute(req)) return;
 
   // Pending (a task such as a password reset is left): finish it first. By
@@ -32,6 +33,21 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(url);
   }
 });
+
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Retired Voloo pages: 410 Gone, so search engines drop them for good.
+  if (isGonePath(req.nextUrl.pathname)) {
+    return new NextResponse(GONE_HTML, {
+      status: 410,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  }
+  return clerk(req, event);
+}
 
 export const config = {
   // Clerk runs only where a session matters: the (auth) route group, which is
@@ -52,5 +68,11 @@ export const config = {
     "/sso-callback/:path*",
     "/session-tasks/:path*",
     "/(api|trpc)(.*)",
+    // Retired Voloo pages (lib/gone.ts answers them with 410 Gone).
+    "/(en|ru)/:path*",
+    "/ka/:path+",
+    "/(menu|menu-examples|venues|volooaimenu|experimenr|admin|shop)/:path*",
+    "/(acoustic-shop|auto-1|auto-shop|modern|shoes|coffee|coffee-2|coffee-3|coffee-4)/:path*",
+    "/(dark-menu|light-menu|modern-restaurant|regular|beauty|construction)/:path*",
   ],
 };

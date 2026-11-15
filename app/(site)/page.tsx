@@ -29,7 +29,7 @@ import { LiveVotingRail } from "@/components/listing/LiveVotingRail";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
 import { getPublicListings } from "@/lib/listings";
-import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+import { SITE_NAME, SITE_URL, SOCIAL_PROFILES, absoluteUrl } from "@/lib/site";
 
 // Title and description are the root defaults (app/layout.tsx), which Next
 // also copies into og:title and og:description. This openGraph replaces the
@@ -57,7 +57,7 @@ export default async function Home() {
   const listed = listings.slice(0, 20);
   // Organization gives Google the logo; WebSite gives it the site name (the
   // domain used to carry another product). No SearchAction: there is no
-  // search page. Add sameAs to the Organization once social profiles exist.
+  // search page.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -67,6 +67,8 @@ export default async function Home() {
         name: SITE_NAME,
         url: `${SITE_URL}/`,
         logo: { "@type": "ImageObject", url: absoluteUrl("/brand/crow.png"), width: 431, height: 320 },
+        description: "Website awards and web design inspiration, born in Tbilisi. Site of the Day, Month and Year, scored by a jury.",
+        sameAs: SOCIAL_PROFILES.map((p) => p.href),
       },
       {
         "@type": "WebSite",
