@@ -441,6 +441,23 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
         )}
       </section>
 
+      {/* About this site: the editorial write-up (written on the admin's agent desk) */}
+      {listing.writeup?.trim() && (
+        <section aria-labelledby="about-site-title" className="container-site mt-12">
+          <h2 id="about-site-title" className="eyebrow">
+            About this site
+          </h2>
+          <div className="mt-3 grid max-w-2xl gap-4 text-lg leading-relaxed tracking-[-0.01em]">
+            {listing.writeup
+              .trim()
+              .split(/\n\s*\n/)
+              .map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+          </div>
+        </section>
+      )}
+
       {/* Jury note: the owner's own short review */}
       {listing.juryNote?.trim() && (
         <section aria-labelledby="jury-note-title" className="container-site mt-12">

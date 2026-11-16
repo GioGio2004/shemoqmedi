@@ -65,6 +65,8 @@ export type PublicListing = {
   galleryUrls: string[]; // up to 4 more screenshots, in order
   videoUrl: string | null; // short muted hover preview
   juryNote: string | null; // owner-written review (up to ~600 chars), shown on the listing page
+  /** "About this site": the editorial write-up, paragraphs separated by a blank line. Optional until the backend with it is deployed. */
+  writeup?: string | null;
 };
 
 /** One of the signed-in user's own listings. */
