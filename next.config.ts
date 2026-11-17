@@ -91,6 +91,15 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Content-Language", value: "ka" }],
       },
       {
+        // Build output (JS chunks, CSS, fonts). Googlebot fetches these to
+        // render pages, so they stay crawlable (never disallow /_next/ in
+        // robots.txt), but they are not pages: keep them out of the index.
+        // Without this they pile up in Search Console under "Crawled -
+        // currently not indexed". /_next/image is left alone (Google Images).
+        source: "/_next/static/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex" }],
+      },
+      {
         // Crow sprite sheets: rebuilt rarely, so let browsers keep them a day
         // and revalidate in the background for a week.
         source: "/crow/:path+",
