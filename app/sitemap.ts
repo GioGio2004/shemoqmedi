@@ -5,6 +5,7 @@ import { SOTD_PATH, sotdWinners } from "@/lib/sotd";
 import { getAwardSlugs, getCreators, getJurorSlugs, getPublicListings, getPublicSlugs } from "@/lib/listings";
 import { listingImageUrls, listingVideo } from "@/lib/imageSeo";
 import { absoluteUrl } from "@/lib/site";
+import { escapeSitemap } from "@/lib/sitemapXml";
 
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
 // keeps the page static (ISR) and revalidate refreshes it in the background.
@@ -50,7 +51,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const creatorCovers = (slug: string) =>
     listings.flatMap((l) => (l.creator?.slug === slug && l.coverUrl ? [l.coverUrl] : []));
 
-  return [
+  // Titles and taglines are free text ("Agency & Production"): escape them all.
+  return escapeSitemap([
     {
       url: absoluteUrl("/"),
       lastModified: newest(listings),
@@ -134,5 +136,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "yearly" as const,
       priority: 0.5,
     })),
-  ];
+  ]);
 }
