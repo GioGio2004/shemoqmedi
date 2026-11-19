@@ -126,7 +126,8 @@ const sections: InfoSection[] = [
           <li>ImageKit: storage and delivery of screenshots and photos;</li>
           <li>Cloudflare R2: storage and delivery of preview videos;</li>
           <li>Resend: sending emails such as jury claim links;</li>
-          <li>Ahrefs: aggregated, cookieless visit statistics.</li>
+          <li>Ahrefs: aggregated, cookieless visit statistics;</li>
+          <li>Cloudflare: aggregated, cookieless visit statistics (Cloudflare Web Analytics) on public pages.</li>
         </ul>
         <p>
           Some of these providers store or process data outside Georgia, including in the United States and the
