@@ -36,8 +36,8 @@ function fallbackDescription(creator: PublicCreator, listings: PublicListing[]) 
   const who = `${creator.name}, ${creator.tier === "solo" ? "solo developer" : "design agency"}${
     creator.location ? ` in ${creator.location}` : ""
   }`;
-  if (listings.length === 0) return `${who}. Websites, jury and community scores and awards on ${SITE_NAME}.`;
-  return `Websites by ${who}: ${nameWorks(listings.map((l) => l.title))}. Scored by a jury and the community on ${SITE_NAME}.`;
+  if (listings.length === 0) return `${who}. Websites, jury scores and awards on ${SITE_NAME}.`;
+  return `Websites by ${who}: ${nameWorks(listings.map((l) => l.title))}. Scored by an independent jury on ${SITE_NAME}.`;
 }
 
 /**

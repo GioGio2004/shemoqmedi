@@ -13,9 +13,6 @@ const panel = "rounded-3xl border border-black/10 p-6 md:p-8";
 const input =
   "w-full min-h-[46px] rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none transition-colors placeholder:text-black/35 focus:border-black";
 
-/** Removal requests go through the same review queue, marked with this prefix. */
-const REMOVAL_PREFIX = "Removal request: ";
-
 type Intent = "claim" | "removal";
 
 
@@ -72,7 +69,7 @@ function Form({
   const [error, setError] = useState<string | null>(null);
 
   const removal = intent === "removal";
-  const maxLength = LIMITS.claimMessage - (removal ? REMOVAL_PREFIX.length : 0);
+  const maxLength = LIMITS.claimMessage;
 
   if (status === "done") {
     return (
@@ -110,8 +107,11 @@ function Form({
       await submit({
         targetType,
         slug,
-        message: removal ? `${REMOVAL_PREFIX}${text}` : text,
+        message: text,
         proofUrl: proofUrl.trim() || undefined,
+        // Removal requests share the review queue but are approved
+        // differently: the site is taken down and nobody gets ownership.
+        intent: removal ? "remove" : "claim",
       });
       setStatus("done");
     } catch (err) {

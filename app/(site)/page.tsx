@@ -110,7 +110,7 @@ export default async function Home() {
         eyebrow="Website awards & web design inspiration"
         prelude="the web's finest"
         title="Websites"
-        lede="Web design inspiration: sites worth seeing, scored by a jury and the community. The best get awarded."
+        lede="Web design inspiration: sites worth seeing, scored by an independent jury. The best get awarded."
         meta={`${listings.length} ${listings.length === 1 ? "website" : "websites"}`}
         action={<PillLink href="/submit">Submit your site</PillLink>}
       />

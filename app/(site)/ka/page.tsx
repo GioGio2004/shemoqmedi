@@ -5,9 +5,10 @@ import { PageHero } from "@/components/listing/PageHero";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { PillLink } from "@/components/site/ui";
 import { MIN_INDEXABLE_COLLECTION } from "@/lib/collections";
-import { getPublicListings } from "@/lib/listings";
+import { getAwardRules, getPublicListings } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
-import { AWARD_RULES } from "@/lib/taxonomy";
+import { pct, score } from "@/lib/scoringCopy";
+import type { AwardRules } from "@/lib/taxonomy";
 
 // The one Georgian page: a hand-written landing page for Georgian searches
 // ("საუკეთესო ქართული საიტები"), listing the sites made in Georgia. The rest
@@ -56,23 +57,23 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = "force-static";
 export const revalidate = 300;
 
-const AWARDS = [
+const awardsFor = (rules: AwardRules) => [
   {
     name: "საპატიო მოხსენიება",
     en: "Honorable Mention",
-    rule: "ყოველი საიტი, რომელიც კვირის ჯგუფში 6.5 ან მეტ ქულას იღებს (ვერცხლის ყვავი).",
+    rule: `ყოველი საიტი, რომელიც კვირის ჯგუფში ${score(rules, rules.honorableMentionMin)} ან მეტ ქულას იღებს (ვერცხლის ყვავი).`,
   },
   {
     name: "დღის საიტი",
     en: "Site of the Day",
-    rule: "7.0 ან მეტი ქულის საიტები რიგში დგებიან; ყოველდღე ერთი საიტი იმარჯვებს და მხოლოდ ერთხელ (შავი ყვავი).",
+    rule: `${score(rules, rules.sotdMin)} ან მეტი ქულის საიტები რიგში დგებიან; ყოველდღე ერთი საიტი იმარჯვებს და მხოლოდ ერთხელ (შავი ყვავი).`,
   },
   { name: "თვის საიტი", en: "Site of the Month", rule: "თვის დღის საიტებიდან საუკეთესო, ჟიურის ხელახალი შეფასებით (წითელი ყვავი)." },
   { name: "წლის საიტი", en: "Site of the Year", rule: "წლის თორმეტი თვის საიტიდან საუკეთესო, იანვარში (ოქროს ყვავი)." },
   {
     name: "საუკეთესო სოლო ნამუშევარი",
     en: "Best Solo Creation",
-    rule: "8.2 ან მეტი ქულა საიტისთვის, რომელიც ერთმა ადამიანმა შექმნა.",
+    rule: `${score(rules, rules.bscMin)} ან მეტი ქულა საიტისთვის, რომელიც ერთმა ადამიანმა შექმნა.`,
   },
 ];
 
@@ -82,7 +83,10 @@ const prose =
   "grid max-w-2xl gap-4 text-[15px] leading-relaxed text-black/70 md:col-span-8 [&_a]:text-black [&_a]:underline [&_a]:decoration-black/25 [&_a]:underline-offset-4 [&_strong]:font-semibold [&_strong]:text-black";
 
 export default async function GeorgianPage() {
-  const listings = (await getPublicListings()).filter((l) => l.region === "georgia");
+  const [all, rules] = await Promise.all([getPublicListings(), getAwardRules()]);
+  const listings = all.filter((l) => l.region === "georgia");
+  /** A pillar's weight from the live rules, "40%". */
+  const w = (key: string) => pct(rules.pillars.find((p) => p.key === key)?.weight ?? 0);
   const url = absoluteUrl("/ka");
 
   const jsonLd = {
@@ -175,9 +179,9 @@ export default async function GeorgianPage() {
           <div className={prose}>
             <p>
               ყოველ საიტს ჟიური ხელით ამოწმებს, სანამ ის გამოქვეყნდება. საიტები ყოველკვირეულ ჯგუფებად
-              გროვდება და ჟიური მათ მომდევნო კვირას აფასებს 1-დან 10-მდე ოთხი კრიტერიუმით:
-              <strong> დიზაინი (40%), მოხმარების სიმარტივე (30%), კრეატიულობა (20%) და კონტენტი (10%)</strong>.
-              ჯილდოსთვის საიტს მინიმუმ {AWARD_RULES.minVotes} ჟიურის შეფასება სჭირდება. ჟიურის წევრი საკუთარ ან
+              გროვდება და ჟიური მათ მომდევნო კვირას აფასებს {rules.scoreMin}-დან {rules.scoreMax}-მდე ოთხი კრიტერიუმით:
+              <strong> დიზაინი ({w("design")}), მოხმარების სიმარტივე ({w("usability")}), კრეატიულობა ({w("creativity")}) და კონტენტი ({w("content")})</strong>.
+              ჯილდოსთვის საიტს მინიმუმ {rules.minVotes} ჟიურის შეფასება სჭირდება. ჟიურის წევრი საკუთარ ან
               თავისი კომპანიის საიტს ვერ შეაფასებს.
             </p>
             <p>
@@ -185,7 +189,7 @@ export default async function GeorgianPage() {
               შემდეგ საუკეთესო საიტები ჯილდოს იღებენ:
             </p>
             <dl className="grid gap-4">
-              {AWARDS.map((a) => (
+              {awardsFor(rules).map((a) => (
                 <div key={a.en}>
                   <dt className="font-semibold text-black">
                     {a.name} <span className="font-normal text-black/55">({a.en})</span>

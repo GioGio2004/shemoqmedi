@@ -14,6 +14,7 @@ import {
   type PublicAward,
 } from "@/convex-helpers-api";
 import { allCollections } from "@/lib/collections";
+import { AWARD_RULES, type AwardRules } from "@/lib/taxonomy";
 
 // Server-side reads for the public pages. Pages using these must export
 // `dynamic = "force-static"` + `revalidate` (Convex reads are POST requests,
@@ -164,3 +165,19 @@ export async function getFirst100Count(): Promise<{ given: number; limit: number
     return null;
   }
 }
+
+/**
+ * The live award rules (weights, thresholds, rounds) from the backend, for
+ * every page that states a number. Never throws: if the backend is
+ * unreachable, or older than awards.publicRules, the page uses the defaults in
+ * lib/taxonomy.ts, which match the backend's default settings.
+ */
+export const getAwardRules = cache(async (): Promise<AwardRules> => {
+  try {
+    return { ...AWARD_RULES, ...(await fetchQuery(api.awards.publicRules, {})) };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("awards.publicRules failed:", error);
+    return AWARD_RULES;
+  }
+});

@@ -27,9 +27,9 @@ async function isJuror() {
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ submitted?: string; claimed?: string }>;
+  searchParams: Promise<{ submitted?: string; claimed?: string; jury?: string }>;
 }) {
-  const { submitted, claimed } = await searchParams;
+  const { submitted, claimed, jury } = await searchParams;
   if (!submitted && !claimed && (await isJuror())) redirect("/jury/profile");
 
   return (
@@ -39,11 +39,13 @@ export default async function AccountPage({
           prelude="your account"
           title="Your sites"
           lede={
-            claimed
-              ? "Done, the site is yours. Its public page updates within a minute, with a followed link to your site."
-              : submitted
-                ? "Thanks, your site is in the review queue. You'll see the decision here."
-                : "Everything you've submitted, and where it stands."
+            jury === "pending"
+              ? "Claimed. Your jury profile goes live on the jury page once we've checked it's you; we'll be in touch."
+              : claimed
+                ? "Done, the site is yours. Its public page updates within a minute, with a followed link to your site."
+                : submitted
+                  ? "Thanks, your site is in the review queue. We also check that it's yours before your listing links back to you with a followed link. You'll see the decision here."
+                  : "Everything you've submitted, and where it stands."
           }
           action={
             <div className="flex items-center gap-4">

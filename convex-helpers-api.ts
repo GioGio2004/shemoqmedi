@@ -6,13 +6,14 @@
 
 import { type DefaultFunctionArgs, type FunctionReference, anyApi } from "convex/server";
 import { type GenericId as Id } from "convex/values";
-import type { AwardSlug, CreatorTier, JuryCategory, RegionSlug } from "@/lib/taxonomy";
+import type { AwardRules, AwardSlug, CreatorTier, JuryCategory, RegionSlug } from "@/lib/taxonomy";
 import type { RegisterArgs, UploadAuth } from "@/lib/imagekitUpload";
 import type { RegisterVideoArgs } from "@/lib/videoUpload";
 
 export type Pillars = { design: number; usability: number; creativity: number; content: number };
 
-export type ListingStatus = "pending" | "in_voting" | "awarded" | "archived" | "rejected";
+/** "withdrawn": the owner archived it (hidden, everything kept, restorable). */
+export type ListingStatus = "pending" | "in_voting" | "awarded" | "archived" | "rejected" | "withdrawn";
 export type PublicStatus = "in_voting" | "awarded" | "archived";
 
 /** A public listing (in voting, awarded or archived). */
@@ -31,12 +32,18 @@ export type PublicListing = {
   creator: { slug: string; name: string } | null;
   status: PublicStatus;
   awards: AwardSlug[];
+  /**
+   * Scores, pillar scores and vote counts below are null while the site is
+   * in voting: they are revealed once judging closes. false: sealed. Optional
+   * until the backend with it is deployed (then treat in_voting as sealed).
+   */
+  scoresRevealed?: boolean;
   editorialScores: Pillars | null; // jury, per pillar
   communityScores: Pillars | null; // community average, per pillar
-  communityVotesCount: number;
+  communityVotesCount: number | null;
   editorialAverage: number | null;
   communityAverage: number | null;
-  finalScore: number | null; // 60% jury + 40% community
+  finalScore: number | null; // the jury's weighted score (community votes never count)
   publishedAt: number;
   votingEndsAt: number;
   /** Legacy (before weekly batches): voting was extended a week for the jury. */
@@ -49,7 +56,7 @@ export type PublicListing = {
    */
   sotdDay?: string | null;
   /** Jury votes in the score; awards need the configured minimum. Optional until the backend with it is deployed. */
-  juryVotes?: number;
+  juryVotes?: number | null;
   /** Built by the Shemoqmedi team: never eligible for awards. */
   byTeam?: boolean;
   /** A significant redesign of the listing with this slug. */
@@ -78,10 +85,19 @@ export type OwnListing = {
   status: ListingStatus;
   reviewNote: string | null;
   awards: AwardSlug[];
-  finalScore: number | null;
+  finalScore: number | null; // null while in voting: revealed when judging closes
   votingEndsAt: number | null;
   createdAt: number;
   coverUrl: string | null;
+  /**
+   * What withdrawing does: "delete" (never public, no awards: gone for good),
+   * "archive" (hidden from the site, everything kept, restorable) or null
+   * (nothing: a submission you sent but don't own once it's public, or one
+   * already withdrawn).
+   */
+  removal: "delete" | "archive" | null;
+  /** Withdrawn by you: restore brings it back as it was. */
+  canRestore: boolean;
 };
 
 export type PublicCreator = {
@@ -158,13 +174,15 @@ export type ClaimListingPreview = {
 };
 
 export type ClaimResolution = {
-  state: "open" | "claimed" | "invalid";
+  state: "open" | "claimed" | "expired" | "invalid"; // expired: older than 14 days
   kind: "juror" | "bundle" | "listing" | null;
   juror: ClaimJurorPreview | null;
   listings: ClaimListingPreview[];
   redirect: string | null; // state "claimed": where the claimed profile/listing lives
+  emailHint: string | null; // "an•••@gmail.com": the invitation is bound to this address
 };
 
+/** Reviews list only sites whose judging has closed. */
 export type JurorPage = {
   juror: JurorPublic & { joinedAt: number };
   reviews: { listing: { slug: string; title: string; coverUrl: string | null }; average: number; comment: string; updatedAt: number }[];
@@ -290,8 +308,12 @@ export type PublicApiType = {
     publicSlugs: Q<Empty, { slug: string; updatedAt: number }[]>;
     generateUploadUrl: M<Empty, string>;
     submit: M<SubmitArgs, { slug: string }>;
+    /** Sites you own, plus submissions you sent that nobody owns yet. */
     myListings: Q<Empty, OwnListing[]>;
-    withdraw: M<{ id: Id<"listings"> }, null>;
+    /** Deletes a never-public submission, or archives (status "withdrawn") one that has been public. */
+    withdraw: M<{ id: Id<"listings"> }, { result: "deleted" | "archived" }>;
+    /** Owner: bring a withdrawn listing back in the status it had. */
+    restore: M<{ id: Id<"listings"> }, null>;
   };
   votes: {
     /** One vote per user while in_voting; throws ConvexError with a readable message. */
@@ -313,7 +335,9 @@ export type PublicApiType = {
   };
   jury: {
     /** Active jurors with their evaluation counts (/jury). */
+    /** evaluations: counts only sites whose judging has closed. */
     listPublic: Q<Empty, (JurorPublic & { evaluations: number })[]>;
+    /** Empty while the site is in voting: reviews are revealed when judging closes. */
     reviewsForListing: Q<{ slug: string }, JuryReview[]>;
     /** The signed-in user's jury profile, or null if they are not on the jury. */
     /** hasPresetPhoto: the photo prepared with the invitation is still the one shown. */
@@ -339,7 +363,8 @@ export type PublicApiType = {
   claimLinks: {
     /** Anyone can preview a link; claiming needs a signed-in user. */
     resolve: Q<{ token: string }, ClaimResolution>;
-    claim: M<{ token: string }, { kind: "juror" | "bundle" | "listing"; redirect: string }>;
+    /** Rejects an account whose email isn't the invited one; `pending`: the jury profile waits for an admin. */
+    claim: M<{ token: string }, { kind: "juror" | "bundle" | "listing"; redirect: string; pending: boolean }>;
   };
   awards: {
     /** An active award by its slug (/awards/<slug> and the badge image); null when revoked or unknown. */
@@ -353,6 +378,8 @@ export type PublicApiType = {
     mine: Q<Empty, PublicAward[]>;
     /** How many of the hundred honorary First 100 badges are given. */
     first100Count: Q<Empty, { given: number; limit: number }>;
+    /** The live award rules (pillars, weights, thresholds, rounds); see AwardRules. */
+    publicRules: Q<Empty, AwardRules>;
   };
   rounds: {
     /** Open Site of the Month / Year rounds the signed-in juror can score; null for non-jurors. */
@@ -371,8 +398,15 @@ export type PublicApiType = {
     >;
   };
   claims: {
+    /** intent "remove" asks for a listing to be taken down (listings only). */
     submit: M<
-      { targetType: "listing" | "creator"; slug: string; message: string; proofUrl?: string },
+      {
+        targetType: "listing" | "creator";
+        slug: string;
+        message: string;
+        proofUrl?: string;
+        intent?: "claim" | "remove";
+      },
       null
     >;
   };

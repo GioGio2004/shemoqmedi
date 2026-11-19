@@ -1,6 +1,9 @@
 import { ClerkProvider as ClerkNextJSProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 
+// The live site and local dev. Preview deployments use relative redirects only.
+const ALLOWED_REDIRECT_ORIGINS = ["https://www.shemoqmedi.space", "http://localhost:3005"];
+
 type ClerkProviderProps = React.ComponentProps<typeof ClerkNextJSProvider>;
 
 // Clerk's forms follow the site: white surface, black text and buttons,
@@ -10,6 +13,9 @@ export function ClerkProvider({ children, appearance, ...props }: ClerkProviderP
     <ClerkNextJSProvider
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
+      // Clerk only follows redirects back to this site (no open redirect via
+      // redirect_url after sign-in). Relative paths are always allowed.
+      allowedRedirectOrigins={ALLOWED_REDIRECT_ORIGINS}
       // A session with a task left (pending) finishes it here before the site counts it as signed in.
       taskUrls={{
         "choose-organization": "/session-tasks",

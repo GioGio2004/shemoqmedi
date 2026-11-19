@@ -6,9 +6,10 @@ import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
 import { awardName } from "@/lib/badgeInfo";
 import { collectionHref } from "@/lib/collections";
-import { getFirst100Count } from "@/lib/listings";
+import { getAwardRules, getFirst100Count } from "@/lib/listings";
+import { score } from "@/lib/scoringCopy";
 import { SITE_NAME } from "@/lib/site";
-import { AWARD_RULES, type AwardSlug } from "@/lib/taxonomy";
+import type { AwardRules, AwardSlug } from "@/lib/taxonomy";
 
 const title = "Website Award Badges";
 const description =
@@ -37,25 +38,25 @@ export const revalidate = 300;
 type Sample = { tier: AwardSlug; period: string; date: string; crow: string; text: string };
 
 // The four tiers, highest first, then the two outside the ladder. Sample dates.
-const TIERS: Sample[] = [
-  { tier: "SOTY", period: "2026", date: "2027-01-20", crow: "Gold crow", text: "The year's best, chosen by the jury from the twelve Sites of the Month." },
+const tiersFor = (rules: AwardRules): Sample[] => [
+  { tier: "SOTY", period: "2026", date: "2027-01-20", crow: "Gold crow", text: "The highest award: the year's best, chosen by the jury from that year's Sites of the Month." },
   { tier: "SOTM", period: "2026-11", date: "2026-12-06", crow: "Red crow", text: "The month's best Site of the Day, scored again by the jury." },
-  { tier: "SOTD", period: "2026-11-12", date: "2026-11-12", crow: "Black crow", text: "One site a day, from the jury's best. Never the same site twice." },
+  { tier: "SOTD", period: "2026-11-12", date: "2026-11-12", crow: "Black crow", text: `One site a day from the jury's queue of sites scored ${score(rules, rules.sotdMin)} or more. Never the same site twice.` },
   {
     tier: "HM",
     period: "2026-11-02",
     date: "2026-11-16",
     crow: "Silver crow",
-    text: `Scored ${AWARD_RULES.honorableMentionMin.toFixed(2)} or more by the jury in its weekly batch.`,
+    text: `Scored ${score(rules, rules.honorableMentionMin)} or more by the jury in its weekly batch.`,
   },
 ];
-const SIDE: Sample[] = [
+const sideFor = (rules: AwardRules): Sample[] => [
   {
     tier: "BSC",
     period: "2026-11-02",
     date: "2026-11-16",
     crow: "For solo makers",
-    text: `A site built by one person that scores ${AWARD_RULES.bscMin.toFixed(2)} or more.`,
+    text: `A site built by one person that scores ${score(rules, rules.bscMin)} or more.`,
   },
   { tier: "F100", period: "001", date: "2026-11-10", crow: "Honorary", text: "For the first hundred sites on Shemoqmedi. Each badge is numbered." },
 ];
@@ -87,7 +88,9 @@ function SealCard({ sample, index, note }: { sample: Sample; index: number; note
 }
 
 export default async function BadgesPage() {
-  const first100 = await getFirst100Count();
+  const [first100, rules] = await Promise.all([getFirst100Count(), getAwardRules()]);
+  const tiers = tiersFor(rules);
+  const side = sideFor(rules);
 
   return (
     <>
@@ -108,7 +111,7 @@ export default async function BadgesPage() {
           The four awards
         </h2>
         <ul className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {TIERS.map((s, i) => (
+          {tiers.map((s, i) => (
             <SealCard key={s.tier} sample={s} index={i} />
           ))}
         </ul>
@@ -119,7 +122,7 @@ export default async function BadgesPage() {
           Outside the ladder
         </h2>
         <ul className="grid gap-6 sm:grid-cols-2">
-          {SIDE.map((s, i) => (
+          {side.map((s, i) => (
             <SealCard
               key={s.tier}
               sample={s}
@@ -167,7 +170,7 @@ export default async function BadgesPage() {
           </div>
           <div className="grid content-start gap-8 lg:col-span-8">
             <ul className="grid gap-4 sm:grid-cols-2">
-              {[...TIERS, ...SIDE].map((s, i) => (
+              {[...tiers, ...side].map((s, i) => (
                 <li key={s.tier} className="grid place-items-center rounded-2xl border border-black/10 p-5">
                   <BadgeReveal delay={i * 70} className="w-full max-w-[300px]">
                     <BadgeArt shape="tag" tier={s.tier} period={s.period} date={s.date} />

@@ -12,6 +12,7 @@ import { ArrowIcon, PillLink, Tag } from "@/components/site/ui";
 import { JuryCard } from "@/components/jury/JuryCard";
 import { friendlyError } from "@/lib/errors";
 import { hostOf } from "@/lib/format";
+import { matchesEmailHint } from "@/lib/claimEmail";
 
 /** Hero copy per link kind. */
 function heroFor(r: ClaimResolution | undefined, justClaimed: boolean) {
@@ -21,6 +22,13 @@ function heroFor(r: ClaimResolution | undefined, justClaimed: boolean) {
       prelude: "this link is",
       title: "Not valid",
       lede: "It may have been replaced by a newer link. Check that you opened the full link, or ask us for a new one.",
+    };
+  }
+  if (r.state === "expired") {
+    return {
+      prelude: "this link has",
+      title: "Expired",
+      lede: "Claim links work for 14 days. Reply to the message you got it in and we'll send you a new one.",
     };
   }
   if (r.state === "claimed") {
@@ -73,7 +81,7 @@ function ListingPreview({ listing }: { listing: ClaimListingPreview }) {
 
 const perks = {
   juror: [
-    ["Score websites", "Rate sites in their voting window on design, usability, creativity and code."],
+    ["Score websites", "Rate sites in their voting window on design, usability, creativity and content."],
     ["Your name on every review", "Your comments appear on each site's page with your profile."],
     ["A public jury page", "A profile and badge you can share."],
   ],
@@ -86,11 +94,12 @@ const perks = {
 
 /**
  * /claim/<token>: preview what a secret claim link points to (a jury profile,
- * a profile plus its websites, or one website), then claim it. Signed-out
- * visitors go through sign-up and come back with ?auto=1, which claims
- * straight away so nothing is lost across the auth handoff.
+ * a profile plus its websites, or one website), then claim it. Claiming is
+ * always a click on "Claim as <email>", so nobody claims with the wrong
+ * account by accident after signing in; "Use another account" signs out and
+ * comes back here through sign-in.
  */
-export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
+export function ClaimToken({ token }: { token: string }) {
   const router = useRouter();
   const resolution = useQuery(api.claimLinks.resolve, { token });
   const { isLoaded, isSignedIn } = useAuth();
@@ -105,10 +114,11 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
   const claimMutation = useMutation(api.claimLinks.claim);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Claimed, but the jury profile waits for an admin (no email to check it against).
+  const [pending, setPending] = useState<string | null>(null);
   // Set while our own claim runs: the link then resolves to "claimed", which
   // must not redirect to the public page before the claim's own redirect.
   const claiming = useRef(false);
-  const autoRan = useRef(false);
 
   const claim = useCallback(async () => {
     if (claiming.current) return;
@@ -117,6 +127,11 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
     setError(null);
     try {
       const result = await claimMutation({ token });
+      if (result.pending) {
+        setBusy(false);
+        setPending(result.redirect);
+        return;
+      }
       router.push(result.redirect);
     } catch (err) {
       claiming.current = false;
@@ -131,17 +146,16 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
     if (redirect && !claiming.current) router.replace(redirect);
   }, [redirect, router]);
 
-  // Back from sign-up/sign-in: claim once, as soon as Convex has the session.
-  const open = resolution?.state === "open";
-  useEffect(() => {
-    if (!auto || !open || !isSignedIn || !accountReady || autoRan.current) return;
-    autoRan.current = true;
-    void claim();
-  }, [auto, open, isSignedIn, accountReady, claim]);
-
   // busy stays set after a successful claim, until the redirect lands.
-  const hero = heroFor(resolution, busy);
-  const listingTitle = resolution?.kind === "listing" && hero.title.length > 10;
+  const hero = pending
+    ? {
+        prelude: "claimed",
+        title: "Almost there",
+        lede: "Your jury profile is yours. It goes live on the jury page once we've checked it's you; we'll be in touch.",
+      }
+    : heroFor(resolution, busy);
+  const listingTitle = !pending && resolution?.kind === "listing" && hero.title.length > 10;
+  const back = `/claim/${token}`;
 
   return (
     <>
@@ -152,17 +166,21 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
         lede={hero.lede}
       />
       <div className="container-site pb-24">
-        {resolution === undefined && <p className="text-sm text-black/55">Loading…</p>}
+        {pending && <PillLink href={pending}>Go to your account</PillLink>}
 
-        {resolution?.state === "invalid" && <PillLink href="/">Back to the directory</PillLink>}
+        {!pending && resolution === undefined && <p className="text-sm text-black/55">Loading…</p>}
 
-        {resolution?.state === "claimed" && redirect && (
+        {!pending && (resolution?.state === "invalid" || resolution?.state === "expired") && (
+          <PillLink href="/">Back to the directory</PillLink>
+        )}
+
+        {!pending && resolution?.state === "claimed" && redirect && (
           <Link href={redirect} className="text-sm font-medium underline underline-offset-[5px]">
             Continue
           </Link>
         )}
 
-        {resolution?.state === "open" && (
+        {!pending && resolution?.state === "open" && (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="grid content-start gap-8">
               {resolution.juror && <JuryCard juror={resolution.juror} branded />}
@@ -188,7 +206,7 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
               </ul>
 
               <ClaimActions
-                token={token}
+                back={back}
                 label={
                   resolution.kind === "juror"
                     ? "Claim jury spot"
@@ -202,9 +220,10 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
                 ready={isLoaded && (!isSignedIn || accountReady)}
                 signedIn={!!isSignedIn}
                 email={user?.primaryEmailAddress?.emailAddress ?? null}
-                busy={busy || (auto && !!isSignedIn && !error)}
+                emailHint={resolution.emailHint}
+                busy={busy}
                 onClaim={() => void claim()}
-                onSignOut={() => void signOut({ redirectUrl: `/claim/${token}` })}
+                onSignOut={() => void signOut({ redirectUrl: `/sign-in?redirect_url=${encodeURIComponent(back)}` })}
               />
               {error && (
                 <p role="alert" className="text-sm font-medium">
@@ -220,36 +239,45 @@ export function ClaimToken({ token, auto }: { token: string; auto: boolean }) {
 }
 
 function ClaimActions({
-  token,
+  back,
   label,
   ready,
   signedIn,
   email,
+  emailHint,
   busy,
   onClaim,
   onSignOut,
 }: {
-  token: string;
+  back: string;
   label: string;
   ready: boolean;
   signedIn: boolean;
   email: string | null;
+  emailHint: string | null;
   busy: boolean;
   onClaim: () => void;
   onSignOut: () => void;
 }) {
   if (!ready) return <p className="text-sm text-black/55">Loading…</p>;
 
+  const hint = emailHint ? (
+    <p className="text-sm text-black/60">
+      This invitation is for <span className="font-medium text-black">{emailHint}</span>. Sign in with that address.
+    </p>
+  ) : null;
+
   if (!signedIn) {
-    const back = encodeURIComponent(`/claim/${token}?auto=1`);
+    const to = encodeURIComponent(back);
     return (
       <div className="grid gap-4">
-        <PillLink href={`/sign-up?redirect_url=${back}`} className="justify-self-start">
+        {hint}
+        <PillLink href={`/sign-up?redirect_url=${to}`} className="justify-self-start">
           {label}
         </PillLink>
         <p className="text-sm text-black/60">
-          Create a free account first; you come straight back here.{" "}
-          <Link href={`/sign-in?redirect_url=${back}`} className="text-black underline underline-offset-4">
+          Create a free account first; you come straight back here to confirm.{" "}
+          <Link href={`/sign-in?redirect_url=${to}`} className="text-black underline underline-offset-4">
             I already have an account
           </Link>
         </p>
@@ -257,27 +285,47 @@ function ClaimActions({
     );
   }
 
+  // Signed in with an account that can't be the invited one: say so before they try.
+  const wrongAccount = !!email && !!emailHint && !matchesEmailHint(email, emailHint);
+
   return (
     <div className="grid gap-4">
+      {hint}
+      <p className="text-sm text-black/60">
+        Signed in as <span className="font-medium text-black">{email ?? "your account"}</span>.
+      </p>
+      {wrongAccount && (
+        <p role="alert" className="text-sm font-medium">
+          That isn&apos;t the address this invitation was sent to. Use another account to claim it.
+        </p>
+      )}
       <button
         type="button"
         disabled={busy}
         onClick={onClaim}
-        className="inline-flex min-h-[46px] items-center gap-3.5 justify-self-start rounded-full bg-black py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
+        className="inline-flex min-h-[46px] max-w-full items-center gap-3.5 justify-self-start rounded-full bg-black py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
       >
-        {busy ? "Claiming…" : label}
-        <span className="grid size-9 place-items-center rounded-full bg-white text-black">
+        <span className="min-w-0 truncate">
+          {busy ? (
+            "Claiming…"
+          ) : email ? (
+            <>
+              Claim as <span className="tracking-normal normal-case">{email}</span>
+            </>
+          ) : (
+            label
+          )}
+        </span>
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-black">
           <ArrowIcon />
         </span>
       </button>
-      {email && (
-        <p className="text-sm text-black/60">
-          Claiming as {email}.{" "}
-          <button type="button" onClick={onSignOut} className="text-black underline underline-offset-4">
-            Use another account
-          </button>
-        </p>
-      )}
+      <p className="text-sm text-black/60">
+        Not you?{" "}
+        <button type="button" onClick={onSignOut} className="text-black underline underline-offset-4">
+          Use another account
+        </button>
+      </p>
     </div>
   );
 }

@@ -280,19 +280,26 @@ export function errorMessage(err: unknown, fallback = "Something went wrong. Ple
 }
 
 /**
- * Where to go after auth. Only same-origin paths are allowed, so the
- * ?redirect_url= set by proxy.ts cannot send people to another site.
+ * Where to go after auth. Only same-origin destinations are allowed, so the
+ * ?redirect_url= set by proxy.ts cannot send people to another site. The raw
+ * value is resolved against our own origin the way the browser would resolve
+ * it, so tricks like a backslash path, an encoded tab or "//evil.com" (which
+ * browsers read as another host) end up on another origin and are refused.
  */
-export function safeRedirect(raw: string | null, fallback: string) {
-  if (!raw) return fallback;
-  if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+export function safeRedirect(raw: string | null, fallback: string, origin = currentOrigin()) {
+  if (!raw || !origin) return fallback;
+  // Control characters and backslashes have no place in our own paths.
+  if (/[\u0000-\u001f\\]/.test(raw)) return fallback;
   try {
-    const url = new URL(raw);
-    if (typeof window !== "undefined" && url.origin === window.location.origin) {
-      return `${url.pathname}${url.search}${url.hash}`;
-    }
+    const base = new URL(origin);
+    const url = new URL(raw, base);
+    if (url.origin !== base.origin) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
   } catch {
-    // not a URL
+    return fallback;
   }
-  return fallback;
+}
+
+function currentOrigin() {
+  return typeof window !== "undefined" ? window.location.origin : null;
 }

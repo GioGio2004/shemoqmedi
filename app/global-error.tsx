@@ -3,12 +3,19 @@
 // Root-layout error boundary (errors thrown by app/layout.tsx itself).
 // Must render its own <html>/<body>.
 
+import { useEffect } from "react";
+import { reportError } from "@/lib/sentry";
+
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Sent to Sentry when it is set up (lib/sentry.ts); a no-op otherwise.
+  useEffect(() => reportError(error), [error]);
+
   return (
     <html lang="en">
       <body

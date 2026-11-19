@@ -5,6 +5,7 @@ import {
   CREATOR_TIERS,
   REGIONS,
   TECHNOLOGIES,
+  PILLARS,
   listingCategories,
 } from "@/lib/taxonomy";
 
@@ -48,8 +49,13 @@ export type Collection = {
 
 const year = () => new Date().getFullYear();
 
-const SCORED_BY = "Scored by an independent jury and the community.";
-const PILLARS_LINE = "design, usability, creativity and code";
+// Only the jury's score decides awards (community votes are shown, never counted).
+const SCORED_BY = "Scored by an independent jury.";
+/** "design, usability, creativity and content", from the jury pillars. */
+const PILLARS_LINE = (() => {
+  const names = PILLARS.map((p) => p.name.toLowerCase());
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+})();
 
 /** "Best Portfolio Websites & …", without a second "&" for "Food & Drink". */
 function bestTitle(name: string) {
@@ -98,7 +104,7 @@ function build(): Collection[] {
       heading: `${c.name} websites`,
       intro: `Hand-picked ${phrase} websites, scored on ${PILLARS_LINE}.`,
       title: bestTitle(c.name),
-      description: `The best ${phrase} websites for web design inspiration, hand-reviewed and scored by an independent jury and the community.`,
+      description: `The best ${phrase} websites for web design inspiration, hand-reviewed and scored by an independent jury.`,
       summarize: (n, list) => `${n} hand-picked ${phrase} websites: ${list}. ${SCORED_BY}`,
       match: (l) => listingCategories(l).includes(c.slug),
     });
@@ -112,7 +118,7 @@ function build(): Collection[] {
       existing.match = (l) => prev(l) || l.technologies.includes(t.name);
       existing.intro = `AI products and websites built with AI, scored on ${PILLARS_LINE}.`;
       existing.description =
-        "AI products and AI-built websites, hand-reviewed and scored by an independent jury and the community.";
+        "AI products and AI-built websites, hand-reviewed and scored by an independent jury.";
       existing.summarize = (n, list) => `${n} AI products and AI-built websites: ${list}. ${SCORED_BY}`;
       continue;
     }
@@ -124,7 +130,7 @@ function build(): Collection[] {
       heading: `${t.name} websites`,
       intro: `Websites built with ${phrase}, each scored on ${PILLARS_LINE}.`,
       title: bestTitle(t.name),
-      description: `The best websites built with ${phrase}: hand-reviewed, then scored on ${PILLARS_LINE} by a jury and the community.`,
+      description: `The best websites built with ${phrase}: hand-reviewed, then scored on ${PILLARS_LINE} by an independent jury.`,
       summarize: (n, list) =>
         `${n} websites built with ${phrase}: ${list}. Each one scored on ${PILLARS_LINE}.`,
       match: (l) => l.technologies.includes(t.name),
@@ -138,23 +144,23 @@ function build(): Collection[] {
       kind: "region",
       name: r.name,
       heading: georgia ? "Websites from Georgia" : "Websites worldwide",
-      intro: `Websites ${where}, scored by an independent jury and the community.`,
+      intro: `Websites ${where}, scored by an independent jury.`,
       title: georgia
         ? `Best Websites from Georgia (Tbilisi): Georgian Web Design (${year()})`
         : `Best Websites from Around the World (${year()})`,
       description: georgia
-        ? "The best Georgian web design: websites made in Georgia, hand-reviewed and scored by an independent jury and the community."
-        : "The best websites from around the world, hand-reviewed and scored by an independent jury and the community.",
+        ? "The best Georgian web design: websites made in Georgia, hand-reviewed and scored by an independent jury."
+        : "The best websites from around the world, hand-reviewed and scored by an independent jury.",
       summarize: (n, list) => `${n} websites ${where}: ${list}. ${SCORED_BY}`,
       match: (l) => l.region === r.slug,
     });
   }
   const AWARD_INTRO: Record<(typeof AWARDS)[number]["slug"], string> = {
-    SOTY: "The best website of each year, chosen by the jury from the twelve Sites of the Month.",
+    SOTY: "Shemoqmedi's highest award: the best website of each year, chosen by the jury from that year's Sites of the Month.",
     SOTM: "The best website of each month, chosen by the jury from that month's Sites of the Day.",
-    SOTD: "One website a day, from the jury's best-scored sites. Never the same site twice.",
+    SOTD: "One website a day, the best in the jury's queue. Never the same site twice.",
     BSC: "The finest websites built by one person, without an agency budget.",
-    HM: "Websites the jury scored 6.50 or more in their weekly batch.",
+    HM: "Every website that reached the jury's Honorable Mention score in its weekly batch.",
     F100: "The first hundred websites on Shemoqmedi, each with an honorary numbered badge.",
   };
   for (const a of AWARDS) {
@@ -184,9 +190,9 @@ function build(): Collection[] {
     kind: "status",
     name: "Nominees",
     heading: "This week's nominees",
-    intro: "Websites in voting right now. Each weekly batch is scored by the jury the week after it is approved; badge holders can vote too.",
+    intro: "Websites in voting right now. Each weekly batch is scored by the jury the week after it is approved; badge holders can vote too, for interest.",
     title: `Live Nominees: Vote on This Week's Best Websites (${year()})`,
-    description: "Websites in voting right now. Each weekly batch is scored by the jury the week after it is approved; badge holders can vote too.",
+    description: "Websites in voting right now. Each weekly batch is scored by the jury the week after it is approved; badge holders can vote too, for interest.",
     summarize: null, // changes every week; the fixed line stays accurate
     match: (l) => l.status === "in_voting",
   });
@@ -199,7 +205,7 @@ function build(): Collection[] {
     intro: `Websites of early-stage companies and new products, scored on ${PILLARS_LINE}.`,
     title: `Best Startup Websites & Web Design Inspiration (${year()})`,
     description:
-      "The best startup websites for web design inspiration, hand-reviewed and scored by an independent jury and the community.",
+      "The best startup websites for web design inspiration, hand-reviewed and scored by an independent jury.",
     summarize: (n, list) => `${n} hand-picked startup websites: ${list}. ${SCORED_BY}`,
     match: (l) => l.isStartup,
   });

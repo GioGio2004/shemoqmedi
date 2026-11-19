@@ -71,7 +71,7 @@ export default async function ClaimPage({
     return (
       <>
         <main id="main-content">
-          <ClaimToken token={key} auto={query.auto === "1"} />
+          <ClaimToken token={key} />
         </main>
       </>
     );

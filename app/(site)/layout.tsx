@@ -13,6 +13,13 @@ export default function SiteLayout({ children }: Readonly<{ children: React.Reac
       <Analytics />
       {/* Ahrefs Web Analytics: cookieless, no personal data */}
       <Script src="https://analytics.ahrefs.com/analytics.js" data-key="VjHihnlDJZ4C5YnUgPPQ/Q" strategy="lazyOnload" />
+      {/* Cloudflare Web Analytics: cookieless page views. Here, not in the root
+          layout, so it never runs on /claim/<token> or the sign-in pages. */}
+      <Script
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon='{"token": "83618e259266450a8201ab6e959d52e5"}'
+        strategy="afterInteractive"
+      />
     </>
   );
 }

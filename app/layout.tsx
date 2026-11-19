@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Header } from "@/components/site/Header";
 import "./globals.css";
@@ -16,7 +15,7 @@ const inter = Inter({
 // The defaults below are the home page's: it sets no title of its own.
 const title = "Shemoqmedi: Website Awards & Web Design Inspiration";
 const description =
-  "The best websites, scored by a jury and the community. Web design inspiration and website awards: Site of the Day, Best Solo Creation, Honorable Mention.";
+  "The best websites, scored by an independent jury. Web design inspiration and website awards: Site of the Day, Best Solo Creation, Honorable Mention.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,12 +66,6 @@ export default function RootLayout({
       <body className={inter.variable}>
         <Header />
         {children}
-        {/* Cloudflare Web Analytics: cookieless page views, loaded after the page is interactive. */}
-        <Script
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "83618e259266450a8201ab6e959d52e5"}'
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );

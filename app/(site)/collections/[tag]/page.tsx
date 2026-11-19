@@ -12,8 +12,8 @@ import {
   MIN_INDEXABLE_COLLECTION,
   type Collection,
 } from "@/lib/collections";
-import { COLLECTION_ABOUT } from "@/lib/collectionCopy";
-import { getPublicListings } from "@/lib/listings";
+import { collectionAbout } from "@/lib/collectionCopy";
+import { getAwardRules, getPublicListings } from "@/lib/listings";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -96,14 +96,14 @@ export default async function CollectionPage({ params }: Params) {
   const collection = getCollection(tag);
   if (!collection || collectionHref(tag) !== `/collections/${tag}`) notFound();
 
-  const all = await getPublicListings();
+  const [all, rules] = await Promise.all([getPublicListings(), getAwardRules()]);
   const listings = all.filter(collection.match);
   // Only link siblings that have something to show.
   const related = allCollections().filter(
     (c) => c.tag !== collection.tag && group(c.kind) === group(collection.kind) && all.some(c.match),
   );
   const url = absoluteUrl(`/collections/${collection.tag}`);
-  const about = COLLECTION_ABOUT[collection.tag];
+  const about = collectionAbout(collection.tag, rules);
 
   const jsonLd = {
     "@context": "https://schema.org",

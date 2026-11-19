@@ -10,7 +10,8 @@ import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ScreenshotGallery } from "@/components/listing/ScreenshotGallery";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { PillLink, Tag } from "@/components/site/ui";
-import { getJuryReviews, getListing, getListingAwards, getPublicSlugs, withRef } from "@/lib/listings";
+import { getAwardRules, getJuryReviews, getListing, getListingAwards, getPublicSlugs, withRef } from "@/lib/listings";
+import { pillarNames, scoreRange } from "@/lib/scoringCopy";
 import { outboundRel } from "@/lib/ref";
 import { JuryLauncher } from "@/components/jury/JuryLauncher";
 import { resolveListingSlug } from "@/lib/slugRedirect";
@@ -330,7 +331,11 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
   const liveUrl = withRef(listing.url);
   const rel = outboundRel(listing);
-  const [juryReviews, awardHistory] = await Promise.all([getJuryReviews(listing.slug), getListingAwards(listing.slug)]);
+  const [juryReviews, awardHistory, rules] = await Promise.all([
+    getJuryReviews(listing.slug),
+    getListingAwards(listing.slug),
+    getAwardRules(),
+  ]);
   const categories = listingCategories(listing);
   const inVoting = listing.status === "in_voting";
   const jsonLd = buildJsonLd(listing, {
@@ -532,16 +537,17 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
       {/* Scores + voting */}
       <section aria-label="Scores" className="container-site mt-12 pb-24">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-          <ScoreBreakdown listing={listing} reviews={juryReviews} />
+          <ScoreBreakdown listing={listing} reviews={juryReviews} minVotes={rules.minVotes} />
 
           <div className="grid content-start gap-6">
             {inVoting ? (
               <div className="rounded-3xl border border-black/10 p-6 md:p-8">
-                <p className="eyebrow">Community vote · 40%</p>
+                <p className="eyebrow">Community vote · not counted</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em]">Cast your vote</h2>
                 <p className="mt-3 max-w-sm text-sm leading-relaxed text-black/60">
-                  Score Design, Usability, Creativity and Code from 1 to 10. Open to creators with a
-                  Shemoqmedi badge: one vote each, never on your own site.
+                  Score {pillarNames(rules)} from {scoreRange(rules)}. Open to creators with a Shemoqmedi
+                  badge: one vote each, never on your own site. The community score is shown for interest; only the
+                  jury&apos;s score decides awards.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <PillLink href={`/vote/${listing.slug}`}>Vote on this site</PillLink>

@@ -4,6 +4,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { reportError } from "@/lib/sentry";
 
 export default function Error({
   error,
@@ -15,6 +16,8 @@ export default function Error({
   useEffect(() => {
     // Details only while developing; visitors just see the message below.
     if (process.env.NODE_ENV === "development") console.error(error);
+    // Sent to Sentry when it is set up (lib/sentry.ts); a no-op otherwise.
+    reportError(error);
   }, [error]);
 
   return (

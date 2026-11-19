@@ -6,9 +6,11 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import { PillLink } from "@/components/site/ui";
 import { JuryCard } from "@/components/jury/JuryCard";
 import { panelName, safeUrl } from "@/components/jury/jurorInfo";
-import { getJurorPage, getJurorSlugs } from "@/lib/listings";
+import { getAwardRules, getJurorPage, getJurorSlugs } from "@/lib/listings";
 import { formatDate, formatScore } from "@/lib/format";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+import { pillarList } from "@/lib/scoringCopy";
+import type { AwardRules } from "@/lib/taxonomy";
 
 // A juror's public page and shareable badge. Pre-rendered at build for every
 // public juror, then refreshed in the background; a newly claimed juror
@@ -23,9 +25,9 @@ export async function generateStaticParams() {
   return (await getJurorSlugs()).map(({ slug }) => ({ slug }));
 }
 
-function describe(name: string, title: string, panel: string, reviews: number) {
+function describe(rules: AwardRules, name: string, title: string, panel: string, reviews: number) {
   const scored = reviews > 0 ? ` ${reviews} ${reviews === 1 ? "website" : "websites"} scored so far.` : "";
-  return `${name}, ${title}, on the ${SITE_NAME} jury (${panel}): scores websites on design, usability, creativity and code.${scored}`;
+  return `${name}, ${title}, on the ${SITE_NAME} jury (${panel}): scores websites on ${pillarList(rules)}.${scored}`;
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -34,7 +36,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!data) return { title: "Juror not found", robots: { index: false } };
   const { juror, reviews } = data;
   const title = `${juror.name}, ${juror.title}: ${SITE_NAME} Jury`;
-  const description = juror.bio ?? describe(juror.name, juror.title, panelName(juror.category), reviews.length);
+  const description = juror.bio ?? describe(await getAwardRules(), juror.name, juror.title, panelName(juror.category), reviews.length);
   return {
     title: { absolute: title },
     description,
@@ -132,7 +134,7 @@ export default async function JurorPage({ params }: Params) {
               </div>
             ))}
             <div className="bg-white p-6 text-sm text-black/60">
-              Jurors score each site in its voting window. The jury&apos;s average counts for 60% of the final result.{" "}
+              Jurors score each site in its jury week. The final score is the jury&apos;s average alone; community votes never count.{" "}
               <Link href="/how-we-score" className="text-black underline decoration-black/25 underline-offset-4 hover:decoration-black">
                 How we score
               </Link>
@@ -199,7 +201,7 @@ export default async function JurorPage({ params }: Params) {
           Reviews
         </h2>
         {reviews.length === 0 ? (
-          <p className="mt-4 text-sm text-black/55">No reviews yet.</p>
+          <p className="mt-4 text-sm text-black/55">No reviews yet. Reviews appear once judging closes.</p>
         ) : (
           <ul className="mt-6 grid gap-x-6 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
             {reviews.map((r) => (

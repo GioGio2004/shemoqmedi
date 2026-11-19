@@ -41,7 +41,8 @@ function average(scores: Pillars) {
 
 
 /**
- * Community vote: four 1–10 sliders (Design, Usability, Creativity, Code).
+ * Community vote: four 1–10 sliders (Design, Usability, Creativity, Content).
+ * Shown on the site for interest; only the jury's score decides awards.
  * One vote per voter while the listing is in its voting window, open only to
  * creators with a Shemoqmedi badge and never on their own site (the backend
  * enforces the same rules).
@@ -123,8 +124,8 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
         <p className="eyebrow">Vote recorded</p>
         <p className="mt-3 text-3xl font-semibold tracking-[-0.045em]">Thank you.</p>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-black/60">
-          Your scores for {title} count toward the community 40%. The public page updates within a
-          minute.
+          Your scores for {title} are added to its community score, shown for interest beside the
+          jury&apos;s. The public page updates within a minute.
         </p>
         <ScoreList scores={scores} />
         <BackLink slug={slug} />

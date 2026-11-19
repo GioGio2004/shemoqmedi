@@ -5,9 +5,10 @@ import { ListingCard } from "@/components/listing/ListingCard";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink, Tag } from "@/components/site/ui";
-import { COLLECTION_ABOUT } from "@/lib/collectionCopy";
 import { MIN_INDEXABLE } from "@/lib/collections";
-import { getPublicListings } from "@/lib/listings";
+import { getAwardRules, getPublicListings } from "@/lib/listings";
+import { ruleCollectionAbout, sotdDescription, sotdLede } from "@/lib/scoringCopy";
+import type { AwardRules } from "@/lib/taxonomy";
 import { SITE_NAME, absoluteUrl } from "@/lib/site";
 import { SOTD_PATH, formatDay, formatMonth, sotdWinners, utcToday, wonOn } from "@/lib/sotd";
 
@@ -18,24 +19,23 @@ export const dynamic = "force-static";
 export const revalidate = 60;
 
 const TITLE = `Site of the Day: Daily Website Award Winners (${new Date().getFullYear()})`;
-const FIXED_DESCRIPTION =
-  "One website a day, scored 8.50 or more by the jury and the community on design, usability, creativity and code. Every Site of the Day, by date.";
-
 /** Names the latest winners once there are enough of them, like the collection pages. */
-function description(winners: PublicListing[]) {
-  if (winners.length < MIN_INDEXABLE) return FIXED_DESCRIPTION;
+function description(winners: PublicListing[], rules: AwardRules) {
+  const fixed = sotdDescription(rules);
+  if (winners.length < MIN_INDEXABLE) return fixed;
   const names = [...new Map(winners.map((l) => [l.title.toLowerCase(), l.title])).values()];
   for (const k of [3, 2, 1]) {
-    const text = `${winners.length} Site of the Day winners, one a day: ${names.slice(0, k).join(", ")} and more. Scored by the jury and the community.`;
+    const text = `${winners.length} Site of the Day winners, one a day: ${names.slice(0, k).join(", ")} and more. Chosen by the jury.`;
     if (text.length <= 160) return text;
   }
-  return FIXED_DESCRIPTION;
+  return fixed;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   // getPublicListings is cache()d, so the page below reuses this read.
-  const winners = sotdWinners(await getPublicListings());
-  const text = description(winners);
+  const [listings, rules] = await Promise.all([getPublicListings(), getAwardRules()]);
+  const winners = sotdWinners(listings);
+  const text = description(winners, rules);
   return {
     title: { absolute: TITLE },
     description: text,
@@ -66,13 +66,13 @@ function byMonth(winners: PublicListing[]) {
 }
 
 export default async function SiteOfTheDayPage() {
-  const listings = await getPublicListings();
+  const [listings, rules] = await Promise.all([getPublicListings(), getAwardRules()]);
   const winners = sotdWinners(listings);
   const today = utcToday();
   const current = winners.find((l) => wonOn(l) === today) ?? null;
   const archive = winners.filter((l) => l !== current);
   const url = absoluteUrl(SOTD_PATH);
-  const about = COLLECTION_ABOUT.sotd;
+  const about = ruleCollectionAbout("sotd", rules);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -81,7 +81,7 @@ export default async function SiteOfTheDayPage() {
         "@type": "CollectionPage",
         "@id": url,
         name: "Site of the Day",
-        description: description(winners),
+        description: description(winners, rules),
         url,
         mainEntity: {
           "@type": "ItemList",
@@ -115,7 +115,7 @@ export default async function SiteOfTheDayPage() {
         prelude="one website a day"
         title="Site of the Day"
         titleClassName="text-[clamp(3rem,9vw,9rem)] leading-[0.88]"
-        lede="Every day, one site that scored 8.50 or more with the jury and the community. Never the same site twice."
+        lede={sotdLede(rules)}
         meta={`${winners.length} ${winners.length === 1 ? "winner" : "winners"}`}
         action={
           <PillLink href="/submit" variant="outline">

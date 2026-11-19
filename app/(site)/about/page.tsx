@@ -5,7 +5,7 @@ import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 
 const title = "About Shemoqmedi: Website Awards Made in Georgia";
 const description =
-  "Shemoqmedi is a website awards and web design inspiration platform. Every site is reviewed by hand, then scored by a jury and the community on design, usability, creativity and code.";
+  "Shemoqmedi is a website awards and web design inspiration platform. Every site is reviewed by hand, then scored by an independent jury on design, usability, creativity and content.";
 
 export const metadata: Metadata = {
   // Absolute: the brand is already in it, so no " | Shemoqmedi" suffix.
@@ -113,7 +113,7 @@ export default function AboutPage() {
         current="/about"
         prelude="about"
         title={SITE_NAME}
-        lede="Website awards and web design inspiration. Every site reviewed by hand, then scored by a jury and the community."
+        lede="Website awards and web design inspiration. Every site reviewed by hand, then scored by an independent jury."
         sections={sections}
       />
     </>

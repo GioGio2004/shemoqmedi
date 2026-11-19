@@ -121,7 +121,7 @@ const sections: InfoSection[] = [
     heading: "Scores and awards",
     body: (
       <p>
-        Scores and awards are opinions of the jury and the community, calculated as described on{" "}
+        Scores and awards are the opinions of the jury, calculated as described on{" "}
         <Link href="/how-we-score">How we score</Link>. They are not a guarantee of a site&apos;s quality, security or
         fitness for any purpose. We may correct scores or awards that were affected by an error or by manipulation.
       </p>

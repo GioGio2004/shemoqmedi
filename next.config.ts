@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 // The one host that may be indexed. Hard-coded on purpose (not read from
 // NEXT_PUBLIC_URL) so an env typo can never noindex the live site.
@@ -136,4 +137,23 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Error monitoring (Sentry, lib/sentry.ts). The build plugin is only added
+// when a DSN is set, so local and CI builds are exactly as before. Source maps
+// are uploaded only when SENTRY_AUTH_TOKEN (with SENTRY_ORG and
+// SENTRY_PROJECT) is set too; without it the build skips the upload and
+// still passes, and stack traces show minified code.
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+const sentryEnabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN);
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: sentryAuthToken,
+      silent: !process.env.CI,
+      telemetry: false,
+      sourcemaps: { disable: !sentryAuthToken, deleteSourcemapsAfterUpload: true },
+      release: { create: Boolean(sentryAuthToken) },
+      widenClientFileUpload: true,
+    })
+  : nextConfig;

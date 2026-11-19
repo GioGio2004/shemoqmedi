@@ -4,20 +4,24 @@ import type { JurorPublic } from "@/convex-helpers-api";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { JuryCard } from "@/components/jury/JuryCard";
 import { safeUrl } from "@/components/jury/jurorInfo";
-import { getJurors } from "@/lib/listings";
+import { getAwardRules, getJurors } from "@/lib/listings";
+import { pillarList, scoreRange } from "@/lib/scoringCopy";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
-import { JURY_CATEGORIES } from "@/lib/taxonomy";
+import { JURY_CATEGORIES, type AwardRules } from "@/lib/taxonomy";
 
 const title = "The Jury: Who Reviews and Scores Websites";
-const description =
-  "Meet the Shemoqmedi jury: designers and developers who score every website in its voting window on design, usability, creativity and code. Their score counts for 60%.";
+const describe = (rules: AwardRules) =>
+  `Meet the Shemoqmedi jury: designers and developers who score every website from ${scoreRange(rules)} on ${pillarList(rules)}. Only the jury decides awards.`;
 
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: "/jury" },
-  openGraph: infoOpenGraph("/jury", title, description),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const description = describe(await getAwardRules());
+  return {
+    title,
+    description,
+    alternates: { canonical: "/jury" },
+    openGraph: infoOpenGraph("/jury", title, description),
+  };
+}
 
 // Members come from Convex (jury.listPublic); refreshed in the background.
 export const dynamic = "force-static";
@@ -64,20 +68,21 @@ function Members({ jurors }: { jurors: Member[] }) {
   );
 }
 
-const process: InfoSection[] = [
+const processFor = (rules: AwardRules): InfoSection[] => [
   {
     id: "review",
     heading: "How the jury works",
     body: (
       <>
         <p>
-          Every submitted site is checked by hand before it is listed. Once it goes live, the jury has its
-          voting window to evaluate it: each juror gives a score from 1 to 10 on design, usability, creativity
-          and code, and writes a short comment that is shown on the site&apos;s page with their name.
+          Every submitted site is checked by hand before it is listed. Sites approved in one week form a batch, and
+          the jury evaluates the batch during the following week: each juror gives a score from {scoreRange(rules)} on{" "}
+          {pillarList(rules)}, and writes a short comment that is shown on the site&apos;s page with their name.
         </p>
         <p>
-          The site&apos;s jury score is the average of its jurors&apos; evaluations and counts for 60% of the final
-          result; the community&apos;s votes count for the other 40%. The full method is on{" "}
+          The final score is the average of the jurors&apos; weighted scores, and it alone decides awards; a site
+          needs at least {rules.minVotes} jury votes to be eligible. Community votes are shown for interest and never
+          count. The full method is on{" "}
           <Link href="/how-we-score">How we score</Link>.
         </p>
       </>
@@ -96,12 +101,12 @@ const process: InfoSection[] = [
 ];
 
 export default async function JuryPage() {
-  const jurors = await getJurors();
+  const [jurors, rules] = await Promise.all([getJurors(), getAwardRules()]);
   const sections: InfoSection[] = [
     ...(jurors.length > 0
       ? [{ id: "members", heading: "Members", body: <Members jurors={jurors} /> }]
       : []),
-    ...process,
+    ...processFor(rules),
   ];
   const jsonLd = {
     "@context": "https://schema.org",
@@ -109,7 +114,7 @@ export default async function JuryPage() {
     "@id": absoluteUrl("/jury"),
     url: absoluteUrl("/jury"),
     name: title,
-    description,
+    description: describe(rules),
     isPartOf: { "@id": `${SITE_URL}/#website` },
     inLanguage: "en",
     ...(jurors.length > 0

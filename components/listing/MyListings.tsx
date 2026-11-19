@@ -13,6 +13,7 @@ import {
 import { api, type ListingStatus, type OwnListing } from "@/convex-helpers-api";
 import { AwardBadge, ScoreBadge } from "@/components/listing/Badges";
 import { Countdown } from "@/components/listing/Countdown";
+import { removalAction } from "@/lib/listingRemoval";
 
 const STATUS: Record<ListingStatus, string> = {
   pending: "In review",
@@ -20,6 +21,7 @@ const STATUS: Record<ListingStatus, string> = {
   awarded: "Awarded",
   archived: "Closed",
   rejected: "Not accepted",
+  withdrawn: "Archived by you",
 };
 
 /** Statuses that have a public /sites/<slug> page. */
@@ -76,28 +78,47 @@ function StatusDetail({ listing }: { listing: OwnListing }) {
       return listing.reviewNote ? (
         <p className="mt-2 text-sm">Reason: {listing.reviewNote}</p>
       ) : null;
+    case "withdrawn":
+      return (
+        <p className="mt-2 text-sm text-black/55">
+          Off the site. Awards, scores and votes are kept; restore it any time.
+        </p>
+      );
     default:
       return null;
   }
 }
 
+/** Delete, Archive or Restore, whichever this listing allows (nothing otherwise). */
+function RemovalButton({ listing, onClick }: { listing: OwnListing; onClick: () => void }) {
+  const action = removalAction(listing);
+  if (!action) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-black/55 underline underline-offset-4 hover:text-black"
+    >
+      {action.label}
+    </button>
+  );
+}
+
 function List() {
   const listings = useQuery(api.listings.myListings, {});
   const withdraw = useMutation(api.listings.withdraw);
+  const restore = useMutation(api.listings.restore);
   const [error, setError] = useState<string | null>(null);
 
-  async function remove(listing: OwnListing) {
-    if (
-      !confirm(
-        `Remove "${listing.title}"? This deletes it and its screenshots.`,
-      )
-    )
-      return;
+  async function act(listing: OwnListing) {
+    const action = removalAction(listing);
+    if (!action || !confirm(action.confirm)) return;
     setError(null);
     try {
-      await withdraw({ id: listing.id });
+      if (action.kind === "restore") await restore({ id: listing.id });
+      else await withdraw({ id: listing.id });
     } catch (err) {
-      setError(friendlyError(err, "Could not remove the site. Please try again."));
+      setError(friendlyError(err, "Could not update the site. Please try again."));
     }
   }
 
@@ -166,13 +187,7 @@ function List() {
                   Get badges
                 </Link>
               )}
-              <button
-                type="button"
-                onClick={() => void remove(l)}
-                className="text-black/55 underline underline-offset-4 hover:text-black"
-              >
-                {l.status === "pending" ? "Withdraw" : "Remove"}
-              </button>
+              <RemovalButton listing={l} onClick={() => void act(l)} />
             </div>
           </li>
         ))}

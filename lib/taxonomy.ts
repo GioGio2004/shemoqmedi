@@ -148,16 +148,54 @@ export function weightedScore(scores: Record<(typeof PILLARS)[number]["key"], nu
   return PILLARS.reduce((sum, p) => sum + scores[p.key] * p.weight, 0);
 }
 
-/** The award rules shown on the site (defaults of the backend's award settings). */
-export const AWARD_RULES = {
+/**
+ * The award rules as the backend serves them (awards.publicRules, built from
+ * shemoqmedi-admin/convex/lib/scoring.ts and lib/config.ts). Pages read the
+ * live object through getAwardRules() in lib/listings.ts.
+ */
+export type AwardRules = {
+  pillars: { key: string; name: string; weight: number }[];
+  scoreMin: number;
+  scoreMax: number;
+  decimals: number;
+  /** Always false: community votes are shown but never decide an award. */
+  communityCounts: boolean;
+  minVotes: number;
+  honorableMentionMin: number;
+  sotdMin: number;
+  bscMin: number;
+  /** "HH:MM" in timeZone. */
+  announceTime: string;
+  timeZone: string;
+  monthlyRoundDays: number;
+  yearlyRoundDays: number;
+  /** "MM-DD". */
+  yearlyAnnounceDate: string;
+  resubmitMonths: number;
+};
+
+/**
+ * Fallback only, for when the backend can't be reached: the defaults of the
+ * backend's award settings. An admin can change the live values at any time,
+ * so pages should state numbers from getAwardRules(), not from here.
+ */
+export const AWARD_RULES: AwardRules = {
+  pillars: PILLARS.map((p) => ({ key: p.key, name: p.name, weight: p.weight })),
+  scoreMin: 1,
+  scoreMax: 10,
+  decimals: 2,
+  communityCounts: false,
   minVotes: 3,
   honorableMentionMin: 6.5,
   sotdMin: 7.0,
   bscMin: 8.2,
+  announceTime: "00:00",
+  timeZone: "Asia/Tbilisi",
   monthlyRoundDays: 5,
   yearlyRoundDays: 10,
+  yearlyAnnounceDate: "01-20",
   resubmitMonths: 12,
-} as const;
+};
 
 /** Jury panels (mirrors the backend's JURY_CATEGORIES). */
 export const JURY_CATEGORIES = [
