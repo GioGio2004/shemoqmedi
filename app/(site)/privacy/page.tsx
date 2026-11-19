@@ -127,7 +127,11 @@ const sections: InfoSection[] = [
           <li>Cloudflare R2: storage and delivery of preview videos;</li>
           <li>Resend: sending emails such as jury claim links;</li>
           <li>Ahrefs: aggregated, cookieless visit statistics;</li>
-          <li>Cloudflare: aggregated, cookieless visit statistics (Cloudflare Web Analytics) on public pages.</li>
+          <li>Cloudflare: aggregated, cookieless visit statistics (Cloudflare Web Analytics) on public pages;</li>
+          <li>
+            Sentry: error reports when a page breaks (the page address, browser and the error, with private links and
+            keys removed), when error reporting is switched on.
+          </li>
         </ul>
         <p>
           Some of these providers store or process data outside Georgia, including in the United States and the
@@ -153,8 +157,10 @@ const sections: InfoSection[] = [
     body: (
       <>
         <p>
-          We keep your account data while your account exists. When you delete your account, your account record is
-          deleted; scores you gave remain only as part of each site&apos;s anonymous averages.
+          We keep your account data while your account exists. You can delete your account yourself at the bottom of
+          your account page. That deletes your account record, your community votes, your claim and removal requests,
+          and sites you submitted that were never published. Published sites stay listed as part of the awards record
+          but no longer belong to you, and a jury profile becomes private.
         </p>
         <p>
           Published listings and jury evaluations stay online as part of the public awards record until they are

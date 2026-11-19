@@ -4,6 +4,7 @@ import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
 import { JuryProfile } from "@/components/jury/JurorProfileForm";
 import { MyListings } from "@/components/listing/MyListings";
+import { DeleteAccount } from "@/components/account/DeleteAccount";
 
 export const metadata: Metadata = { title: "Your jury profile", robots: { index: false } };
 
@@ -56,6 +57,7 @@ export default async function JuryProfilePage({ searchParams }: { searchParams: 
             </div>
             <MyListings />
           </section>
+          <DeleteAccount />
         </div>
       </main>
     </>

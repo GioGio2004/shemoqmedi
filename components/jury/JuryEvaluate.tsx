@@ -141,7 +141,7 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
               <label className="grid gap-2">
                 <span className="flex items-baseline justify-between">
                   <span className="eyebrow text-black">
-                    Comment <span className="text-black/45">(optional)</span>
+                    Comment <span className="text-black/60">(optional)</span>
                   </span>
                   <span className="font-mono text-[11px] text-black/55 tabular-nums">
                     {length}/{LIMITS.juryComment}

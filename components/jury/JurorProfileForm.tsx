@@ -561,7 +561,7 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
   if (!claimed) return <div className="grid max-w-3xl gap-8">{form}</div>;
   return (
     <div className="grid gap-16">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <JuryCard juror={me} href={`/jury/${me.slug}`} branded />
         <JuryShare slug={me.slug} />
       </div>

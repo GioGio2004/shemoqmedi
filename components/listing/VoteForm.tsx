@@ -248,7 +248,7 @@ function Ballot({ slug, title }: { slug: string; title: string }) {
           <p className="eyebrow">Your average</p>
           <p className="mt-2 font-mono text-4xl font-medium tracking-tight tabular-nums" aria-live="polite">
             {formatScore(average(scores))}
-            <span className="text-xl text-black/40"> / 10</span>
+            <span className="text-xl text-black/60"> / 10</span>
           </p>
         </div>
         <div className="flex flex-col items-start gap-3 sm:items-end">

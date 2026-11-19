@@ -242,20 +242,20 @@ export function MyBadges() {
 
       <ol className="grid gap-6 border-t border-black/10 pt-8 text-sm leading-relaxed text-black/60 md:grid-cols-3">
         <li>
-          <span className="font-mono text-[11px] text-black/45">01</span>
+          <span className="font-mono text-[11px] text-black/60">01</span>
           <p className="mt-1">
             <strong className="font-semibold text-black">Copy</strong> the code of the badge you want.
           </p>
         </li>
         <li>
-          <span className="font-mono text-[11px] text-black/45">02</span>
+          <span className="font-mono text-[11px] text-black/60">02</span>
           <p className="mt-1">
             <strong className="font-semibold text-black">Paste</strong> it in your footer&apos;s HTML, or in an Embed /
             Custom HTML block in Webflow, Framer, Wix or WordPress.
           </p>
         </li>
         <li>
-          <span className="font-mono text-[11px] text-black/45">03</span>
+          <span className="font-mono text-[11px] text-black/60">03</span>
           <p className="mt-1">
             <strong className="font-semibold text-black">Done.</strong> The badge is one small image that links to your
             award page. A pinned corner badge stays at the bottom right of the window.

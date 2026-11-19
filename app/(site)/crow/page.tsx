@@ -191,14 +191,14 @@ export default function CrowPage() {
               key={k.n}
               className="crow-rise grid gap-3 border-t border-black/10 py-8 md:grid-cols-12 md:gap-10 md:py-10"
             >
-              <span className="font-mono text-sm text-black/45 tabular-nums md:col-span-1">{k.n}</span>
+              <span className="font-mono text-sm text-black/60 tabular-nums md:col-span-1">{k.n}</span>
               <h3 className="text-[clamp(1.5rem,2.6vw,2.25rem)] leading-[1.05] font-semibold tracking-[-0.045em] md:col-span-4">
                 {k.title}
               </h3>
               <div className="grid gap-3 md:col-span-7">
                 <p className="max-w-xl text-[15px] leading-relaxed text-black/70">{k.text}</p>
                 <p className="text-sm font-medium">
-                  <span className="text-black/45">Here: </span>
+                  <span className="text-black/60">Here: </span>
                   {k.us}
                 </p>
               </div>
@@ -320,7 +320,7 @@ export default function CrowPage() {
               </PillLink>
             </div>
           </div>
-          <p className="mt-16 text-xs text-black/45">
+          <p className="mt-16 text-xs text-black/60">
             Sources: Hunt, Nature (1996); Marzluff et al., Animal Behaviour (2010); Kabadayi &amp; Osvath, Science
             (2017); Vander Wall &amp; Balda (1977); Shephard et al., Animal Cognition (2014); Bird &amp; Emery, Current
             Biology (2009). <Link href="/about" className="underline underline-offset-4">About Shemoqmedi</Link>

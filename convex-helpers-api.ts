@@ -190,6 +190,8 @@ export type JurorPage = {
 
 export type JuryReview = {
   juror: JurorPublic;
+  /** /jury/<slug> exists (an active, claimed juror); otherwise show the name without a link. */
+  profilePublic?: boolean;
   scores: Pillars;
   average: number;
   comment: string;
@@ -285,7 +287,7 @@ export type SubmitArgs = {
 export type PublicApiType = {
   media: {
     /** Signed parameters for one browser → ImageKit upload (signed-in users). */
-    uploadAuth: A<Empty, UploadAuth>;
+    uploadAuth: A<{ site: string; label: string; contentType: string }, UploadAuth>;
     /** Record a finished ImageKit upload (screenshots only); returns the id submit takes. */
     register: M<RegisterArgs, Id<"media">>;
     /** Presigned URL for one browser → Cloudflare R2 video upload (signed-in users). */
@@ -298,6 +300,13 @@ export type PublicApiType = {
   };
   users: {
     getCurrentUser: Q<Empty, ConvexUser | null>;
+    deleteMyAccount: A<
+      { confirm: "DELETE" },
+      {
+        counts: { listingsDeleted: number; listingsReleased: number; creators: number; votes: number; claims: number };
+        loginDeleted: boolean;
+      }
+    >;
   };
   listings: {
     /** All public listings (max 200), newest first. */
@@ -308,6 +317,8 @@ export type PublicApiType = {
     publicSlugs: Q<Empty, { slug: string; updatedAt: number }[]>;
     generateUploadUrl: M<Empty, string>;
     submit: M<SubmitArgs, { slug: string }>;
+    /** The checks submit makes that don't need the files; run before uploading. */
+    precheckSubmission: Q<{ url: string; redesignOf?: string }, { ok: true } | { ok: false; reason: string }>;
     /** Sites you own, plus submissions you sent that nobody owns yet. */
     myListings: Q<Empty, OwnListing[]>;
     /** Deletes a never-public submission, or archives (status "withdrawn") one that has been public. */

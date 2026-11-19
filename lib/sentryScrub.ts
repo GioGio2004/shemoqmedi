@@ -7,8 +7,7 @@
 // transaction, breadcrumb data.from/to/url, exception messages, span
 // descriptions, ...), every string in the event is scrubbed.
 //
-// The admin has the same file (shemoqmedi-admin/lib/sentryScrub.ts): keep
-// them in step.
+// When the admin gets Sentry too, copy this file there and keep the two in step.
 
 const REDACTED = "[redacted]";
 

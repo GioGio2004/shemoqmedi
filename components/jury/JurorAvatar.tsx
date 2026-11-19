@@ -1,8 +1,24 @@
 import { cn } from "@/lib/utils";
 
 /**
- * A juror's Clerk profile photo, or a grey placeholder when they have none.
- * Plain <img>: Clerk serves the image already sized and cached.
+ * An ImageKit photo resized and cropped by ImageKit to `px` square (preset
+ * juror photos are full-size uploads: one was 838 KB for a 48 px circle,
+ * audit F-04). Other hosts (Clerk) are returned as they are.
+ */
+export function sizedAvatarUrl(url: string, px: number) {
+  try {
+    const u = new URL(url);
+    if (u.hostname !== "ik.imagekit.io" || u.searchParams.has("tr")) return url;
+    u.searchParams.set("tr", `w-${px},h-${px},fo-auto`);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * A juror's profile photo (Clerk, or a preset uploaded to ImageKit), or a
+ * grey placeholder when they have none. Plain <img>: both hosts resize it.
  */
 export function JurorAvatar({
   url,
@@ -15,9 +31,9 @@ export function JurorAvatar({
 }) {
   if (url) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- Clerk-hosted avatar
+      // eslint-disable-next-line @next/next/no-img-element -- Clerk/ImageKit resize it themselves
       <img
-        src={url}
+        src={sizedAvatarUrl(url, size * 2)}
         alt=""
         width={size}
         height={size}

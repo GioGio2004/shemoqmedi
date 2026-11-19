@@ -35,7 +35,7 @@ export function ScoreBreakdown({
           <p className="eyebrow">Final score</p>
           <p className="mt-2 font-mono text-5xl font-medium tracking-tight tabular-nums md:text-6xl">
             {formatScore(listing.finalScore)}
-            {listing.finalScore !== null && <span className="text-2xl text-black/40"> / 10</span>}
+            {listing.finalScore !== null && <span className="text-2xl text-black/60"> / 10</span>}
           </p>
         </div>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[11px] tracking-[0.06em] uppercase">

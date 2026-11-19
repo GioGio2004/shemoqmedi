@@ -179,7 +179,7 @@ export function MenuSearchField({ className }: { className?: string }) {
         submit();
       }}
     >
-      <SearchIcon className="pointer-events-none absolute left-4 text-black/50" />
+      <SearchIcon className="pointer-events-none absolute left-4 text-black/60" />
       <input
         ref={desktopField}
         type="search"
@@ -199,9 +199,9 @@ export function MenuSearchField({ className }: { className?: string }) {
         aria-expanded={open}
         aria-autocomplete="list"
         autoComplete="off"
-        className="h-[46px] w-full min-w-0 rounded-full bg-transparent pr-12 pl-11 text-[14px] outline-none placeholder:text-black/45 [&::-webkit-search-cancel-button]:hidden"
+        className="h-[46px] w-full min-w-0 rounded-full bg-transparent pr-12 pl-11 text-[14px] outline-none placeholder:text-black/60 [&::-webkit-search-cancel-button]:hidden"
       />
-      <kbd className="pointer-events-none absolute right-3 grid h-6 min-w-6 place-items-center rounded-md border border-black/10 px-1.5 font-mono text-[11px] text-black/45">
+      <kbd className="pointer-events-none absolute right-3 grid h-6 min-w-6 place-items-center rounded-md border border-black/10 px-1.5 font-mono text-[11px] text-black/60">
         /
       </kbd>
     </form>
@@ -401,7 +401,7 @@ function Dropdown({
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-2 select-none [&::-webkit-details-marker]:hidden">
         <span className="text-[16px] font-semibold tracking-[-0.02em] lg:text-[15px]">
           {title}
-          <span className="ml-2 font-mono text-[10.5px] font-normal text-black/45">{total}</span>
+          <span className="ml-2 font-mono text-[10.5px] font-normal text-black/60">{total}</span>
         </span>
         <span
           aria-hidden="true"
@@ -477,7 +477,7 @@ function SearchResults({ query, data }: { query: string; data: MenuData | null }
     <div className="grid gap-7" aria-live="polite">
       {none && (
         <p className="text-2xl font-semibold tracking-[-0.03em]">
-          No results for “{query.trim()}”. <span className="text-black/45">Try a site, a creator or a category.</span>
+          No results for “{query.trim()}”. <span className="text-black/60">Try a site, a creator or a category.</span>
         </p>
       )}
       {r.sites.length > 0 && (
@@ -563,7 +563,7 @@ export function MenuCurtain() {
               submit();
             }}
           >
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-black/50" />
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-black/60" />
             <input
               ref={mobileField}
               type="search"
@@ -573,7 +573,7 @@ export function MenuCurtain() {
               aria-label="Search the site"
               autoComplete="off"
               enterKeyHint="search"
-              className="h-[50px] w-full rounded-full border border-black/[0.08] bg-white pr-4 pl-11 text-[16px] outline-none placeholder:text-black/45 focus:border-black [&::-webkit-search-cancel-button]:hidden"
+              className="h-[50px] w-full rounded-full border border-black/[0.08] bg-white pr-4 pl-11 text-[16px] outline-none placeholder:text-black/60 focus:border-black [&::-webkit-search-cancel-button]:hidden"
             />
           </form>
 

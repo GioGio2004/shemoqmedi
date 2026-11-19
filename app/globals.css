@@ -152,7 +152,7 @@
  * site uses a colour of its own.
  */
 .score-tile {
-  background: rgb(0 64 255 / 0.78);
+  background: rgb(0 64 255 / 0.82); /* white text on it stays above 4.5:1 (audit H-01) */
   border: 1px solid rgb(255 255 255 / 0.28);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   backdrop-filter: blur(18px) saturate(1.4);

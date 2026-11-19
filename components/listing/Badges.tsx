@@ -59,7 +59,7 @@ export function ScoreBadge({
   return (
     <span className={cn(mono, "tabular-nums text-black", className)}>
       {formatScore(score)}
-      {outOf && score !== null && <span className="text-black/45"> / 10</span>}
+      {outOf && score !== null && <span className="text-black/60"> / 10</span>}
     </span>
   );
 }

@@ -88,7 +88,7 @@ export function JuryCard({
       )}
       {meta}
       {branded && (
-        <p className="flex items-center justify-between gap-3 border-t border-black/10 pt-4 font-mono text-[10.5px] font-medium tracking-[0.08em] text-black/45 uppercase">
+        <p className="flex items-center justify-between gap-3 border-t border-black/10 pt-4 font-mono text-[10.5px] font-medium tracking-[0.08em] text-black/60 uppercase">
           <span>Shemoqmedi Jury</span>
           <span>shemoqmedi.space</span>
         </p>

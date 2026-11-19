@@ -45,13 +45,17 @@ export function JuryReviews({ reviews }: { reviews: JuryReview[] }) {
               </p>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold tracking-[-0.02em]">
-                  <Link href={`/jury/${r.juror.slug}`} className="hover:underline">
-                    {r.juror.name}
-                  </Link>
+                  {r.profilePublic ? (
+                    <Link href={`/jury/${r.juror.slug}`} className="hover:underline">
+                      {r.juror.name}
+                    </Link>
+                  ) : (
+                    r.juror.name
+                  )}
                 </p>
                 <p className="truncate text-xs text-black/55">{r.juror.title}</p>
               </div>
-              <p className="hidden shrink-0 text-xs text-black/45 sm:block">{formatDate(r.updatedAt)}</p>
+              <p className="hidden shrink-0 text-xs text-black/60 sm:block">{formatDate(r.updatedAt)}</p>
             </div>
             {r.comment && (
               <p className="text-[15px] leading-relaxed whitespace-pre-line text-black/80">{r.comment}</p>

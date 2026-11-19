@@ -188,7 +188,7 @@ function Form({
 
       <div className="grid gap-2">
         <label htmlFor={proofId} className="eyebrow text-black">
-          Proof link <span className="text-black/45 normal-case tracking-normal">(optional)</span>
+          Proof link <span className="text-black/60 normal-case tracking-normal">(optional)</span>
         </label>
         <input
           id={proofId}

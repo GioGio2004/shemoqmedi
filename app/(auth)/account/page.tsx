@@ -7,6 +7,7 @@ import { api } from "@/convex-helpers-api";
 import { PageHero } from "@/components/listing/PageHero";
 import { MyListings } from "@/components/listing/MyListings";
 import { PillLink } from "@/components/site/ui";
+import { DeleteAccount } from "@/components/account/DeleteAccount";
 
 export const metadata: Metadata = { title: "Your sites", robots: { index: false } };
 
@@ -56,6 +57,7 @@ export default async function AccountPage({
         />
         <div className="container-site pb-24">
           <MyListings />
+          <DeleteAccount />
         </div>
       </main>
     </>

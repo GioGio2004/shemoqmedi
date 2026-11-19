@@ -56,7 +56,7 @@ function Candidate({ roundId, c }: { roundId: string; c: RoundCard["candidates"]
             <label key={p.key} className="grid gap-1.5">
               <span className="flex items-baseline justify-between">
                 <span className="eyebrow text-black">
-                  {p.name} <span className="text-black/45">{Math.round(p.weight * 100)}%</span>
+                  {p.name} <span className="text-black/60">{Math.round(p.weight * 100)}%</span>
                 </span>
                 <span className="font-mono text-sm tabular-nums">{scores[p.key].toFixed(1)}</span>
               </span>

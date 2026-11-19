@@ -536,7 +536,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
       {/* Scores + voting */}
       <section aria-label="Scores" className="container-site mt-12 pb-24">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <ScoreBreakdown listing={listing} reviews={juryReviews} minVotes={rules.minVotes} />
 
           <div className="grid content-start gap-6">

@@ -181,7 +181,7 @@ export function ClaimToken({ token }: { token: string }) {
         )}
 
         {!pending && resolution?.state === "open" && (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="grid content-start gap-8">
               {resolution.juror && <JuryCard juror={resolution.juror} branded />}
               {resolution.listings.map((l) => (

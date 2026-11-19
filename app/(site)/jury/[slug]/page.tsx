@@ -120,7 +120,7 @@ export default async function JurorPage({ params }: Params) {
       />
 
       <section aria-label={`${juror.name}, jury badge`} className="container-site pb-16">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <JuryCard juror={juror} size="lg" branded />
           <dl className="grid content-start gap-px overflow-hidden rounded-3xl border border-black/10 bg-black/10">
             {[
@@ -156,7 +156,7 @@ export default async function JurorPage({ params }: Params) {
                         <span className="font-semibold">{e.title}</span>
                         <span className="text-black/60">, {e.organization}</span>
                       </p>
-                      {e.period && <p className={`${mono} text-black/45`}>{e.period}</p>}
+                      {e.period && <p className={`${mono} text-black/60`}>{e.period}</p>}
                     </li>
                   ))}
                 </ul>
@@ -183,7 +183,7 @@ export default async function JurorPage({ params }: Params) {
                           ) : (
                             <p className="text-sm font-semibold">{w.title}</p>
                           )}
-                          {w.year && <p className={`${mono} text-black/45`}>{w.year}</p>}
+                          {w.year && <p className={`${mono} text-black/60`}>{w.year}</p>}
                         </div>
                         {w.description && <p className="text-sm leading-relaxed text-black/60">{w.description}</p>}
                       </li>
@@ -233,7 +233,7 @@ export default async function JurorPage({ params }: Params) {
                 {r.comment && (
                   <p className="text-[15px] leading-relaxed whitespace-pre-line text-black/80">{r.comment}</p>
                 )}
-                <p className={`${mono} text-black/45`}>{formatDate(r.updatedAt)}</p>
+                <p className={`${mono} text-black/60`}>{formatDate(r.updatedAt)}</p>
               </li>
             ))}
           </ul>

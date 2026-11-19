@@ -3,7 +3,7 @@
 import { friendlyError } from "@/lib/errors";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAction, useMutation } from "convex/react";
+import { useAction, useConvex, useMutation } from "convex/react";
 import { MAX_IMAGE_INPUT_BYTES, uploadToImageKit } from "@/lib/imagekitUpload";
 import { uploadVideoToR2 } from "@/lib/videoUpload";
 import { useUser } from "@clerk/nextjs";
@@ -364,6 +364,7 @@ export function ListingForm() {
   const getVideoUploadUrl = useAction(api.media.videoUploadUrl);
   const registerVideo = useMutation(api.media.registerVideo);
   const submit = useMutation(api.listings.submit);
+  const convex = useConvex();
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -418,7 +419,7 @@ export function ListingForm() {
         await uploadVideoToR2(file, { site: title, label }, (args) => getVideoUploadUrl(args), setProgress),
       );
     }
-    const args = await uploadToImageKit(file, { site: title, label }, () => getUploadAuth({}));
+    const args = await uploadToImageKit(file, { site: title, label }, getUploadAuth);
     return await registerMedia(args);
   }
 
@@ -449,6 +450,16 @@ export function ListingForm() {
     busy.current = true;
     setError(null);
     try {
+      // Same domain and queue checks as submit, before any file uploads (audit A-08).
+      const check = await convex.query(api.listings.precheckSubmission, {
+        url: data.url,
+        redesignOf: isRedesign ? redesignSlug(redesignOf) || undefined : undefined,
+      });
+      if (!check.ok) {
+        setError(check.reason);
+        busy.current = false;
+        return;
+      }
       setStatus("uploading");
       setProgress(null);
       const coverId = await upload(data.cover, "cover");
