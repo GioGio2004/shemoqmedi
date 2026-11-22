@@ -257,6 +257,47 @@ export type ConvexUser = {
   updatedAt: number;
 };
 
+/** One Lighthouse run (mobile or desktop) from Google PageSpeed Insights (convex/audits.ts). */
+export type AuditReport = {
+  /** 0-100; null when Lighthouse could not score a category. */
+  scores: { performance: number | null; accessibility: number | null; bestPractices: number | null; seo: number | null };
+  /** Lab metrics from this run, in ms (cls unitless). */
+  lab: {
+    fcp: number | null;
+    lcp: number | null;
+    tbt: number | null;
+    cls: number | null;
+    speedIndex: number | null;
+    ttfb: number | null;
+  };
+  /** Real-user data (Chrome UX Report, 75th percentile); null without enough traffic. */
+  field: {
+    category: string;
+    lcp: number | null;
+    cls: number | null;
+    inp: number | null;
+    fcp: number | null;
+    ttfb: number | null;
+  } | null;
+  pageBytes: number | null;
+  requests: number | null;
+  opportunities: { title: string; savingsMs: number }[];
+  issues: { category: "accessibility" | "best-practices" | "seo"; title: string }[];
+  screenshot?: string;
+  lighthouseVersion: string;
+};
+
+/** The technical audit of a listed site, for jurors. */
+export type SiteAudit = {
+  url: string;
+  status: "running" | "done" | "error";
+  error: string | null;
+  requestedAt: number;
+  finishedAt: number | null;
+  mobile: AuditReport | null;
+  desktop: AuditReport | null;
+};
+
 type Q<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"query", "public", Args, Ret>;
 type M<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"mutation", "public", Args, Ret>;
 type A<Args extends DefaultFunctionArgs, Ret> = FunctionReference<"action", "public", Args, Ret>;
@@ -396,6 +437,10 @@ export type PublicApiType = {
     /** Open Site of the Month / Year rounds the signed-in juror can score; null for non-jurors. */
     open: Q<Empty, RoundCard[] | null>;
     vote: M<{ roundId: string; slug: string; scores: Pillars }, null>;
+  };
+  audits: {
+    /** The site's technical audit, for jurors only; null for anyone else or before the first run. */
+    forJuror: Q<{ slug: string }, SiteAudit | null>;
   };
   conflicts: {
     /** A juror declares they built the site or it belongs to their company. */
