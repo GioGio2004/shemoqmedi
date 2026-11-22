@@ -3,7 +3,7 @@ import type { JurorPublic } from "@/convex-helpers-api";
 import { hostOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { JurorAvatar } from "./JurorAvatar";
-import { panelName, safeUrl } from "./jurorInfo";
+import { linkedinUrl, panelName, safeUrl } from "./jurorInfo";
 
 /** What the card needs: a public juror, or a claim-link preview (no slug yet). */
 export type JuryCardJuror = Omit<JurorPublic, "slug"> & { slug?: string };
@@ -32,7 +32,7 @@ export function JuryCard({
 }) {
   const lg = size === "lg";
   const website = safeUrl(juror.website);
-  const linkedin = safeUrl(juror.linkedinUrl);
+  const linkedin = linkedinUrl(juror.linkedinUrl);
   const link = "relative z-10 underline decoration-black/20 underline-offset-4 hover:decoration-black";
 
   return (

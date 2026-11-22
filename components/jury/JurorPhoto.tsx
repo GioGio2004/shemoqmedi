@@ -26,6 +26,7 @@ function initials(name: string) {
 export function JurorPhoto({
   url,
   name,
+  alt = "",
   width,
   height,
   mono = true,
@@ -34,6 +35,8 @@ export function JurorPhoto({
 }: {
   url: string | null;
   name: string;
+  /** Empty (decorative) where the name is printed beside the photo. */
+  alt?: string;
   /** Rendered size in CSS px; the image is fetched at twice that. */
   width: number;
   height: number;
@@ -48,7 +51,7 @@ export function JurorPhoto({
         // eslint-disable-next-line @next/next/no-img-element -- Clerk/ImageKit resize it themselves
         <img
           src={sizedPhotoUrl(url, width * 2, height * 2)}
-          alt=""
+          alt={alt}
           width={width}
           height={height}
           loading={priority ? "eager" : "lazy"}

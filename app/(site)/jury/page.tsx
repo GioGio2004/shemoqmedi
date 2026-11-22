@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { JuryDirectory } from "@/components/jury/JuryDirectory";
-import { safeUrl } from "@/components/jury/jurorInfo";
+import { linkedinUrl, safeUrl } from "@/components/jury/jurorInfo";
 import { getAwardRules, getJurors } from "@/lib/listings";
 import { pillarList, scoreRange } from "@/lib/scoringCopy";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
@@ -74,7 +74,7 @@ export default async function JuryPage() {
       ? {
           // Same @id as the Person on each member's /jury/<slug> page.
           mentions: jurors.map((j) => {
-            const sameAs = [safeUrl(j.website), safeUrl(j.linkedinUrl)].filter((l): l is string => l !== null);
+            const sameAs = [safeUrl(j.website), linkedinUrl(j.linkedinUrl)].filter((l): l is string => l !== null);
             return {
               "@type": "Person",
               "@id": `${absoluteUrl(`/jury/${j.slug}`)}#person`,

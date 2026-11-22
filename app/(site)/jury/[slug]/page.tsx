@@ -5,7 +5,7 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import { ArrowIcon, PillLink } from "@/components/site/ui";
 import { JurorPhoto } from "@/components/jury/JurorPhoto";
 import { JuryShareActions } from "@/components/jury/JuryShareActions";
-import { panelName, safeUrl } from "@/components/jury/jurorInfo";
+import { jurorTitle, linkedinUrl, panelName, safeUrl } from "@/components/jury/jurorInfo";
 import { getAwardRules, getJurorPage, getJurorSlugs } from "@/lib/listings";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const data = await getJurorPage(slug);
   if (!data) return { title: "Juror not found", robots: { index: false } };
   const { juror, reviews } = data;
-  const title = `${juror.name}, ${juror.title}: ${SITE_NAME} Jury`;
+  const title = jurorTitle(juror.name, juror.title);
   const description = juror.bio ? snippet(juror.bio) : describe(await getAwardRules(), juror.name, juror.title, panelName(juror.category), reviews.length);
   return {
     title: { absolute: title },
@@ -97,7 +97,7 @@ export default async function JurorPage({ params }: Params) {
   const rules = await getAwardRules();
   const panel = panelName(juror.category);
   const website = safeUrl(juror.website);
-  const linkedin = safeUrl(juror.linkedinUrl);
+  const linkedin = linkedinUrl(juror.linkedinUrl);
   const sameAs = [website, linkedin].filter((l): l is string => l !== null);
   const experience = juror.experience ?? [];
   const work = juror.work ?? [];
@@ -113,7 +113,7 @@ export default async function JurorPage({ params }: Params) {
         "@type": "ProfilePage",
         "@id": url,
         url,
-        name: `${juror.name}, ${juror.title}: ${SITE_NAME} Jury`,
+        name: jurorTitle(juror.name, juror.title),
         isPartOf: { "@id": `${SITE_URL}/#website` },
         inLanguage: "en",
         mainEntity: { "@id": personId },
@@ -127,6 +127,14 @@ export default async function JurorPage({ params }: Params) {
         description: juror.bio ?? undefined,
         image: juror.imageUrl ?? undefined,
         sameAs: sameAs.length > 0 ? sameAs : undefined,
+        // The seat on the jury: a role in the site's Organization (home page schema).
+        memberOf: {
+          "@type": "OrganizationRole",
+          roleName: juror.isFounding ? "Founding jury member" : "Jury member",
+          startDate: new Date(juror.joinedAt).toISOString().slice(0, 10),
+          memberOf: { "@id": `${SITE_URL}/#organization` },
+        },
+        knowsAbout: panel,
         ...(juror.location ? { homeLocation: { "@type": "Place", name: juror.location } } : {}),
       },
     ],
@@ -159,6 +167,7 @@ export default async function JurorPage({ params }: Params) {
           <JurorPhoto
             url={juror.imageUrl}
             name={juror.name}
+            alt={`${juror.name}, ${juror.title}`}
             width={420}
             height={525}
             mono={false}

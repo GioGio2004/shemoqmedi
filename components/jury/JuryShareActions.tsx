@@ -58,7 +58,7 @@ export function JuryShareActions({
         <a
           href={addToLinkedInUrl(slug, joinedAt)}
           target="_blank"
-          rel="noopener"
+          rel="nofollow noopener"
           className={cn(button, "border-black bg-black text-white hover:bg-black/85")}
         >
           Add to LinkedIn profile
@@ -67,7 +67,7 @@ export function JuryShareActions({
       <a
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
         target="_blank"
-        rel="noopener"
+        rel="nofollow noopener"
         className={button}
       >
         Share on LinkedIn

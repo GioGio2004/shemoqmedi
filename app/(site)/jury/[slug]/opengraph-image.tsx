@@ -9,7 +9,7 @@ import { getJurorPage, getJurorSlugs } from "@/lib/listings";
 // one orange accent, the post design system's palette. Text uses the font
 // bundled with next/og (one regular weight); a hairline stroke makes it bold.
 
-export const alt = "Shemoqmedi Jury member";
+export const alt = "A Shemoqmedi Jury member's portrait beside the Shemoqmedi crow";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
