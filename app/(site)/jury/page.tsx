@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { JurorPublic } from "@/convex-helpers-api";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
-import { JuryCard } from "@/components/jury/JuryCard";
+import { JuryDirectory } from "@/components/jury/JuryDirectory";
 import { safeUrl } from "@/components/jury/jurorInfo";
 import { getAwardRules, getJurors } from "@/lib/listings";
 import { pillarList, scoreRange } from "@/lib/scoringCopy";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
-import { JURY_CATEGORIES, type AwardRules } from "@/lib/taxonomy";
+import type { AwardRules } from "@/lib/taxonomy";
 
 const title = "The Jury: Who Reviews and Scores Websites";
 const describe = (rules: AwardRules) =>
@@ -26,47 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
 // Members come from Convex (jury.listPublic); refreshed in the background.
 export const dynamic = "force-static";
 export const revalidate = 60;
-
-type Member = JurorPublic & { evaluations: number };
-
-/** Members by panel, in JURY_CATEGORIES order; jurors without a panel last, under "Jury". */
-function byPanel(jurors: Member[]) {
-  const panels: { key: string; name: string; members: Member[] }[] = JURY_CATEGORIES.map((c) => ({
-    key: c.slug,
-    name: c.name,
-    members: jurors.filter((j) => j.category === c.slug),
-  }));
-  panels.push({ key: "jury", name: "Jury", members: jurors.filter((j) => j.category === null) });
-  return panels.filter((p) => p.members.length > 0);
-}
-
-function Members({ jurors }: { jurors: Member[] }) {
-  return (
-    <div className="grid gap-10">
-      {byPanel(jurors).map((panel) => (
-        <div key={panel.key} className="grid gap-4">
-          <h3 className="eyebrow">{panel.name}</h3>
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {panel.members.map((j) => (
-              // id: older links point at /jury#<slug>.
-              <li key={j.slug} id={j.slug} className="grid scroll-mt-32">
-                <JuryCard
-                  juror={j}
-                  href={`/jury/${j.slug}`}
-                  meta={
-                    <p className="text-xs text-black/55">
-                      {j.evaluations} {j.evaluations === 1 ? "evaluation" : "evaluations"}
-                    </p>
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 const processFor = (rules: AwardRules): InfoSection[] => [
   {
@@ -102,12 +60,7 @@ const processFor = (rules: AwardRules): InfoSection[] => [
 
 export default async function JuryPage() {
   const [jurors, rules] = await Promise.all([getJurors(), getAwardRules()]);
-  const sections: InfoSection[] = [
-    ...(jurors.length > 0
-      ? [{ id: "members", heading: "Members", body: <Members jurors={jurors} /> }]
-      : []),
-    ...processFor(rules),
-  ];
+  const sections = processFor(rules);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -147,6 +100,7 @@ export default async function JuryPage() {
         title="Jury"
         lede="Designers and developers who score every site in its voting window and say what they think of it."
         sections={sections}
+        lead={jurors.length > 0 ? <JuryDirectory jurors={jurors} /> : undefined}
       />
     </>
   );

@@ -8,9 +8,11 @@ import { friendlyError } from "@/lib/errors";
 import { isImageKit } from "@/lib/imageLoader";
 import { CATEGORIES, CATEGORY_GROUPS, LIMITS } from "@/lib/taxonomy";
 import { ArrowIcon } from "@/components/site/ui";
+import Link from "next/link";
 import { JurorAvatar } from "./JurorAvatar";
-import { JuryCard } from "./JuryCard";
-import { JuryShare } from "./JuryShare";
+import { JurorPhoto } from "./JurorPhoto";
+import { JuryShareActions } from "./JuryShareActions";
+import { panelName } from "./jurorInfo";
 
 const input =
   "w-full min-h-[46px] rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none transition-colors placeholder:text-black/35 focus:border-black";
@@ -108,9 +110,8 @@ function PhotoField({ current, preset, adopt }: { current: string | null; preset
 
   return (
     <div className="grid gap-3">
-      <p className={label}>Photo</p>
       <div className="flex flex-wrap items-center gap-5">
-        <JurorAvatar url={shown} size={88} />
+        <JurorAvatar url={shown} size={96} />
         <div className="grid gap-2">
           <div className="flex flex-wrap gap-3 text-sm">
             <button
@@ -186,10 +187,7 @@ function InterestsField({ value, onChange }: { value: string[]; onChange: (value
   const toggle = (slug: string) => onChange(value.includes(slug) ? value.filter((s) => s !== slug) : [...value, slug]);
   return (
     <fieldset className="grid gap-4">
-      <legend className={label}>Categories you follow</legend>
-      <p className="-mt-2 text-xs text-black/55">
-        Your daily email lists new sites in these, plus the general queue (sites no juror follows yet).
-      </p>
+      <legend className="sr-only">Categories you follow</legend>
       {CATEGORY_GROUPS.map((group) => (
         <div key={group.name} className="grid gap-2">
           <p className="text-xs font-medium text-black/55">{group.name}</p>
@@ -256,9 +254,7 @@ function ExperienceEditor({
     onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
   return (
     <fieldset className="grid gap-3">
-      <legend className={`${label} mb-3`}>
-        Experience (optional) <span className="text-black/55">{rows.length}/{LIMITS.juryExperience}</span>
-      </legend>
+      <legend className="sr-only">Experience</legend>
       {rows.map((r, i) => (
         <div
           key={i}
@@ -313,9 +309,7 @@ function WorkEditor({ rows, onChange }: { rows: JurorWork[]; onChange: (rows: Ju
     onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
   return (
     <fieldset className="grid gap-3">
-      <legend className={`${label} mb-3`}>
-        Work (optional) <span className="text-black/55">{rows.length}/{LIMITS.juryWork}</span>
-      </legend>
+      <legend className="sr-only">Selected work</legend>
       {rows.map((r, i) => (
         <div key={i} className="grid gap-3 rounded-2xl border border-black/10 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem]">
           <input
@@ -376,12 +370,17 @@ function WorkEditor({ rows, onChange }: { rows: JurorWork[]; onChange: (rows: Ju
 
 type TextKey = "name" | "title" | "location" | "website" | "linkedinUrl" | "bio";
 
+type Preview = { name: string; title: string; location: string };
+
 function ProfileFields({
   initial,
   photo,
   submitLabel,
   onSave,
+  aside,
 }: {
+  /** Left column, given the form's live name, role and location. */
+  aside?: (preview: Preview) => React.ReactNode;
   initial: JurorProfileArgs;
   photo: { current: string | null; preset: boolean; adopt?: boolean };
   submitLabel: string;
@@ -438,94 +437,146 @@ function ProfileFields({
     }
   }
 
+  const preview = { name: form.name, title: form.title, location: form.location ?? "" };
+
   return (
-    <form onSubmit={onSubmit} className="grid gap-6">
-      <PhotoField current={photo.current} preset={photo.preset} adopt={photo.adopt} />
-      <div className="grid gap-6 md:grid-cols-2">
-        <label className="grid gap-2">
-          <span className={label}>Name</span>
-          <input required maxLength={LIMITS.creditName} value={form.name} onChange={set("name")} className={input} />
-        </label>
-        <label className="grid gap-2">
-          <span className={label}>Role</span>
-          <input
-            required
-            maxLength={LIMITS.juryTitle}
-            value={form.title}
-            onChange={set("title")}
-            className={input}
-            placeholder="Creative director at Studio X"
-          />
-        </label>
-        <label className="grid gap-2">
-          <span className={label}>Location (optional)</span>
-          <input maxLength={80} value={form.location ?? ""} onChange={set("location")} className={input} placeholder="Tbilisi, Georgia" />
-        </label>
-        <label className="grid gap-2">
-          <span className={label}>Website (optional)</span>
-          <input
-            inputMode="url"
-            maxLength={LIMITS.url}
-            value={form.website ?? ""}
-            onChange={set("website")}
-            className={input}
-            placeholder="https://your-portfolio.com"
-            spellCheck={false}
-          />
-        </label>
-        <label className="grid gap-2 md:col-span-2">
-          <span className={label}>LinkedIn (optional)</span>
-          <input
-            inputMode="url"
-            maxLength={LIMITS.url}
-            value={form.linkedinUrl ?? ""}
-            onChange={set("linkedinUrl")}
-            className={input}
-            placeholder="https://www.linkedin.com/in/your-name"
-            spellCheck={false}
-          />
-        </label>
-      </div>
-      <label className="grid gap-2">
-        <span className={label}>
-          Short bio (optional) <span className="text-black/55">{(form.bio ?? "").length}/{LIMITS.juryBio}</span>
-        </span>
-        <textarea rows={3} maxLength={LIMITS.juryBio} value={form.bio ?? ""} onChange={set("bio")} className={`${input} resize-y`} />
-      </label>
-      <ExperienceEditor rows={form.experience ?? []} onChange={setExperience} />
-      <WorkEditor rows={form.work ?? []} onChange={setWork} />
-      {form.interests !== undefined && (
-        <InterestsField
-          value={form.interests}
-          onChange={(interests) => {
-            setSaved(false);
-            setForm((f) => ({ ...f, interests }));
-          }}
-        />
-      )}
-      {error && (
-        <p role="alert" className="text-sm font-medium">
-          {error}
-        </p>
-      )}
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
-          disabled={busy}
-          className="inline-flex min-h-[46px] items-center gap-3.5 rounded-full bg-black py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
+    <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
+      {aside && <aside className="lg:col-span-4 lg:sticky lg:top-28 lg:self-start">{aside(preview)}</aside>}
+      <form onSubmit={onSubmit} className={aside ? "grid min-w-0 gap-0 lg:col-span-8" : "grid min-w-0 gap-0"}>
+        <Group title="Photo" hint="Shown on your profile, the jury page and next to every review you sign.">
+          <PhotoField current={photo.current} preset={photo.preset} adopt={photo.adopt} />
+        </Group>
+        <Group title="Basics" hint="Your name and role as they should read in a credit.">
+          <div className="grid gap-5 md:grid-cols-2">
+            <label className="grid gap-2">
+              <span className={label}>Name</span>
+              <input required maxLength={LIMITS.creditName} value={form.name} onChange={set("name")} className={input} />
+            </label>
+            <label className="grid gap-2">
+              <span className={label}>Location</span>
+              <input maxLength={80} value={form.location ?? ""} onChange={set("location")} className={input} placeholder="Tbilisi, Georgia" />
+            </label>
+            <label className="grid gap-2 md:col-span-2">
+              <span className={label}>Role</span>
+              <input
+                required
+                maxLength={LIMITS.juryTitle}
+                value={form.title}
+                onChange={set("title")}
+                className={input}
+                placeholder="Creative director at Studio X"
+              />
+            </label>
+          </div>
+        </Group>
+        <Group title="Links" hint="Your profile links out to these. Both are optional.">
+          <div className="grid gap-5 md:grid-cols-2">
+            <label className="grid gap-2">
+              <span className={label}>LinkedIn</span>
+              <input
+                inputMode="url"
+                maxLength={LIMITS.url}
+                value={form.linkedinUrl ?? ""}
+                onChange={set("linkedinUrl")}
+                className={input}
+                placeholder="https://www.linkedin.com/in/your-name"
+                spellCheck={false}
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className={label}>Website</span>
+              <input
+                inputMode="url"
+                maxLength={LIMITS.url}
+                value={form.website ?? ""}
+                onChange={set("website")}
+                className={input}
+                placeholder="https://your-portfolio.com"
+                spellCheck={false}
+              />
+            </label>
+          </div>
+        </Group>
+        <Group
+          title="About"
+          hint="Two or three sentences in the first person: what you do, what you care about in a website."
+          count={`${(form.bio ?? "").length}/${LIMITS.juryBio}`}
         >
-          {busy ? "Saving…" : submitLabel}
-          <span className="grid size-9 place-items-center rounded-full bg-white text-black">
-            <ArrowIcon />
-          </span>
-        </button>
-        {saved && (
-          <p role="status" className="text-sm text-black/60">
-            Saved.
-          </p>
+          <textarea
+            aria-label="Short bio"
+            rows={10}
+            maxLength={LIMITS.juryBio}
+            value={form.bio ?? ""}
+            onChange={set("bio")}
+            className={`${input} resize-y leading-relaxed`}
+          />
+        </Group>
+        <Group title="Experience" hint="Roles you want on your profile, most recent first." count={`${(form.experience ?? []).length}/${LIMITS.juryExperience}`}>
+          <ExperienceEditor rows={form.experience ?? []} onChange={setExperience} />
+        </Group>
+        <Group title="Selected work" hint="Projects you are proud of, with a link where there is one." count={`${(form.work ?? []).length}/${LIMITS.juryWork}`}>
+          <WorkEditor rows={form.work ?? []} onChange={setWork} />
+        </Group>
+        {form.interests !== undefined && (
+          <Group title="Daily digest" hint="Private. Your daily email lists new sites in these categories, plus the general queue.">
+            <InterestsField
+              value={form.interests}
+              onChange={(interests) => {
+                setSaved(false);
+                setForm((f) => ({ ...f, interests }));
+              }}
+            />
+          </Group>
         )}
+        <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-4 border-t border-black/10 bg-white/95 px-1 py-4 backdrop-blur">
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex min-h-[46px] items-center gap-3.5 rounded-full bg-black py-1 pr-1.5 pl-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
+          >
+            {busy ? "Saving…" : submitLabel}
+            <span className="grid size-9 place-items-center rounded-full bg-white text-black">
+              <ArrowIcon />
+            </span>
+          </button>
+          {error ? (
+            <p role="alert" className="text-sm font-medium">
+              {error}
+            </p>
+          ) : (
+            <p role="status" className="text-sm text-black/60">
+              {saved ? "Saved. Your public page updates within a minute." : ""}
+            </p>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/** A titled block of the profile form. */
+function Group({
+  title,
+  hint,
+  count,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  count?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-5 border-t border-black/10 py-8 first:border-t-0 first:pt-0">
+      <div className="grid gap-1">
+        <div className="flex items-baseline justify-between gap-4">
+          <h3 className="text-xl font-semibold tracking-[-0.03em]">{title}</h3>
+          {count && <p className="font-mono text-[11px] tracking-[0.06em] text-black/50 tabular-nums">{count}</p>}
+        </div>
+        {hint && <p className="text-sm text-black/55">{hint}</p>}
       </div>
-    </form>
+      {children}
+    </section>
   );
 }
 
@@ -538,42 +589,72 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
   const update = useMutation(api.jury.updateProfile);
   if (me === undefined) return <p className="text-sm text-black/55">Loading…</p>;
   if (me === null) return <p className="text-sm">This account is not on the jury. Jury membership is by invitation.</p>;
-  const form = (
-    <ProfileFields
-      initial={{
-        name: me.name,
-        title: me.title,
-        location: me.location ?? undefined,
-        website: me.website ?? undefined,
-        linkedinUrl: me.linkedinUrl ?? undefined,
-        bio: me.bio ?? undefined,
-        experience: me.experience ?? [],
-        work: me.work ?? [],
-        interests: me.interests ?? [],
-      }}
-      photo={{ current: me.imageUrl, preset: me.hasPresetPhoto, adopt: claimed }}
-      submitLabel="Save profile"
-      onSave={async (profile) => {
-        await update(profile);
-      }}
-    />
-  );
-  if (!claimed) return <div className="grid max-w-3xl gap-8">{form}</div>;
   return (
-    <div className="grid gap-16">
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <JuryCard juror={me} href={`/jury/${me.slug}`} branded />
-        <JuryShare slug={me.slug} />
-      </div>
-      <section aria-labelledby="edit-profile-title" className="grid max-w-3xl gap-8 border-t border-black/10 pt-12">
-        <div className="grid gap-2">
-          <h2 id="edit-profile-title" className="text-3xl font-semibold tracking-[-0.045em]">
-            Your profile
-          </h2>
-          <p className="text-sm text-black/60">Check your details. Changes show on your jury page within a few minutes.</p>
+    <div className="grid gap-10">
+      {claimed && (
+        <div className="grid gap-2 rounded-3xl bg-black p-6 text-white md:p-8">
+          <p className="font-mono text-[11px] tracking-[0.08em] text-white/60 uppercase">Welcome to the jury</p>
+          <p className="max-w-2xl text-2xl leading-tight font-semibold tracking-[-0.04em] md:text-3xl">
+            Your jury page is live. Check your details, then add the seat to your LinkedIn profile.
+          </p>
         </div>
-        {form}
-      </section>
+      )}
+      <ProfileFields
+        initial={{
+          name: me.name,
+          title: me.title,
+          location: me.location ?? undefined,
+          website: me.website ?? undefined,
+          linkedinUrl: me.linkedinUrl ?? undefined,
+          bio: me.bio ?? undefined,
+          experience: me.experience ?? [],
+          work: me.work ?? [],
+          interests: me.interests ?? [],
+        }}
+        photo={{ current: me.imageUrl, preset: me.hasPresetPhoto, adopt: claimed }}
+        submitLabel="Save profile"
+        onSave={async (profile) => {
+          await update(profile);
+        }}
+        aside={(live) => (
+          <div className="grid gap-6">
+            <div className="grid gap-4 rounded-3xl border border-black/10 p-4">
+              <JurorPhoto
+                url={me.imageUrl}
+                name={live.name || me.name}
+                width={360}
+                height={450}
+                mono={false}
+                className="aspect-[4/5] w-full rounded-2xl"
+              />
+              <div className="grid gap-1 px-1 pb-1">
+                <p className="eyebrow">
+                  {panelName(me.category)}
+                  {me.isFounding ? " · Founding" : ""}
+                </p>
+                <p className="text-2xl leading-tight font-semibold tracking-[-0.04em] [overflow-wrap:anywhere]">
+                  {live.name || "Your name"}
+                </p>
+                <p className="text-sm leading-snug text-black/70">{live.title || "Your role"}</p>
+                {live.location && <p className="text-sm text-black/50">{live.location}</p>}
+              </div>
+            </div>
+            <div className="grid gap-3">
+              <Link
+                href={`/jury/${me.slug}`}
+                className="text-sm font-medium underline decoration-black/25 underline-offset-4 hover:decoration-black"
+              >
+                View your public page
+              </Link>
+              <JuryShareActions slug={me.slug} owner />
+              <p className="text-xs leading-relaxed text-black/55">
+                &ldquo;Add to LinkedIn profile&rdquo; lists your jury seat under Licenses &amp; certifications, linked to
+                your page here.
+              </p>
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }

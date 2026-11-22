@@ -243,7 +243,7 @@ export const LIMITS = {
   /** Jury evaluation comment, optional (mirrors the backend). */
   juryComment: 1000,
   juryTitle: 80,
-  juryBio: 400,
+  juryBio: 1500,
   reviewNote: 500,
   claimMessage: 1000,
   /** Extra screenshots after the cover (so 5 images in all). */

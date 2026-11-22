@@ -23,11 +23,14 @@ export function InfoPage({
   lede,
   sections,
   current,
+  lead,
 }: {
   prelude: string;
   title: string;
   lede: string;
   sections: InfoSection[];
+  /** Full-width content between the hero and the sections (the jury directory). */
+  lead?: React.ReactNode;
   /** This page's path, left out of the "More" links at the end. */
   current: string;
 }) {
@@ -39,6 +42,7 @@ export function InfoPage({
         lede={lede}
         action={<PillLink href="/submit">Submit your site</PillLink>}
       />
+      {lead}
       <div className="container-site pb-8">
         {sections.map((s) => (
           <section

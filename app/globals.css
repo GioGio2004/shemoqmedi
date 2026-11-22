@@ -33,6 +33,38 @@
   --border: rgb(0 0 0 / 0.1);
   --input: rgb(0 0 0 / 0.14);
   --ring: var(--black);
+
+  /* The one brand accent (used by the black + orange theme and share cards). */
+  --orange: #ff4d00;
+  /* Header and menu glass. */
+  --glass: rgb(255 255 255 / 0.55);
+  --glass-menu: rgb(255 255 255 / 0.6);
+  --glass-solid: rgb(255 255 255 / 0.94);
+  --glass-line: rgb(0 0 0 / 0.08);
+}
+
+/*
+ * Black + orange theme (the navbar's theme switch). The site is written in
+ * black-on-white utilities (bg-white, text-black/60, border-black/10…);
+ * Tailwind reads those colours from --color-white and --color-black, so
+ * swapping the two turns every page dark with off-white text in one place.
+ * Orange then takes over what was solid black: primary buttons, active tags,
+ * notices, labels, hovers. Screenshots and photos are untouched.
+ */
+html[data-theme="orange"] {
+  color-scheme: dark;
+  --white: #0a0a0a;
+  --black: #f4f1ea;
+  --color-white: #0a0a0a;
+  --color-black: #f4f1ea;
+  --muted-foreground: rgb(244 241 234 / 0.6);
+  --accent: rgb(244 241 234 / 0.06);
+  --border: rgb(244 241 234 / 0.12);
+  --input: rgb(244 241 234 / 0.18);
+  --glass: rgb(10 10 10 / 0.6);
+  --glass-menu: rgb(10 10 10 / 0.72);
+  --glass-solid: rgb(10 10 10 / 0.94);
+  --glass-line: rgb(244 241 234 / 0.1);
 }
 
 @theme inline {
@@ -139,7 +171,7 @@
   }
   @supports not (animation-timeline: scroll()) {
     .site-header {
-      background: rgb(255 255 255 / 0.55);
+      background: var(--glass);
       -webkit-backdrop-filter: blur(24px) saturate(1.6);
       backdrop-filter: blur(24px) saturate(1.6);
     }
@@ -175,10 +207,10 @@
 
 @keyframes header-solidify {
   to {
-    background: rgb(255 255 255 / 0.55);
+    background: var(--glass);
     -webkit-backdrop-filter: blur(24px) saturate(1.6);
     backdrop-filter: blur(24px) saturate(1.6);
-    border-bottom-color: rgb(0 0 0 / 0.08);
+    border-bottom-color: var(--glass-line);
   }
 }
 
@@ -186,8 +218,8 @@
    there is near-solid white, or the page shows straight through it. */
 @keyframes header-solidify-phone {
   to {
-    background: rgb(255 255 255 / 0.94);
-    border-bottom-color: rgb(0 0 0 / 0.08);
+    background: var(--glass-solid);
+    border-bottom-color: var(--glass-line);
   }
 }
 @media (max-width: 767px) {
@@ -196,7 +228,7 @@
   }
   @supports not (animation-timeline: scroll()) {
     .site-header {
-      background: rgb(255 255 255 / 0.94);
+      background: var(--glass-solid);
     }
   }
 }
@@ -224,10 +256,10 @@
 }
 html[data-menu-open] .site-header {
   animation: none;
-  background: rgb(255 255 255 / 0.6);
+  background: var(--glass-menu);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   backdrop-filter: blur(20px) saturate(1.5);
-  border-bottom-color: rgb(0 0 0 / 0.08);
+  border-bottom-color: var(--glass-line);
 }
 
 /* InViewVideo full screen: the box fills the screen in black, the video is
@@ -472,4 +504,45 @@ html[data-menu-open] .site-header {
     opacity: 1;
     transform: none;
   }
+}
+
+/* ── Black + orange theme: the orange accents ─────────────────────────────────
+   Unlayered, so they win over the utilities they restyle. */
+html[data-theme="orange"] .bg-black {
+  background-color: var(--orange);
+  color: #0a0a0a;
+}
+html[data-theme="orange"] .border-black {
+  border-color: var(--orange);
+}
+@media (hover: hover) {
+  html[data-theme="orange"] .hover\:border-black:hover {
+    border-color: var(--orange);
+  }
+  html[data-theme="orange"] .hover\:text-black:hover {
+    color: var(--orange);
+  }
+  html[data-theme="orange"] .hover\:decoration-black:hover {
+    text-decoration-color: var(--orange);
+  }
+}
+html[data-theme="orange"] .eyebrow {
+  color: var(--orange);
+}
+html[data-theme="orange"] ::selection {
+  background: var(--orange);
+  color: #0a0a0a;
+}
+html[data-theme="orange"] :where(a, button, input, textarea, select, summary):focus-visible {
+  outline-color: var(--orange);
+}
+html[data-theme="orange"] .score-tile {
+  background: rgb(255 77 0 / 0.86);
+  color: #0a0a0a;
+}
+/* The crow is drawn black: on the dark theme it flies in off-white. */
+html[data-theme="orange"] .crow-roam,
+html[data-theme="orange"] .nav-crow canvas,
+html[data-theme="orange"] .crow-mark {
+  filter: invert(1);
 }

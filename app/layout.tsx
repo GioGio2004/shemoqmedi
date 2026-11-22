@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Header } from "@/components/site/Header";
+import { THEME_SCRIPT } from "@/components/site/ThemeSwitch";
 import "./globals.css";
 
 const inter = Inter({
@@ -62,7 +63,12 @@ export default function RootLayout({
   return (
     // data-scroll-behavior: Next turns the smooth scrolling from globals.css off
     // during page changes, so a new page opens at the top instead of gliding up.
-    <html lang="en" data-scroll-behavior="smooth">
+    // suppressHydrationWarning: THEME_SCRIPT may set data-theme before React loads.
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* The saved theme (navbar switch), applied before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className={inter.variable}>
         <Header />
         {children}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { UserButton } from "@clerk/nextjs";
-import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
+import { AccountHeader } from "@/components/account/AccountHeader";
 import { JuryProfile } from "@/components/jury/JurorProfileForm";
 import { MyListings } from "@/components/listing/MyListings";
 import { DeleteAccount } from "@/components/account/DeleteAccount";
@@ -15,51 +14,41 @@ export const metadata: Metadata = { title: "Your jury profile", robots: { index:
 export default async function JuryProfilePage({ searchParams }: { searchParams: Promise<{ claimed?: string }> }) {
   const { claimed } = await searchParams;
   return (
-    <>
-      <main id="main-content">
-        <PageHero
-          prelude={claimed ? "welcome to the" : "your"}
-          title={claimed ? "Jury" : "Jury profile"}
-          titleClassName={claimed ? undefined : "text-[clamp(3rem,9vw,9rem)] leading-[0.88]"}
-          lede={
-            claimed
-              ? "Your jury spot is claimed and your profile is public. Share your badge, then score your first website."
-              : "How you appear next to your evaluations and on the jury page."
-          }
-          action={
-            // UserButton: account settings and sign out (jurors don't see /account).
-            <div className="flex items-center gap-4">
-              <UserButton />
-              {!claimed && (
-                <PillLink href="/collections/nominees" variant="outline">
-                  Sites in voting
-                </PillLink>
-              )}
-              <PillLink href="/jury/rounds" variant="outline">
-                Month &amp; year rounds
-              </PillLink>
-            </div>
-          }
-        />
-        <div className="container-site pb-24">
+    <main id="main-content">
+      <AccountHeader
+        eyebrow="Jury profile"
+        actions={
+          <>
+            <PillLink href="/collections/nominees">Sites in voting</PillLink>
+            <PillLink href="/jury/rounds" variant="outline">
+              Month &amp; year rounds
+            </PillLink>
+          </>
+        }
+      />
+      <div className="container-site pb-24">
+        <div className="border-t border-black/10 pt-12 md:pt-16">
           <JuryProfile claimed={!!claimed} />
-          <section aria-labelledby="your-sites-title" className="mt-16 grid gap-8 border-t border-black/10 pt-12">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div className="grid gap-2">
-                <h2 id="your-sites-title" className="text-3xl font-semibold tracking-[-0.045em]">
-                  Your sites
-                </h2>
-                <p className="text-sm text-black/60">Everything you&apos;ve submitted or claimed, and where it stands.</p>
-              </div>
-              <PillLink href="/submit" variant="outline">
-                Submit a site
-              </PillLink>
-            </div>
-            <MyListings />
-          </section>
-          <DeleteAccount />
         </div>
-      </main>
-    </>
+        <section
+          aria-labelledby="your-sites-title"
+          className="mt-8 grid gap-6 border-t border-black/10 py-12 md:grid-cols-12 md:gap-10 md:py-16"
+        >
+          <div className="grid content-start gap-2 md:col-span-4">
+            <h2 id="your-sites-title" className="text-[clamp(1.5rem,2.4vw,2rem)] leading-[1.05] font-semibold tracking-[-0.045em]">
+              Your sites
+            </h2>
+            <p className="text-sm text-black/55">Everything you&apos;ve submitted or claimed, and where it stands.</p>
+            <PillLink href="/submit" variant="outline" className="mt-3 justify-self-start">
+              Submit a site
+            </PillLink>
+          </div>
+          <div className="min-w-0 md:col-span-8">
+            <MyListings />
+          </div>
+        </section>
+        <DeleteAccount />
+      </div>
+    </main>
   );
 }

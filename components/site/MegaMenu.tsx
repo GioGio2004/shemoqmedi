@@ -8,6 +8,7 @@ import { MediaImage as Image } from "@/components/site/MediaImage";
 import { CATEGORIES, CATEGORY_GROUPS, TECHNOLOGIES } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
 import { ArrowIcon } from "./ui";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 // The header's mega menu: a translucent curtain that drops from the top with
 // every way into the site (pages, grouped categories, technologies), a few
@@ -545,7 +546,7 @@ export function MenuCurtain() {
         }}
         className="mega-curtain fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto overscroll-contain md:top-[88px]"
         style={{
-          background: "rgb(255 255 255 / 0.6)",
+          background: "var(--glass-menu)",
           WebkitBackdropFilter: "blur(20px) saturate(1.5)",
           backdropFilter: "blur(20px) saturate(1.5)",
           clipPath: open ? OPENED : CLOSED,
@@ -593,6 +594,15 @@ export function MenuCurtain() {
             >
               Your account
             </Link>
+          </div>
+
+          <div
+            data-reveal
+            style={{ "--i": 4 } as React.CSSProperties}
+            className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-black/10 pt-6"
+          >
+            <p className="eyebrow">Theme</p>
+            <ThemeSwitch />
           </div>
         </div>
       </div>
