@@ -93,69 +93,79 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
           bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {open && (
-          <div
-            id={panelId}
-            role="dialog"
-            aria-label={`Jury evaluation of ${title}`}
-            className="absolute right-0 bottom-[84px] max-h-[min(80vh,720px)] w-[min(420px,calc(100vw-32px))] overflow-y-auto rounded-3xl border border-black/10 bg-white p-6"
-          >
-            <div className="flex items-start gap-3">
-              <JurorAvatar url={me.imageUrl} size={40} />
-              <div className="min-w-0 flex-1">
-                <p className="eyebrow">Jury evaluation</p>
-                <p className="truncate text-lg font-semibold tracking-[-0.03em]">
-                  {title}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-                className="grid size-9 shrink-0 place-items-center rounded-full border border-black/10 hover:border-black"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
+        {/* Always mounted so it can grow out of the button and shrink back into it.
+            Its height stops below the navbar (80 px, 88 px from md) with a 16 px gap,
+            above the button (16 + 68 + 16 px from the bottom). */}
+        <div
+          id={panelId}
+          role="dialog"
+          aria-label={`Jury evaluation of ${title}`}
+          aria-hidden={!open}
+          inert={!open}
+          className={cn(
+            "absolute right-0 bottom-[84px] max-h-[calc(100dvh-196px)] w-[min(460px,calc(100vw-32px))] origin-bottom-right overflow-y-auto overscroll-contain rounded-3xl border border-black/10 bg-white p-5 transition-[opacity,transform,visibility] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] md:max-h-[calc(100dvh-204px)] motion-reduce:transition-none",
+            open
+              ? "visible translate-y-0 scale-100 opacity-100"
+              : "pointer-events-none invisible translate-y-3 scale-[0.6] opacity-0",
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <JurorAvatar url={me.imageUrl} size={40} />
+            <div className="min-w-0 flex-1">
+              <p className="eyebrow">Jury evaluation</p>
+              <p className="truncate text-lg font-semibold tracking-[-0.03em]">
+                {title}
+              </p>
             </div>
-
             <button
               type="button"
-              onClick={() => setReportOpen((o) => !o)}
-              aria-expanded={reportOpen}
-              className="mt-5 flex w-full items-center justify-between gap-3 rounded-2xl border border-black/10 px-4 py-3 text-left transition-colors hover:border-black"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+              className="grid size-9 shrink-0 place-items-center rounded-full border border-black/10 hover:border-black"
             >
-              <span className="grid gap-0.5">
-                <span className="text-sm font-semibold">
-                  {reportOpen ? "Hide technical report" : "Technical report"}
-                </span>
-                <span className="text-xs text-black/55">
-                  {audit?.mobile
-                    ? `Mobile: performance ${audit.mobile.scores.performance ?? "—"} · accessibility ${audit.mobile.scores.accessibility ?? "—"}`
-                    : audit?.status === "running"
-                      ? "Test running…"
-                      : "Speed, accessibility and SEO test"}
-                </span>
-              </span>
-              <span aria-hidden="true" className="font-mono text-xs">
-                {reportOpen ? "×" : "↗"}
-              </span>
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
             </button>
+          </div>
 
-            {state === undefined ? (
-              <p className="mt-6 text-sm text-black/55">Loading…</p>
-            ) : blocked ? (
-              <p className="mt-6 text-sm">{blocked}</p>
-            ) : (
-              <form onSubmit={onSubmit} className="mt-6 grid gap-5">
+          <button
+            type="button"
+            onClick={() => setReportOpen((o) => !o)}
+            aria-expanded={reportOpen}
+            className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-black/10 px-4 py-2.5 text-left transition-colors hover:border-black"
+          >
+            <span className="grid gap-0.5">
+              <span className="text-sm font-semibold">
+                {reportOpen ? "Hide technical report" : "Technical report"}
+              </span>
+              <span className="text-xs text-black/55">
+                {audit?.mobile
+                  ? `Mobile: performance ${audit.mobile.scores.performance ?? "—"} · accessibility ${audit.mobile.scores.accessibility ?? "—"}`
+                  : audit?.status === "running"
+                    ? "Test running…"
+                    : "Speed, accessibility and SEO test"}
+              </span>
+            </span>
+            <span aria-hidden="true" className="font-mono text-xs">
+              {reportOpen ? "×" : "↗"}
+            </span>
+          </button>
+
+          {state === undefined ? (
+            <p className="mt-5 text-sm text-black/55">Loading…</p>
+          ) : blocked ? (
+            <p className="mt-5 text-sm">{blocked}</p>
+          ) : (
+            <form onSubmit={onSubmit} className="mt-5 grid gap-4">
+              <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
                 {PILLARS.map((p) => (
                   <label key={p.key} className="grid gap-1.5">
                     <span className="flex items-baseline justify-between">
@@ -182,87 +192,87 @@ function Evaluate({ slug, title }: { slug: string; title: string }) {
                     />
                   </label>
                 ))}
-                <p className="flex items-baseline justify-between border-y border-black/10 py-3">
-                  <span className="eyebrow text-black">Your score</span>
-                  <span className="font-mono text-2xl font-semibold tabular-nums">
-                    {average.toFixed(2)}
+              </div>
+              <p className="flex items-baseline justify-between border-y border-black/10 py-2.5">
+                <span className="eyebrow text-black">Your score</span>
+                <span className="font-mono text-2xl font-semibold tabular-nums">
+                  {average.toFixed(2)}
+                </span>
+              </p>
+              <label className="grid gap-2">
+                <span className="flex items-baseline justify-between">
+                  <span className="eyebrow text-black">
+                    Comment <span className="text-black/60">(optional)</span>
                   </span>
-                </p>
-                <label className="grid gap-2">
-                  <span className="flex items-baseline justify-between">
-                    <span className="eyebrow text-black">
-                      Comment <span className="text-black/60">(optional)</span>
-                    </span>
-                    <span className="font-mono text-[11px] text-black/55 tabular-nums">
-                      {length}/{LIMITS.juryComment}
-                    </span>
+                  <span className="font-mono text-[11px] text-black/55 tabular-nums">
+                    {length}/{LIMITS.juryComment}
                   </span>
-                  <textarea
-                    rows={5}
-                    maxLength={LIMITS.juryComment}
-                    value={comment}
-                    onChange={(e) => {
-                      setSavedAt(null);
-                      setError(null);
-                      setComment(e.target.value);
-                    }}
-                    placeholder="What stands out, and what could be better? Shown on this page with your name."
-                    className="w-full resize-y rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-black/35 focus:border-black"
-                  />
-                </label>
-                {error && (
-                  <p role="alert" className="text-sm font-medium">
-                    {error}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="min-h-[46px] rounded-full bg-black px-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
-                >
-                  {busy
-                    ? "Saving…"
-                    : hasSaved
-                      ? "Update evaluation"
-                      : "Save evaluation"}
-                </button>
-                {savedAt && (
-                  <p role="status" className="text-xs text-black/60">
-                    Saved. Your score and comment appear on this page within a
-                    minute. You can change them until voting closes.
-                  </p>
-                )}
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={async () => {
-                    const reason = prompt(
-                      "Did you build this site, or does it belong to your company? Say how (it stays private). Your score for it will be removed.",
-                    );
-                    if (reason === null) return;
-                    setBusy(true);
+                </span>
+                <textarea
+                  rows={3}
+                  maxLength={LIMITS.juryComment}
+                  value={comment}
+                  onChange={(e) => {
+                    setSavedAt(null);
                     setError(null);
-                    try {
-                      await declare({
-                        slug,
-                        reason:
-                          reason.trim() ||
-                          "I built this site or it belongs to my company.",
-                      });
-                    } catch (err) {
-                      setError(friendlyError(err));
-                    } finally {
-                      setBusy(false);
-                    }
+                    setComment(e.target.value);
                   }}
-                  className="justify-self-start text-xs text-black/55 underline underline-offset-4 hover:text-black"
-                >
-                  I have a conflict of interest with this site
-                </button>
-              </form>
-            )}
-          </div>
-        )}
+                  placeholder="What stands out, and what could be better? Shown on this page with your name."
+                  className="w-full resize-y rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-black/35 focus:border-black"
+                />
+              </label>
+              {error && (
+                <p role="alert" className="text-sm font-medium">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={busy}
+                className="min-h-[46px] rounded-full bg-black px-5 text-[11.5px] font-semibold tracking-[0.05em] text-white uppercase disabled:opacity-60"
+              >
+                {busy
+                  ? "Saving…"
+                  : hasSaved
+                    ? "Update evaluation"
+                    : "Save evaluation"}
+              </button>
+              {savedAt && (
+                <p role="status" className="text-xs text-black/60">
+                  Saved. Your score and comment appear on this page within a
+                  minute. You can change them until voting closes.
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  const reason = prompt(
+                    "Did you build this site, or does it belong to your company? Say how (it stays private). Your score for it will be removed.",
+                  );
+                  if (reason === null) return;
+                  setBusy(true);
+                  setError(null);
+                  try {
+                    await declare({
+                      slug,
+                      reason:
+                        reason.trim() ||
+                        "I built this site or it belongs to my company.",
+                    });
+                  } catch (err) {
+                    setError(friendlyError(err));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                className="justify-self-start text-xs text-black/55 underline underline-offset-4 hover:text-black"
+              >
+                I have a conflict of interest with this site
+              </button>
+            </form>
+          )}
+        </div>
 
         <button
           ref={buttonRef}
