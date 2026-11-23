@@ -9,7 +9,7 @@ import { api, type ClaimListingPreview, type ClaimResolution } from "@/convex-he
 import { PageHero } from "@/components/listing/PageHero";
 import { MediaImage as Image } from "@/components/site/MediaImage";
 import { ArrowIcon, PillLink, Tag } from "@/components/site/ui";
-import { JuryCard } from "@/components/jury/JuryCard";
+import { JurorProfileView } from "@/components/jury/JurorProfileView";
 import { friendlyError } from "@/lib/errors";
 import { hostOf } from "@/lib/format";
 import { matchesEmailHint } from "@/lib/claimEmail";
@@ -183,7 +183,24 @@ export function ClaimToken({ token }: { token: string }) {
         {!pending && resolution?.state === "open" && (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="grid content-start gap-8">
-              {resolution.juror && <JuryCard juror={resolution.juror} branded />}
+              {resolution.juror && (
+                <div className="grid gap-3 rounded-3xl border border-black/10 p-6 md:p-8">
+                  <p className="eyebrow">Your jury profile is ready</p>
+                  <p className="text-2xl leading-tight font-semibold tracking-[-0.04em]">
+                    Below is your profile exactly as it will appear on Shemoqmedi.
+                  </p>
+                  <p className="text-sm text-black/60">
+                    Everything on it is yours to edit after you claim it: photo, role, bio, experience and work. Nothing is
+                    published as your profile until you claim it.
+                  </p>
+                  <a
+                    href="#profile-preview"
+                    className="justify-self-start text-sm font-medium underline decoration-black/25 underline-offset-4 hover:decoration-black"
+                  >
+                    See the preview
+                  </a>
+                </div>
+              )}
               {resolution.listings.map((l) => (
                 <ListingPreview key={l.slug} listing={l} />
               ))}
@@ -233,8 +250,45 @@ export function ClaimToken({ token }: { token: string }) {
             </div>
           </div>
         )}
+
+        {!pending && resolution?.state === "open" && resolution.juror && (
+          <section
+            id="profile-preview"
+            aria-label="Preview of your jury profile"
+            className="mt-16 scroll-mt-28 overflow-hidden rounded-[28px] border border-black/10"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-3 md:px-8">
+              <p className="eyebrow">Preview</p>
+              <p className="truncate font-mono text-[11px] tracking-[0.06em] text-black/55">
+                shemoqmedi.space/jury/{slugPreview(resolution.juror.name)}
+              </p>
+            </div>
+            <JurorProfileView
+              preview
+              juror={resolution.juror}
+              reviews={[]}
+              about={
+                resolution.juror.bio ??
+                "Your bio goes here: a few lines about your work and what you look for in a great website. Add it after you claim your profile."
+              }
+              onTheJury="Jurors score websites on design, usability, creativity and content, each site in its own judging week, and sign a short review. The final score is the jury's average alone; community votes never count."
+            />
+          </section>
+        )}
       </div>
     </>
+  );
+}
+
+/** What /jury/<slug> will most likely be: the name, lowercased and hyphenated (the server makes it unique). */
+function slugPreview(name: string) {
+  return (
+    name
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "juror"
   );
 }
 

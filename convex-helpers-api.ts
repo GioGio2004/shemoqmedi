@@ -160,6 +160,9 @@ export type ClaimJurorPreview = {
   linkedinUrl: string | null;
   isFounding: boolean;
   imageUrl: string | null;
+  /** Optional during rollout: older backends don't send them. */
+  experience?: JurorExperience[];
+  work?: JurorWork[];
 };
 
 export type ClaimListingPreview = {

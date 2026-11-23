@@ -3,6 +3,7 @@ import Link from "next/link";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { MediaImage as Image } from "@/components/site/MediaImage";
 import { JurorAvatar } from "@/components/jury/JurorAvatar";
+import { JuryTour } from "@/components/jury/JuryTour";
 import { getAwardRules, getJurors, getJuryReviews, getListing } from "@/lib/listings";
 import { formatScore } from "@/lib/format";
 import { PILLAR_TEXT, pct, scoreRange } from "@/lib/scoringCopy";
@@ -252,6 +253,17 @@ export default async function JuryGuidePage() {
       title="Jury"
       lede="Everything a juror needs to know before saying yes: what you do, how sites are scored, the time it takes and what you get."
       sections={sections}
+      lead={
+        <section aria-labelledby="tour-title" className="container-site pb-16">
+          <div className="flex flex-wrap items-end justify-between gap-4 border-t border-black/10 pt-12 pb-8 md:pt-16">
+            <h2 id="tour-title" className="text-[clamp(1.5rem,2.6vw,2.25rem)] leading-[1.05] font-semibold tracking-[-0.045em]">
+              How it works, step by step
+            </h2>
+            <p className="text-sm text-black/55">Use Next, the dots or your arrow keys.</p>
+          </div>
+          <JuryTour cover={example?.coverUrl ?? null} />
+        </section>
+      }
     />
   );
 }
