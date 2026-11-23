@@ -5,6 +5,7 @@ import { getAwardRules } from "@/lib/listings";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import {
   hmRule,
+  PILLAR_TEXT,
   juryOnlyLine,
   pct,
   score,
@@ -33,17 +34,6 @@ export async function generateMetadata(): Promise<Metadata> {
 // Static, refreshed in the background so the numbers follow the award settings.
 export const dynamic = "force-static";
 export const revalidate = 300;
-
-const PILLAR_TEXT: Record<string, string> = {
-  design:
-    "Visual quality: layout, typography, colour, imagery and art direction. Does the site look considered at every screen size, and does its look fit what it is for?",
-  usability:
-    "How easy the site is to use: clear navigation, readable text, fast loading, working forms, and access for keyboard and screen reader users. Effects that get in the way lose points here.",
-  creativity:
-    "Originality of the idea and how it is carried out. Would you remember this site tomorrow, and does it do something you have not seen many times before?",
-  content:
-    "What the site says and shows: clear, honest writing, real product imagery, and information that answers what a visitor came for.",
-};
 
 const awardList = (rules: AwardRules) => [
   {

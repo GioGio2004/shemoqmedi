@@ -52,7 +52,8 @@ const processFor = (rules: AwardRules): InfoSection[] => [
     body: (
       <p>
         Jury membership is by invitation. We invite designers, developers and studio leads whose own work and
-        judgement we trust. Jurors never evaluate their own sites.
+        judgement we trust. Jurors never evaluate their own sites. Invited, or curious what it involves? Read the{" "}
+        <Link href="/jury/guide">guide for jurors</Link>.
       </p>
     ),
   },

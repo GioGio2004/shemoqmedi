@@ -111,3 +111,15 @@ export function ruleCollectionAbout(tag: string, rules: AwardRules): string[] | 
       return null;
   }
 }
+
+/** What each pillar measures (How we score, the juror guide). */
+export const PILLAR_TEXT: Record<string, string> = {
+  design:
+    "Visual quality: layout, typography, colour, imagery and art direction. Does the site look considered at every screen size, and does its look fit what it is for?",
+  usability:
+    "How easy the site is to use: clear navigation, readable text, fast loading, working forms, and access for keyboard and screen reader users. Effects that get in the way lose points here.",
+  creativity:
+    "Originality of the idea and how it is carried out. Would you remember this site tomorrow, and does it do something you have not seen many times before?",
+  content:
+    "What the site says and shows: clear, honest writing, real product imagery, and information that answers what a visitor came for.",
+};
