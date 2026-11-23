@@ -43,9 +43,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       title: award.listing.title,
       creditName: award.listing.creditName,
       jurors: ordered.map((r) => ({ name: r.juror.name, panel: panelName(r.juror.category) })),
-      pillars: ordered.length
-        ? { design: mean("design"), usability: mean("usability"), creativity: mean("creativity"), content: mean("content") }
-        : null,
+      // Month and Year winners are scored again in their own rounds, so the
+      // listing's weekly pillar scores would not add up to their score.
+      pillars:
+        ordered.length && award.tier !== "SOTM" && award.tier !== "SOTY"
+          ? { design: mean("design"), usability: mean("usability"), creativity: mean("creativity"), content: mean("content") }
+          : null,
       verify: code ? { code, url: verifyUrl(code, award.slug) } : null,
     },
     { download },

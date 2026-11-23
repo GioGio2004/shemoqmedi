@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { crc32 } from "node:zlib";
 import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
 import { badgeSvg } from "@/lib/badgeSvg";
@@ -105,6 +104,18 @@ async function crowSrc(dark: boolean) {
 const svgSrc = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 const score2 = (n: number) => n.toFixed(2);
 const score1 = (n: number) => (Math.round(n * 10) / 10).toFixed(1);
+
+// CRC-32 for PNG chunks (zlib's crc32 needs Node 22.2+; this works on any Node).
+const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+function crc32(buf: Buffer) {
+  let c = 0xffffffff;
+  for (const byte of buf) c = CRC_TABLE[(c ^ byte) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
 
 /** PNG text chunks (keyword + value), written right after IHDR, so the file itself names its certificate. */
 function withPngText(png: Buffer, entries: [string, string][]) {
@@ -280,7 +291,8 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
           <div style={{ display: "flex", flexDirection: "column" }}>
             {c.score !== null ? (
               <div style={{ marginTop: px(24), fontSize: px(24), fontWeight: 600 }}>
-                {`Final jury score ${score2(c.score)}${c.jurors.length ? ` from ${c.jurors.length} juror${c.jurors.length === 1 ? "" : "s"}` : ""}`}
+                {/* the juror count only when the score comes from these same reviews (not a Month or Year round) */}
+                {`Final jury score ${score2(c.score)}${c.pillars && c.jurors.length ? ` from ${c.jurors.length} juror${c.jurors.length === 1 ? "" : "s"}` : ""}`}
               </div>
             ) : null}
             {c.pillars ? (

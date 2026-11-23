@@ -18,11 +18,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-type Props = { searchParams: Promise<{ code?: string; award?: string }> };
+type Props = { searchParams: Promise<{ code?: string | string[]; award?: string | string[] }> };
 
 export default async function VerifyPage({ searchParams }: Props) {
-  const { code: raw, award: awardSlug } = await searchParams;
-  const code = raw?.trim().slice(0, 40) ?? "";
+  const params = await searchParams;
+  // A repeated ?code= arrives as an array: take the first.
+  const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const code = first(params.code)?.trim().slice(0, 40) ?? "";
+  const awardSlug = first(params.award)?.slice(0, 120);
   const sample = code.toLowerCase() === "sample" || normalizeCode(code).endsWith("SAMP1E00");
   const signed = certificatesSigned();
   const found = code && !sample && signed ? await findCertificate(code, awardSlug) : null;

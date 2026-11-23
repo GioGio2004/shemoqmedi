@@ -12,6 +12,12 @@ const APEX_HOST = "shemoqmedi.space";
 const FRAME_ANCESTORS = ["https://khvichia.shemoqmedi.space", "https://khvichia-shemoqmedi-space.vercel.app"];
 
 const nextConfig: NextConfig = {
+  // The certificate routes read their fonts and crow from public/ at request
+  // time (lib/certificate.tsx): ship those files with the functions.
+  outputFileTracingIncludes: {
+    "/certificate/[slug]": ["./public/fonts/certificate/**", "./public/brand/crow-clear*.png"],
+    "/certificate/sample/[tier]": ["./public/fonts/certificate/**", "./public/brand/crow-clear*.png"],
+  },
   experimental: {
     // Turbopack's on-disk dev cache survives restarts, and on Windows it
     // twice kept a stale route table after route files changed under a
