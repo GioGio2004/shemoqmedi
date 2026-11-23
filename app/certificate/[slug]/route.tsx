@@ -1,6 +1,7 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
 import { certificateImage, panelName } from "@/lib/certificate";
+import { certificateCode, verifyUrl } from "@/lib/certificateCode";
 import { getJuryReviews } from "@/lib/listings";
 
 // /certificate/<award slug> — the award's certificate as a PNG (A4 portrait,
@@ -30,6 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const ordered = [...reviews].sort((a, b) => a.createdAt - b.createdAt);
   const mean = (key: "design" | "usability" | "creativity" | "content") =>
     ordered.reduce((sum, r) => sum + r.scores[key], 0) / ordered.length;
+  const code = certificateCode(award);
 
   return certificateImage(
     {
@@ -44,6 +46,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       pillars: ordered.length
         ? { design: mean("design"), usability: mean("usability"), creativity: mean("creativity"), content: mean("content") }
         : null,
+      verify: code ? { code, url: verifyUrl(code, award.slug) } : null,
     },
     { download },
   );

@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { crc32 } from "node:zlib";
 import { ImageResponse } from "next/og";
+import QRCode from "qrcode";
 import { badgeSvg } from "@/lib/badgeSvg";
 import { JURY_CATEGORIES, type AwardSlug } from "@/lib/taxonomy";
 import { SITE_URL } from "@/lib/site";
@@ -8,8 +10,12 @@ import { SITE_URL } from "@/lib/site";
 // The award certificate: an A4 portrait poster in the award's own colours,
 // drawn by Satori (next/og) as a PNG. Designed on the "Shemoqmedi Award
 // Certificates" Claude Design canvas: the award name huge in condensed caps,
-// the real seal, who won it, the jury's score, and a line for each signature.
-// Signature lines stay empty: real signatures are added by hand, never drawn.
+// the real seal, who won it, the jury's score, and the names of the people
+// who stand behind it. It is issued digitally: handwritten signatures are
+// never put on a downloadable image, where they could be lifted. Instead it
+// carries a signed certificate number and a QR code that open /verify, the
+// official record, so a copy or an edited version is easy to catch. The
+// number is also written into the PNG's metadata.
 // Served at /certificate/<award> (real awards) and /certificate/sample/<tier>.
 
 export type CertificateJuror = { name: string; panel: string | null };
@@ -24,6 +30,8 @@ export type CertificateData = {
   creditName: string; // its maker
   jurors: CertificateJuror[]; // the jurors who scored it, at most three are shown
   pillars: { design: number; usability: number; creativity: number; content: number } | null;
+  /** The signed certificate number and the /verify link its QR code opens; null when numbers aren't set up. */
+  verify: { code: string; url: string } | null;
   sample?: boolean;
 };
 
@@ -98,6 +106,21 @@ const svgSrc = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).to
 const score2 = (n: number) => n.toFixed(2);
 const score1 = (n: number) => (Math.round(n * 10) / 10).toFixed(1);
 
+/** PNG text chunks (keyword + value), written right after IHDR, so the file itself names its certificate. */
+function withPngText(png: Buffer, entries: [string, string][]) {
+  const chunks = entries.map(([key, value]) => {
+    const data = Buffer.from(`${key}\0${value}`, "latin1");
+    const type = Buffer.from("tEXt", "latin1");
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(data.length);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(Buffer.concat([type, data])) >>> 0);
+    return Buffer.concat([length, type, data, crc]);
+  });
+  const afterIhdr = 8 + 4 + 4 + 13 + 4; // signature + the IHDR chunk
+  return Buffer.concat([png.subarray(0, afterIhdr), ...chunks, png.subarray(afterIhdr)]);
+}
+
 /** The site name's size: as big as fits `width` (an estimate for Archivo at 75% width), never over 96. */
 function nameSize(title: string, width: number) {
   return Math.max(48, Math.min(96, Math.floor(width / (Math.max(title.length, 1) * 0.52))));
@@ -112,6 +135,40 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
   const label = { fontFamily: "Inter", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: px(0.18 * 22) };
   const rule = look.ink;
   const kicker = c.sample ? "Certificate of award · Sample" : "Certificate of award";
+  const qr = c.verify
+    ? svgSrc(
+        await QRCode.toString(c.verify.url, {
+          type: "svg",
+          margin: 0,
+          errorCorrectionLevel: "M",
+          // Always dark on light: many phone cameras can't read a light-on-dark code.
+          color: { dark: `${INK}FF`, light: "#00000000" },
+        }),
+      )
+    : null;
+
+  // The QR code beside its number; without numbers set up, the award page link as before.
+  const verifyBlock =
+    c.verify && qr ? (
+      <div style={{ display: "flex", alignItems: "center", gap: px(14) }}>
+        {/* on the black certificates the code sits on an off-white tile */}
+        <div style={{ display: "flex", padding: look.dark ? px(8) : 0, backgroundColor: look.dark ? PAPER : "transparent" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- rendered by Satori, not the browser */}
+          <img src={qr} width={px(look.dark ? 88 : 96)} height={px(look.dark ? 88 : 96)} style={{ width: px(look.dark ? 88 : 96), height: px(look.dark ? 88 : 96) }} alt="" />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: px(4) }}>
+          <div style={{ ...label, fontSize: px(14), color: look.muted }}>Verify</div>
+          <div style={{ fontSize: px(17), fontWeight: 600 }}>{c.verify.code}</div>
+          <div style={{ fontSize: px(14), fontWeight: 500 }}>{`${verifyHost}/verify`}</div>
+        </div>
+      </div>
+    ) : (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: px(6) }}>
+        <div style={{ ...label, fontSize: px(16), color: look.muted }}>Verify</div>
+        <div style={{ fontSize: px(16), fontWeight: 500 }}>{`${verifyHost}/awards/`}</div>
+        <div style={{ fontSize: px(16), fontWeight: 500 }}>{c.slug}</div>
+      </div>
+    );
 
   // Each word its own box with a set gap: Satori draws a space in this condensed cut far too narrow.
   const headline = (line: string, i: number) => {
@@ -239,10 +296,8 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
       {honorary ? null : (
         <div style={{ position: "absolute", right: px(88), top: px(1010), width: px(300), display: "flex", flexDirection: "column", alignItems: "flex-end", gap: px(8) }}>
           <div style={{ ...label, fontSize: px(16), color: look.muted }}>Awarded</div>
-          <div style={{ fontSize: px(24), fontWeight: 600 }}>{dateText}</div>
-          <div style={{ ...label, fontSize: px(16), color: look.muted, marginTop: px(14) }}>Verify</div>
-          <div style={{ fontSize: px(16), fontWeight: 500 }}>{`${verifyHost}/awards/`}</div>
-          <div style={{ fontSize: px(16), fontWeight: 500 }}>{c.slug}</div>
+          <div style={{ fontSize: px(24), fontWeight: 600, marginBottom: px(22) }}>{dateText}</div>
+          {verifyBlock}
         </div>
       )}
 
@@ -268,10 +323,8 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
               <div style={{ fontSize: px(24), fontWeight: 600 }}>{dateText}</div>
             </div>
             {signature("Giorgi Khvichia", "Founder, Shemoqmedi", "founder")}
-            <div style={{ display: "flex", flexDirection: "column", width: px(colW), flexShrink: 0, gap: px(8), marginLeft: px(gap), alignItems: "flex-end" }}>
-              <div style={{ ...label, fontSize: px(16) }}>Verify</div>
-              <div style={{ fontSize: px(16), fontWeight: 500 }}>{`${verifyHost}/awards/`}</div>
-              <div style={{ fontSize: px(16), fontWeight: 500 }}>{c.slug}</div>
+            <div style={{ display: "flex", flexDirection: "column", width: px(colW), flexShrink: 0, marginLeft: px(gap), alignItems: "flex-end" }}>
+              {verifyBlock}
             </div>
           </>
         ) : (
@@ -280,6 +333,13 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
             {signature("Giorgi Khvichia", "Founder, Shemoqmedi", "founder")}
           </>
         )}
+      </div>
+
+      {/* issued digitally: how to tell a real one */}
+      <div style={{ position: "absolute", left: px(88), bottom: px(40), width: px(W - 176), display: "flex", fontSize: px(13), fontWeight: 500, color: look.muted }}>
+        {c.verify
+          ? `Issued digitally by Shemoqmedi. Handwritten signatures are not reproduced. Check this certificate at ${verifyHost}/verify.`
+          : "Issued digitally by Shemoqmedi. Handwritten signatures are not reproduced."}
       </div>
     </div>
   );
@@ -291,5 +351,12 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
   if (c.sample) headers["X-Robots-Tag"] = "noindex";
   if (opts.download) headers["Content-Disposition"] = `attachment; filename="${certificateFilename(c.slug)}"`;
 
-  return new ImageResponse(image, { width: px(W), height: px(H), fonts: await fontList, headers });
+  const rendered = new ImageResponse(image, { width: px(W), height: px(H), fonts: await fontList });
+  const png = withPngText(Buffer.from(await rendered.arrayBuffer()), [
+    ["Title", `Shemoqmedi certificate: ${/^[\x20-\xFF]*$/.test(c.title) ? c.title : c.slug}`], // tEXt is Latin-1
+    ["Author", "Shemoqmedi"],
+    ["Certificate", c.verify?.code ?? c.slug],
+    ["Verify", c.verify?.url ?? `${SITE_URL}/awards/${c.slug}`],
+  ]);
+  return new Response(new Uint8Array(png), { headers: { ...headers, "Content-Type": "image/png" } });
 }

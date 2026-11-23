@@ -1,5 +1,6 @@
 import { AWARDS, type AwardSlug } from "@/lib/taxonomy";
 import { certificateImage, type CertificateData } from "@/lib/certificate";
+import { SITE_URL } from "@/lib/site";
 
 // /certificate/sample/<tier> — what a certificate looks like for each award,
 // filled with made-up sample data and marked "Sample" on its face, so the
@@ -36,6 +37,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ tier
               { name: "Juror Three", panel: "Venture & Startups" },
             ],
       pillars: tier === "F100" ? null : { design: 9.1, usability: 8.4, creativity: 8.9, content: 8.2 },
+      // A number that can never verify: /verify says it's a sample.
+      verify: { code: `SQ-${tier}-SAMP-LE00`, url: `${SITE_URL}/verify?code=sample` },
       sample: true,
     },
     { download },
