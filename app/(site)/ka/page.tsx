@@ -1,33 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Noto_Sans_Georgian } from "next/font/google";
 import { PageHero } from "@/components/listing/PageHero";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { PillLink } from "@/components/site/ui";
 import { MIN_INDEXABLE_COLLECTION } from "@/lib/collections";
 import { getAwardRules, getPublicListings } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
-import { pct, score } from "@/lib/scoringCopy";
-import type { AwardRules } from "@/lib/taxonomy";
+import { pct } from "@/lib/scoringCopy";
+import { GeorgianRoot } from "@/components/site/Georgian";
+import { KA_PAGES } from "@/lib/kaPages";
+import { awardsKa, bscRuleKa } from "@/lib/scoringCopyKa";
 
-// The one Georgian page: a hand-written landing page for Georgian searches
-// ("საუკეთესო ქართული საიტები"), listing the sites made in Georgia. The rest
-// of the site is English only. Its English counterpart is
-// /collections/georgia; both declare each other with hreflang.
-
-// Inter has no Georgian glyphs: Latin text (site titles) stays in Inter and
-// Georgian falls through to Noto Sans Georgian.
-const georgian = Noto_Sans_Georgian({
-  subsets: ["georgian"],
-  weight: "variable",
-  display: "swap",
-  variable: "--font-georgian",
-});
+// The Georgian hub: a hand-written landing page for Georgian searches
+// ("საუკეთესო ქართული საიტები / ვებგვერდები"), listing the sites made in
+// Georgia and linking to the other Georgian pages (lib/kaPages.ts). Its
+// English counterpart is /collections/georgia; both declare each other with
+// hreflang while that collection is indexable.
 
 const year = () => new Date().getFullYear();
 const title = `საუკეთესო ქართული ვებსაიტები და ვებ დიზაინი (${year()})`;
 const description =
-  "საქართველოში შექმნილი საუკეთესო ვებსაიტები: ხელით შერჩეული და შეფასებული დამოუკიდებელი ჟიურის მიერ დიზაინის, მოხმარების სიმარტივის, კრეატიულობისა და კონტენტის მიხედვით.";
+  "საქართველოში შექმნილი საუკეთესო ვებგვერდები: ხელით შერჩეული და შეფასებული დამოუკიდებელი ჟიურის მიერ დიზაინის, მოხმარების სიმარტივის, კრეატიულობისა და კონტენტის მიხედვით.";
 
 export async function generateMetadata(): Promise<Metadata> {
   // Paired with /collections/georgia only while that page is indexable.
@@ -57,25 +50,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = "force-static";
 export const revalidate = 300;
 
-const awardsFor = (rules: AwardRules) => [
-  {
-    name: "საპატიო მოხსენიება",
-    en: "Honorable Mention",
-    rule: `ყოველი საიტი, რომელიც კვირის ჯგუფში ${score(rules, rules.honorableMentionMin)} ან მეტ ქულას იღებს (ვერცხლის ყვავი).`,
-  },
-  {
-    name: "დღის საიტი",
-    en: "Site of the Day",
-    rule: `${score(rules, rules.sotdMin)} ან მეტი ქულის საიტები რიგში დგებიან; ყოველდღე ერთი საიტი იმარჯვებს და მხოლოდ ერთხელ (შავი ყვავი).`,
-  },
-  { name: "თვის საიტი", en: "Site of the Month", rule: "თვის დღის საიტებიდან საუკეთესო, ჟიურის ხელახალი შეფასებით (წითელი ყვავი)." },
-  { name: "წლის საიტი", en: "Site of the Year", rule: "წლის თორმეტი თვის საიტიდან საუკეთესო, იანვარში (ოქროს ყვავი)." },
-  {
-    name: "საუკეთესო სოლო ნამუშევარი",
-    en: "Best Solo Creation",
-    rule: `${score(rules, rules.bscMin)} ან მეტი ქულა საიტისთვის, რომელიც ერთმა ადამიანმა შექმნა.`,
-  },
-];
 
 const section = "grid gap-4 border-t border-black/10 py-12 md:grid-cols-12 md:gap-10 md:py-16";
 const h2 = "text-[clamp(1.5rem,2.6vw,2.25rem)] leading-[1.15] font-semibold tracking-[-0.02em] md:col-span-4";
@@ -122,11 +96,7 @@ export default async function GeorgianPage() {
   };
 
   return (
-    <div
-      lang="ka"
-      className={georgian.variable}
-      style={{ fontFamily: "var(--font-inter), var(--font-georgian), ui-sans-serif, system-ui, sans-serif" }}
-    >
+    <GeorgianRoot>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
@@ -167,7 +137,8 @@ export default async function GeorgianPage() {
             </p>
             <p>
               ჩვენი მიზანია, ქართულ სტუდიებს, სააგენტოებსა და დამოუკიდებელ დეველოპერებს ჰქონდეთ ადგილი, სადაც მათ
-              საუკეთესო ნამუშევრებს დაინახავენ როგორც საქართველოში, ისე მის ფარგლებს გარეთ.
+              საუკეთესო ნამუშევრებს დაინახავენ როგორც საქართველოში, ისე მის ფარგლებს გარეთ. ხოლო ვისაც საკუთარი
+              საიტი სჭირდება, აქ ნახავს ქართულ ვებგვერდებს, რომლებიც შეიძლება შთაგონებად ან მაგალითად გამოიყენოს.
             </p>
           </div>
         </section>
@@ -189,7 +160,7 @@ export default async function GeorgianPage() {
               შემდეგ საუკეთესო საიტები ჯილდოს იღებენ:
             </p>
             <dl className="grid gap-4">
-              {awardsFor(rules).map((a) => (
+              {awardsKa(rules).map((a) => (
                 <div key={a.en}>
                   <dt className="font-semibold text-black">
                     {a.name} <span className="font-normal text-black/55">({a.en})</span>
@@ -197,13 +168,15 @@ export default async function GeorgianPage() {
                   <dd className="mt-1">{a.rule}</dd>
                 </div>
               ))}
+              <div>
+                <dt className="font-semibold text-black">
+                  საუკეთესო სოლო ნამუშევარი <span className="font-normal text-black/55">(Best Solo Creation)</span>
+                </dt>
+                <dd className="mt-1">{bscRuleKa(rules)}</dd>
+              </div>
             </dl>
             <p>
-              დეტალები ინგლისურად:{" "}
-              <Link href="/how-we-score" hrefLang="en">
-                How we score
-              </Link>
-              .
+              დეტალები: <Link href="/ka/how-we-score">როგორ ვაფასებთ</Link>.
             </p>
           </div>
         </section>
@@ -226,13 +199,30 @@ export default async function GeorgianPage() {
               განათავსონ.
             </p>
             <p>
-              <Link href="/submit" hrefLang="en">
-                საიტის გამოგზავნა
-              </Link>
+              <Link href="/ka/how-to-submit">როგორ გამოვგზავნოთ საიტი</Link> ·{" "}
+              <Link href="/ka/faq">ხშირი კითხვები</Link>
             </p>
           </div>
         </section>
+
+        <nav aria-labelledby="ka-more" className={section}>
+          <h2 id="ka-more" className={h2}>
+            შემოქმედი ქართულად
+          </h2>
+          <ul className="grid gap-3 text-[15px] md:col-span-8">
+            {KA_PAGES.filter((p) => p.ka !== "/ka").map((p) => (
+              <li key={p.ka}>
+                <Link
+                  href={p.ka}
+                  className="text-lg font-semibold tracking-[-0.02em] underline decoration-black/20 underline-offset-4 hover:decoration-black"
+                >
+                  {p.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
-    </div>
+    </GeorgianRoot>
   );
 }

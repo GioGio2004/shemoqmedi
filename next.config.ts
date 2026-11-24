@@ -31,8 +31,10 @@ const nextConfig: NextConfig = {
     // answer 410 Gone from proxy.ts (lib/gone.ts) instead of redirecting to the
     // home page, which Google treats as a soft 404.
     const legacy = [
-      // The site used to be localized under /en, /ka and /ru. It is English-only
-      // now; /ka is the hand-written Georgian landing page (app/(site)/ka).
+      // The site used to be localized under /en, /ka and /ru. It is English
+      // now, plus hand-written Georgian pages under /ka (lib/kaPages.ts): keep
+      // their paths clear of the page names redirected below (/ka/submit
+      // redirects, so the Georgian guide is /ka/how-to-submit).
       { source: "/:locale(en|ru)", destination: "/" },
       // The old Clerk catch-all pages (/en/sign-in/factor-one, ...).
       { source: "/:locale(en|ka|ru)/:page(sign-in|sign-up)/:rest*", destination: "/:page" },
@@ -92,9 +94,9 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // The Georgian landing page. The root layout's <html lang> is "en" for
-        // every page; Bing reads Content-Language for the page's language.
-        source: "/ka",
+        // The Georgian pages (lib/kaPages.ts). The root layout's <html lang> is
+        // "en" for every page; Bing reads Content-Language for the page's language.
+        source: "/ka/:path*",
         headers: [{ key: "Content-Language", value: "ka" }],
       },
       {

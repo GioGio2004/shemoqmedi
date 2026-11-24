@@ -13,6 +13,7 @@ const EXPLORE: FooterLink[] = [
   { label: "Live voting", href: "/collections/nominees" },
   { label: "Creators", href: "/creators" },
   { label: "Badges", href: "/badges" },
+  { label: "Saved sites", href: "/saved" },
 ];
 
 /** Collections in the order we'd like to feature them; empty ones are skipped. */

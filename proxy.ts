@@ -46,6 +46,9 @@ export default function proxy(req: NextRequest, event: NextFetchEvent) {
       },
     });
   }
+  // The live Georgian pages are matched only for the check above; like every
+  // public page they skip Clerk, so they stay cached and never get a handshake.
+  if (req.nextUrl.pathname.startsWith("/ka/")) return NextResponse.next();
   return clerk(req, event);
 }
 

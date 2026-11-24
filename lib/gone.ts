@@ -6,6 +6,8 @@
  * before proxy.ts, so they never reach this list.
  */
 
+import { KA_PAGES } from "./kaPages";
+
 // Top-level Voloo pages and the menu templates.
 // Keep in sync with the gone entries of proxy.ts's matcher (Next needs those
 // as literals, so they cannot be built from this list).
@@ -36,14 +38,18 @@ const GONE_TOP_LEVEL = new Set([
 
 const LOCALES = new Set(["en", "ka", "ru"]);
 
+/** The live Georgian pages (lib/kaPages.ts): never gone. */
+const LIVE_KA = new Set(KA_PAGES.map((p) => p.ka));
+
 /** True when the path belongs to the retired Voloo site. */
 export function isGonePath(pathname: string): boolean {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length === 0) return false;
   const [first] = parts;
   // /en/... and /ru/... (anything left after next.config's redirects), and
-  // /ka/... but never /ka itself: that is the live Georgian page.
-  if (LOCALES.has(first)) return first === "ka" ? parts.length > 1 : true;
+  // /ka/... except the live Georgian pages (/ka and the ones in KA_PAGES).
+  if (first === "ka") return !LIVE_KA.has(`/${parts.join("/")}`);
+  if (LOCALES.has(first)) return true;
   return GONE_TOP_LEVEL.has(first);
 }
 

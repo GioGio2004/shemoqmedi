@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/InfoPage";
 import { getAwardRules } from "@/lib/listings";
+import { enAlternates } from "@/lib/kaPages";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import {
   hmRule,
@@ -26,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: "/how-we-score" },
+    alternates: enAlternates("/how-we-score"),
     openGraph: infoOpenGraph("/how-we-score", title, description),
   };
 }

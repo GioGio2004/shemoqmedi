@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
+import { kaTwinOf } from "@/lib/kaPages";
 
 /** One titled block of an information page (About, Jury, How we score). */
 export type InfoSection = { id: string; heading: string; body: React.ReactNode };
@@ -34,6 +35,8 @@ export function InfoPage({
   /** This page's path, left out of the "More" links at the end. */
   current: string;
 }) {
+  // Georgian translation of this page, linked at the end (lib/kaPages.ts).
+  const georgian = kaTwinOf(current);
   return (
     <>
       <PageHero
@@ -77,6 +80,18 @@ export function InfoPage({
                 Badges
               </Link>
             </li>
+            {georgian && (
+              <li>
+                <Link
+                  href={georgian}
+                  hrefLang="ka"
+                  lang="ka"
+                  className="underline decoration-black/25 underline-offset-4 hover:decoration-black"
+                >
+                  ქართულად
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

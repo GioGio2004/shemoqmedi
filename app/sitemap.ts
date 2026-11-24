@@ -6,6 +6,13 @@ import { getAwardSlugs, getCreators, getJurorSlugs, getPublicListings, getPublic
 import { listingImageUrls, listingVideo } from "@/lib/imageSeo";
 import { absoluteUrl } from "@/lib/site";
 import { escapeSitemap } from "@/lib/sitemapXml";
+import { KA_PAGES, kaTwinOf } from "@/lib/kaPages";
+
+/** hreflang for an English page and its Georgian translation (lib/kaPages.ts), on both entries. */
+function pairAlternates(en: string) {
+  const ka = kaTwinOf(en);
+  return ka ? { alternates: { languages: { en: absoluteUrl(en), ka: absoluteUrl(ka) } } } : {};
+}
 
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
 // keeps the page static (ISR) and revalidate refreshes it in the background.
@@ -70,9 +77,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     { url: absoluteUrl("/badges"), changeFrequency: "monthly", priority: 0.3 },
     { url: absoluteUrl("/about"), changeFrequency: "monthly", priority: 0.4 },
-    { url: absoluteUrl("/how-we-score"), changeFrequency: "monthly", priority: 0.4 },
+    { url: absoluteUrl("/how-we-score"), changeFrequency: "monthly", priority: 0.4, ...pairAlternates("/how-we-score") },
     { url: absoluteUrl("/crow"), changeFrequency: "monthly", priority: 0.4 },
-    { url: absoluteUrl("/jury"), changeFrequency: "monthly", priority: 0.4 },
+    { url: absoluteUrl("/jury"), changeFrequency: "monthly", priority: 0.4, ...pairAlternates("/jury") },
     { url: absoluteUrl("/jury/guide"), changeFrequency: "monthly", priority: 0.3 },
     { url: absoluteUrl("/privacy"), changeFrequency: "yearly", priority: 0.1 },
     { url: absoluteUrl("/terms"), changeFrequency: "yearly", priority: 0.1 },
@@ -85,6 +92,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ? { alternates: { languages: { ka: absoluteUrl("/ka"), en: absoluteUrl("/collections/georgia") } } }
         : {}),
     },
+    // The other Georgian pages (lib/kaPages.ts); translations carry their hreflang pair.
+    ...KA_PAGES.filter((p) => p.ka !== "/ka").map((p) => ({
+      url: absoluteUrl(p.ka),
+      changeFrequency: "monthly" as const,
+      priority: 0.4,
+      ...(p.en ? pairAlternates(p.en) : {}),
+    })),
     // Thin collections are noindex until they fill up, so they stay out.
     // The dated Site of the Day archive: indexable once it has a few winners.
     ...(() => {

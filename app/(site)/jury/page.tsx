@@ -4,6 +4,7 @@ import { InfoPage, infoOpenGraph, type InfoSection } from "@/components/site/Inf
 import { JuryDirectory } from "@/components/jury/JuryDirectory";
 import { linkedinUrl, safeUrl } from "@/components/jury/jurorInfo";
 import { getAwardRules, getJurors } from "@/lib/listings";
+import { enAlternates } from "@/lib/kaPages";
 import { pillarList, scoreRange } from "@/lib/scoringCopy";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import type { AwardRules } from "@/lib/taxonomy";
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: "/jury" },
+    alternates: enAlternates("/jury"),
     openGraph: infoOpenGraph("/jury", title, description),
   };
 }

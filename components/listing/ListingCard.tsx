@@ -8,6 +8,7 @@ import { outboundRel, withRefClient } from "@/lib/ref";
 import { cn } from "@/lib/utils";
 import { AwardBadge, ScoreBadge } from "./Badges";
 import { Countdown } from "./Countdown";
+import { SaveIcon } from "./SaveButton";
 import { ArrowIcon } from "@/components/site/ui";
 
 /**
@@ -50,6 +51,8 @@ export function ListingCard({
           ))}
           {countdown && <Countdown endsAt={listing.votingEndsAt} />}
         </div>
+
+        <SaveIcon slug={listing.slug} title={listing.title} className="absolute top-3 right-3" />
 
         <a
           href={withRefClient(listing.url)}

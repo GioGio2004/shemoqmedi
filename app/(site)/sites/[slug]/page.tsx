@@ -23,6 +23,7 @@ import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { AWARDS, listingCategories } from "@/lib/taxonomy";
 import { listingImageUrls, screenshotCaption, listingVideo } from "@/lib/imageSeo";
 import { badgeLabel, badgePath } from "@/lib/badgeInfo";
+import { SavePill } from "@/components/listing/SaveButton";
 
 // Rendered on first visit, then cached and refreshed at most once a minute.
 // Convex reads are POST requests, which Next treats as uncacheable; force-static
@@ -373,9 +374,12 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           )
         }
         action={
-          <PillLink href={liveUrl} external rel={rel}>
-            Visit live site
-          </PillLink>
+          <span className="inline-flex flex-wrap items-center gap-3">
+            <PillLink href={liveUrl} external rel={rel}>
+              Visit live site
+            </PillLink>
+            <SavePill slug={listing.slug} title={listing.title} />
+          </span>
         }
       />
 

@@ -1,4 +1,5 @@
 import { PillLink, Wordmark } from "./ui";
+import { SavedLink } from "./SavedLink";
 import { MenuButton, MenuCurtain, MenuProvider, MenuSearchField, MobileSearchButton } from "./MegaMenu";
 
 // Fixed, transparent over the page; turns into white glass on scroll (see
@@ -16,6 +17,7 @@ export function Header() {
           <MenuSearchField className="hidden min-w-0 flex-1 lg:mx-auto lg:flex lg:max-w-[560px]" />
           <div className="ml-auto flex items-center gap-2 sm:gap-3 lg:ml-0">
             <MobileSearchButton className="lg:hidden" />
+            <SavedLink />
             <MenuButton />
             <PillLink href="/submit" className="hidden sm:inline-flex">
               Submit site
