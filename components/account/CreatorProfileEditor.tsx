@@ -66,6 +66,9 @@ function Editor({ profile }: { profile: OwnCreatorProfile }) {
         <JurorPhoto
           url={profile.photoUrl}
           name={profile.name}
+          fallbackKey={profile.slug}
+          fallbackAvatar={profile.avatar}
+          fallbackInitials={false}
           width={72}
           height={72}
           mono={false}
@@ -83,8 +86,8 @@ function Editor({ profile }: { profile: OwnCreatorProfile }) {
         </div>
       </div>
       <p className={hint}>
-        Your photo is the one on your Shemoqmedi account (your Google photo if you signed in with Google). Your name
-        and profile address are set by us; write to us if they need changing.
+        Change your picture under Your picture. Your name and profile address are set by us; write to us if they
+        need changing.
       </p>
 
       <label className="grid gap-2">

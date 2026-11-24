@@ -1,3 +1,4 @@
+import { defaultAvatarUrl } from "@/lib/defaultAvatar";
 import { cn } from "@/lib/utils";
 
 /** An ImageKit photo cropped by ImageKit to w×h around the face; other hosts as they are. */
@@ -21,7 +22,8 @@ function initials(name: string) {
 /**
  * A juror's portrait for the directory and profile pages: fills its box
  * (set the aspect ratio with className), black and white until hovered so a
- * panel of mixed photos reads as one set. No photo: their initials on grey.
+ * panel of mixed photos reads as one set. No photo: their initials on grey,
+ * or, with `fallbackKey`, their default avatar with the initials in a corner.
  */
 export function JurorPhoto({
   url,
@@ -31,10 +33,19 @@ export function JurorPhoto({
   height,
   mono = true,
   priority,
+  fallbackKey,
+  fallbackAvatar,
+  fallbackInitials = true,
   className,
 }: {
   url: string | null;
   name: string;
+  /** No photo: show the default avatar picked from this stable key (a creator's slug). */
+  fallbackKey?: string;
+  /** The avatar they picked ("01"…"24"), used instead of the one picked from the key. */
+  fallbackAvatar?: string | null;
+  /** The initials chip over the default avatar. Turn off where the box is small. */
+  fallbackInitials?: boolean;
   /** Empty (decorative) where the name is printed beside the photo. */
   alt?: string;
   /** Rendered size in CSS px; the image is fetched at twice that. */
@@ -61,6 +72,26 @@ export function JurorPhoto({
             mono && "grayscale group-hover:grayscale-0",
           )}
         />
+      ) : fallbackKey ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- a 1 KB SVG from /public */}
+          <img
+            src={defaultAvatarUrl(fallbackKey, fallbackAvatar)}
+            alt=""
+            width={width}
+            height={height}
+            loading={priority ? "eager" : "lazy"}
+            className="absolute inset-0 size-full object-cover"
+          />
+          {fallbackInitials && (
+            <span
+              aria-hidden="true"
+              className="absolute bottom-3 left-3 rounded-md bg-black/75 px-2 py-1 text-xs leading-none font-semibold tracking-[0.04em] text-white"
+            >
+              {initials(name)}
+            </span>
+          )}
+        </>
       ) : (
         <span
           aria-hidden="true"

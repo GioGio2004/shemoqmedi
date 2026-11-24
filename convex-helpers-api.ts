@@ -112,8 +112,10 @@ export type PublicCreator = {
   bio: string | null;
   /** Public "get in touch" address, only when the creator set one. Optional until the backend with it is deployed. */
   email?: string | null;
-  /** The owner's sign-in photo; null or missing shows initials. */
+  /** The owner's sign-in photo, only when they chose to show it; null or missing shows a Shemoqmedi avatar. */
   photoUrl?: string | null;
+  /** The Shemoqmedi avatar the owner picked ("01"…"24"); null or missing = the one picked from the slug. */
+  avatar?: string | null;
   isClaimed: boolean;
   /** SOTY and SOTM are optional until the backend with them is deployed. */
   awards: { SOTY?: number; SOTM?: number; SOTD: number; BSC: number; HM: number; F100?: number };
@@ -126,8 +128,10 @@ export type CreatorSummary = {
   tier: CreatorTier;
   region: RegionSlug;
   location: string | null;
-  /** The owner's sign-in photo; null or missing shows initials. Optional until the backend with it is deployed. */
+  /** The owner's sign-in photo, only when they chose to show it; null or missing shows a Shemoqmedi avatar. */
   photoUrl?: string | null;
+  /** The Shemoqmedi avatar the owner picked ("01"…"24"); null or missing = the one picked from the slug. */
+  avatar?: string | null;
   isClaimed?: boolean;
   nominations: number;
   awards: number;
@@ -145,6 +149,8 @@ export type OwnCreatorProfile = {
   bio: string;
   email: string;
   photoUrl: string | null;
+  /** The Shemoqmedi avatar the owner picked; null or missing = the one picked from the slug. */
+  avatar?: string | null;
   /** false until one of its sites is public. */
   isPublic: boolean;
 };
@@ -277,6 +283,9 @@ export type ConvexUser = {
   name: string;
   email: string;
   profilePicture?: string;
+  hasImage?: boolean;
+  /** The picture the site shows for them: "photo", "01"…"24", or unset (picked for them). */
+  avatar?: string;
   role?: "admin" | "super_admin";
   createdAt: number;
   updatedAt: number;
@@ -366,6 +375,8 @@ export type PublicApiType = {
   };
   users: {
     getCurrentUser: Q<Empty, ConvexUser | null>;
+    /** "photo", "01"…"24", or "auto" (back to the picked one). Returns what's saved (null for auto). */
+    setMyAvatar: M<{ avatar: string }, string | null>;
     deleteMyAccount: A<
       { confirm: "DELETE" },
       {

@@ -8,6 +8,7 @@ import { PillLink } from "@/components/site/ui";
 import { AccountHeader } from "@/components/account/AccountHeader";
 import { DeleteAccount } from "@/components/account/DeleteAccount";
 import { CreatorProfileEditor } from "@/components/account/CreatorProfileEditor";
+import { AvatarPicker } from "@/components/account/AvatarPicker";
 
 export const metadata: Metadata = { title: "Your account", robots: { index: false } };
 
@@ -44,7 +45,11 @@ export default async function AccountPage({
 
   return (
     <main id="main-content">
-      <AccountHeader eyebrow="Your account" actions={<PillLink href="/submit">Submit a site</PillLink>} />
+      <AccountHeader
+        eyebrow="Your account"
+        defaultAvatar
+        actions={<PillLink href="/submit">Submit a site</PillLink>}
+      />
       <div className="container-site pb-24">
         {notice && (
           <p role="status" className="mb-10 rounded-2xl bg-black px-6 py-5 text-[15px] leading-relaxed text-white">
@@ -65,6 +70,7 @@ export default async function AccountPage({
             <MyListings />
           </div>
         </section>
+        <AvatarPicker />
         <CreatorProfileEditor />
         <DeleteAccount />
       </div>

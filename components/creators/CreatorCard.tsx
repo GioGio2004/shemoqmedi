@@ -7,8 +7,9 @@ import { regionName } from "@/lib/collections";
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /**
- * One creator: photo (their sign-in photo, initials without one), name,
- * type, place and record. The whole card links to their profile.
+ * One creator: their picture (a Shemoqmedi avatar with their initials, or
+ * their own photo if they chose it), name, type, place and record. The whole
+ * card links to their profile.
  */
 export function CreatorCard({ creator }: { creator: CreatorSummary }) {
   return (
@@ -16,6 +17,8 @@ export function CreatorCard({ creator }: { creator: CreatorSummary }) {
       <JurorPhoto
         url={creator.photoUrl ?? null}
         name={creator.name}
+        fallbackKey={creator.slug}
+        fallbackAvatar={creator.avatar}
         width={320}
         height={400}
         mono={false}

@@ -200,11 +200,16 @@ export default async function CreatorPage({ params }: Params) {
             <p className="text-[clamp(1.25rem,2vw,1.75rem)] leading-tight tracking-[-0.03em]">
               {solo ? "solo developer" : "agency"}
             </p>
+            {/* mt in em: room above the tight line for accents (Ü, Á, Ş) so they
+                never touch the label, at every size the name scales to. Names of
+                9+ letters take the smaller size: at the large one a 10-letter word
+                ran under the portrait beside it. overflow-wrap is a last resort
+                for a very long single word. */}
             <h1
               className={
-                creator.name.length > 10
-                  ? "text-[clamp(3rem,8vw,8rem)] leading-[0.9] font-semibold tracking-[-0.055em] uppercase"
-                  : "text-[clamp(3.5rem,10vw,10rem)] leading-[0.88] font-semibold tracking-[-0.055em] uppercase"
+                creator.name.length > 8
+                  ? "mt-[0.12em] text-[clamp(3rem,8vw,8rem)] leading-[0.9] font-semibold tracking-[-0.055em] uppercase [overflow-wrap:anywhere]"
+                  : "mt-[0.14em] text-[clamp(3.5rem,10vw,10rem)] leading-[0.88] font-semibold tracking-[-0.055em] uppercase [overflow-wrap:anywhere]"
               }
             >
               {creator.name}
@@ -237,6 +242,9 @@ export default async function CreatorPage({ params }: Params) {
             url={creator.photoUrl ?? null}
             name={creator.name}
             alt={creator.photoUrl ? creator.name : ""}
+            fallbackKey={creator.slug}
+            fallbackAvatar={creator.avatar}
+            fallbackInitials={false}
             width={420}
             height={525}
             mono={false}

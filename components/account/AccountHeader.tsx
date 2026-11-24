@@ -2,6 +2,7 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { JurorAvatar } from "@/components/jury/JurorAvatar";
+import { useMyPicture } from "./useMyPicture";
 
 const fmtSince = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
 
@@ -14,23 +15,35 @@ export function AccountHeader({
   eyebrow,
   lede,
   actions,
+  defaultAvatar = false,
 }: {
   eyebrow: string;
   lede?: React.ReactNode;
   actions?: React.ReactNode;
+  /**
+   * Show their Shemoqmedi picture (avatar, or their photo if they chose it),
+   * the same one as their creator card. On for /account. Off on /jury/profile,
+   * which keeps the juror photo their public jury card shows.
+   */
+  defaultAvatar?: boolean;
 }) {
   const { user, isLoaded } = useUser();
   const { openUserProfile, signOut } = useClerk();
   const name = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "";
   const email = user?.primaryEmailAddress?.emailAddress;
+  const picture = useMyPicture();
+  const avatarReady = defaultAvatar ? picture.ready : isLoaded;
 
   return (
     <header className="container-site pt-32 pb-10 md:pt-40 md:pb-14">
       <p className="eyebrow">{eyebrow}</p>
       <div className="mt-6 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
         <div className="flex min-w-0 items-center gap-5 md:gap-7">
-          {isLoaded ? (
-            <JurorAvatar url={user?.hasImage ? user.imageUrl : null} size={96} />
+          {avatarReady ? (
+            <JurorAvatar
+              url={defaultAvatar ? (picture.photoUrl ?? picture.avatarUrl) : user?.hasImage ? user.imageUrl : null}
+              size={96}
+            />
           ) : (
             <span className="size-24 shrink-0 rounded-full bg-black/[0.06]" />
           )}
