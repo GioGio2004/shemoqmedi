@@ -43,8 +43,11 @@ export function PageHero({
     >
       {eyebrow ? (
         <h1>
-          <span className="eyebrow mb-5 block">{eyebrow}</span>
-          <span className={preludeClass}>{prelude}</span>
+          {/* The spaces between the block spans are invisible on screen but
+              keep the heading's text "eyebrow prelude title" for search
+              engines; without them Google glued the words together. */}
+          <span className="eyebrow mb-5 block">{eyebrow}</span>{" "}
+          <span className={preludeClass}>{prelude}</span>{" "}
           <span className={cn("block", titleClass, titleClassName)}>{title}</span>
         </h1>
       ) : (

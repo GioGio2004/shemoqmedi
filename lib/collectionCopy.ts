@@ -18,7 +18,7 @@ export const COLLECTION_ABOUT: Record<string, string[]> = {
   ],
   "e-commerce": [
     "E-commerce design is judged by two audiences at once: people who want to enjoy browsing and people who want to buy in under a minute. The best online stores serve both.",
-    "Here the jury looks at product photography and how it is framed, the clarity of prices, sizes and delivery details, and how quickly a visitor gets from the home page to the cart. Editorial storytelling, lookbooks and motion are welcome when they lead to products rather than away from them. Checkout flows, filter behaviour on mobile and image loading speed weigh heavily in the usability and code scores.",
+    "Here the jury looks at product photography and how it is framed, the clarity of prices, sizes and delivery details, and how quickly a visitor gets from the home page to the cart. Editorial storytelling, lookbooks and motion are welcome when they lead to products rather than away from them. Checkout flows, filter behaviour on mobile and image loading speed weigh heavily in the usability score.",
   ],
   saas: [
     "A SaaS website has to explain an abstract product to a busy visitor in seconds. The best ones show the product itself, not stock illustrations, and let the interface do the convincing.",
@@ -74,7 +74,7 @@ export const COLLECTION_ABOUT: Record<string, string[]> = {
   ],
   education: [
     "Education websites serve students, parents, teachers and institutions, often all at once. The best ones help each of them find their own path quickly.",
-    "The jury looks for course and programme information that is easy to compare, interactive learning experiences that teach something on the page itself, and visual identities that feel encouraging rather than bureaucratic. Universities, online courses and learning tools in this collection also need to work well on low-end phones and slow connections, so speed and accessibility weigh heavily in the usability and code scores.",
+    "The jury looks for course and programme information that is easy to compare, interactive learning experiences that teach something on the page itself, and visual identities that feel encouraging rather than bureaucratic. Universities, online courses and learning tools in this collection also need to work well on low-end phones and slow connections, so speed and accessibility weigh heavily in the usability score.",
   ],
   games: [
     "Games and entertainment websites are allowed to be loud. Studios, launches, films and interactive experiences use the web to build hype and to let fans step into a world.",
@@ -140,7 +140,7 @@ export const COLLECTION_ABOUT: Record<string, string[]> = {
   ],
   motion: [
     "Motion (formerly Framer Motion) is an animation library for React and JavaScript, used for gestures, layout animations and physics-based transitions.",
-    "The sites in this collection use it to make interfaces feel physical: elements that spring into place, layouts that rearrange smoothly and pages that flow into one another. The jury rewards motion with purpose, animation that explains state changes or guides the eye, and penalises movement that slows tasks down. Smooth performance and respect for reduced-motion settings count toward usability and code.",
+    "The sites in this collection use it to make interfaces feel physical: elements that spring into place, layouts that rearrange smoothly and pages that flow into one another. The jury rewards motion with purpose, animation that explains state changes or guides the eye, and penalises movement that slows tasks down. Smooth performance and respect for reduced-motion settings count toward the usability score.",
   ],
   threejs: [
     "Three.js is the most popular library for 3D graphics in the browser, built on WebGL. It powers product configurators, interactive worlds and the immersive scenes that win awards.",

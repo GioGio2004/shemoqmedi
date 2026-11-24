@@ -27,7 +27,7 @@ const georgian = Noto_Sans_Georgian({
 const year = () => new Date().getFullYear();
 const title = `საუკეთესო ქართული ვებსაიტები და ვებ დიზაინი (${year()})`;
 const description =
-  "საქართველოში შექმნილი საუკეთესო ვებსაიტები: ხელით შერჩეული და შეფასებული ჟიურისა და საზოგადოების მიერ დიზაინის, მოხმარების სიმარტივის, კრეატიულობისა და კოდის მიხედვით.";
+  "საქართველოში შექმნილი საუკეთესო ვებსაიტები: ხელით შერჩეული და შეფასებული დამოუკიდებელი ჟიურის მიერ დიზაინის, მოხმარების სიმარტივის, კრეატიულობისა და კონტენტის მიხედვით.";
 
 export async function generateMetadata(): Promise<Metadata> {
   // Paired with /collections/georgia only while that page is indexable.
@@ -136,7 +136,7 @@ export default async function GeorgianPage() {
         prelude="საქართველოში შექმნილი"
         title="ვებ დიზაინი"
         titleClassName="text-[clamp(2.75rem,9vw,9rem)] leading-[0.95] tracking-[-0.03em]"
-        lede="ვებსაიტები, რომლებიც საქართველოში შეიქმნა: ყოველი მათგანი ხელით შერჩეული და შეფასებულია ჟიურისა და საზოგადოების მიერ."
+        lede="ვებსაიტები, რომლებიც საქართველოში შეიქმნა: ყოველი მათგანი ხელით შერჩეული და შეფასებულია დამოუკიდებელი ჟიურის მიერ."
         meta={`${listings.length} ვებსაიტი`}
         action={<PillLink href="/submit">გამოგზავნე საიტი</PillLink>}
       />
