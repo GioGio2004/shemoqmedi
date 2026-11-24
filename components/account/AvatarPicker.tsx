@@ -13,8 +13,8 @@ const tile =
 
 /**
  * "Your picture": the picture Shemoqmedi shows for them on their creator card,
- * profile and account. Everyone starts on a Shemoqmedi avatar; they can pick
- * another of the 24, or use their sign-in photo instead. `onlyForCreators`
+ * profile and account. Their own photo by default when they have one, else a
+ * Shemoqmedi avatar; they can pick any of the 24 instead. `onlyForCreators`
  * hides it for someone without a creator profile (the jury profile page).
  */
 export function AvatarPicker({ onlyForCreators = false }: { onlyForCreators?: boolean }) {
@@ -50,7 +50,8 @@ export function AvatarPicker({ onlyForCreators = false }: { onlyForCreators?: bo
           Your picture
         </h2>
         <p className="text-sm text-black/55">
-          Shown on your creator card and profile. Pick any of these, or use your own photo.
+          Shown on your creator card and profile. Your own photo is used when you have one; pick any of these
+          instead if you like.
         </p>
         {error && (
           <p role="alert" className="text-sm text-red-700">
@@ -82,7 +83,7 @@ export function AvatarPicker({ onlyForCreators = false }: { onlyForCreators?: bo
             <li key={n}>
               <button
                 type="button"
-                onClick={() => choose(n === picture.picked && !picture.choice ? "auto" : n)}
+                onClick={() => choose(n)}
                 aria-pressed={current === n}
                 aria-label={`Use picture ${Number(n)}`}
                 disabled={busy !== null}

@@ -7,9 +7,10 @@ import { defaultAvatarUrl, pickedAvatar } from "@/lib/defaultAvatar";
 
 /**
  * The signed-in person's picture on Shemoqmedi, the same one their creator
- * card and profile show: a Shemoqmedi avatar (the one they picked, else the
- * one picked from their creator profile's address, else from their account),
- * or their sign-in photo if they chose it. `ready` is false while loading.
+ * card and profile show: their own photo when they have one, unless they
+ * picked a Shemoqmedi avatar instead; without a photo, a Shemoqmedi avatar
+ * (the one they picked, else the one picked from their creator profile's
+ * address, else from their account). `ready` is false while loading.
  */
 export function useMyPicture() {
   const { user, isLoaded } = useUser();
@@ -19,10 +20,11 @@ export function useMyPicture() {
   const key = profiles?.[0]?.slug ?? user?.id ?? "";
   const choice = me?.avatar ?? null;
   const hasPhoto = Boolean(user?.hasImage);
-  const showsPhoto = choice === "photo" && hasPhoto;
+  const pickedAnAvatar = choice !== null && choice !== "photo";
+  const showsPhoto = hasPhoto && !pickedAnAvatar;
   return {
     ready,
-    /** Their sign-in photo, only when they chose it. */
+    /** Their own photo, unless they picked an avatar instead. */
     photoUrl: showsPhoto && user ? user.imageUrl : null,
     /** The avatar shown when not the photo. */
     avatarUrl: defaultAvatarUrl(key, choice),

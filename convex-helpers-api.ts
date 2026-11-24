@@ -112,7 +112,7 @@ export type PublicCreator = {
   bio: string | null;
   /** Public "get in touch" address, only when the creator set one. Optional until the backend with it is deployed. */
   email?: string | null;
-  /** The owner's sign-in photo, only when they chose to show it; null or missing shows a Shemoqmedi avatar. */
+  /** The owner's own photo, unless they picked an avatar instead; null or missing shows a Shemoqmedi avatar. */
   photoUrl?: string | null;
   /** The Shemoqmedi avatar the owner picked ("01"…"24"); null or missing = the one picked from the slug. */
   avatar?: string | null;
@@ -128,7 +128,7 @@ export type CreatorSummary = {
   tier: CreatorTier;
   region: RegionSlug;
   location: string | null;
-  /** The owner's sign-in photo, only when they chose to show it; null or missing shows a Shemoqmedi avatar. */
+  /** The owner's own photo, unless they picked an avatar instead; null or missing shows a Shemoqmedi avatar. */
   photoUrl?: string | null;
   /** The Shemoqmedi avatar the owner picked ("01"…"24"); null or missing = the one picked from the slug. */
   avatar?: string | null;
