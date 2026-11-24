@@ -47,7 +47,13 @@ function Editor({ profile }: { profile: OwnCreatorProfile }) {
     }
     setState({ busy: true, message: null, error: false });
     try {
-      await save({ id: profile.id, bio, location, website, links: linkList, email });
+      // Show what was saved: the server adds https://, trims and tidies.
+      const saved = await save({ id: profile.id, bio, location, website, links: linkList, email });
+      setBio(saved.bio);
+      setLocation(saved.location);
+      setWebsite(saved.website);
+      setLinks(saved.links.join("\n"));
+      setEmail(saved.email);
       setState({ busy: false, message: "Saved. Your public profile updates within a minute.", error: false });
     } catch (err) {
       setState({ busy: false, message: friendlyError(err), error: true });
@@ -109,8 +115,9 @@ function Editor({ profile }: { profile: OwnCreatorProfile }) {
         <label className="grid gap-2">
           <span className={label}>Website</span>
           <input
-            type="url"
+            type="text"
             inputMode="url"
+            autoComplete="url"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             placeholder="https://yourstudio.com"

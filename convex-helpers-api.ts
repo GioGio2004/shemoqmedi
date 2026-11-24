@@ -415,7 +415,7 @@ export type PublicApiType = {
     /** The owner edits their profile; "" clears a field. */
     updateMine: M<
       { id: Id<"creators">; location: string; website: string; links: string[]; bio: string; email: string },
-      null
+      { location: string; website: string; links: string[]; bio: string; email: string }
     >;
   };
   jury: {

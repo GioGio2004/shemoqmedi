@@ -360,7 +360,8 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
   // never stored by a shared cache or the CDN. Samples are public.
   const headers: Record<string, string> = c.sample
     ? { "Cache-Control": "public, max-age=300, s-maxage=300", "Access-Control-Allow-Origin": "*" }
-    : { "Cache-Control": "private, no-store" };
+    : // The owner's own browser may keep it an hour; shared caches never.
+      { "Cache-Control": "private, max-age=3600" };
   headers["X-Robots-Tag"] = "noindex";
   if (opts.download) headers["Content-Disposition"] = `attachment; filename="${certificateFilename(c.slug)}"`;
 

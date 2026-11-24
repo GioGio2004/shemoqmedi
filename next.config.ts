@@ -67,6 +67,16 @@ const nextConfig: NextConfig = {
       })),
       { source: "/:path*", has: [apex], destination: `https://${CANONICAL_HOST}/:path*`, permanent: true },
       ...legacy.map((r) => ({ ...r, permanent: true })),
+      // The filterable directory moved from the home page to /websites: old
+      // shared filter links (/?award=sotd, /?tech=gsap, ...) follow it with
+      // their query string. Kept out of `legacy`, whose apex copies replace
+      // `has` and would send every apex "/" here.
+      ...(["award", "category", "region", "tech"] as const).map((key) => ({
+        source: "/",
+        has: [{ type: "query" as const, key }],
+        destination: "/websites",
+        permanent: true,
+      })),
     ];
   },
   async headers() {
