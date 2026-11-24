@@ -138,12 +138,13 @@ export default async function AwardPage({ params }: Params) {
             <PillLink href={withRef(award.listing.url)} external variant="outline">
               Visit the site
             </PillLink>
-            <PillLink href={`/certificate/${award.slug}?download=1`} external variant="outline">
-              Download certificate
-            </PillLink>
           </div>
           <p className="text-xs leading-relaxed text-black/55">
-            Is this your site? Its badge is on your account once you have{" "}
+            Is this your site? Its badge and certificate are on{" "}
+            <Link href="/account/badges" className="underline underline-offset-4">
+              your achievements
+            </Link>{" "}
+            once you have{" "}
             <Link href={`/claim/${award.listing.slug}`} className="underline underline-offset-4">
               claimed it
             </Link>

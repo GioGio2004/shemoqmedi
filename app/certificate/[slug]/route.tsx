@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex-helpers-api";
 import { certificateImage, panelName } from "@/lib/certificate";
@@ -6,12 +7,41 @@ import { getJuryReviews } from "@/lib/listings";
 
 // /certificate/<award slug> — the award's certificate as a PNG (A4 portrait,
 // 2262 x 3200). ?download=1 saves it as a file instead of showing it.
-// Like the badge, unknown or revoked awards get a 404, so a certificate
-// exists only while its award does; the verify link on it points back here.
+//
+// Private: only the signed-in owner of the winning site (it is on their
+// Achievements page, /account/badges) and admins can open it; everyone else
+// gets the same 404 as an unknown award. The award page, its badge and the
+// certificate's number on /verify stay public. Unknown or revoked awards get
+// a 404 too, so a certificate exists only while its award does.
+
+const notFound = () =>
+  new Response("No such certificate", {
+    status: 404,
+    headers: { "Content-Type": "text/plain", "Cache-Control": "private, no-store" },
+  });
+
+/** Whether the signed-in visitor owns this award's site, or is an admin. */
+async function mayOpen(slug: string) {
+  const { userId, getToken } = await auth();
+  if (!userId) return false;
+  const token = await getToken({ template: "convex" });
+  if (!token) return false;
+  const [me, mine] = await Promise.all([
+    fetchQuery(api.users.getCurrentUser, {}, { token }),
+    fetchQuery(api.awards.mine, {}, { token }),
+  ]);
+  return me?.role === "admin" || me?.role === "super_admin" || mine.some((a) => a.slug === slug);
+}
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const download = new URL(request.url).searchParams.get("download") === "1";
+  try {
+    if (!(await mayOpen(slug))) return notFound();
+  } catch (error) {
+    console.error("certificate access check failed:", error);
+    return new Response("Unavailable", { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
   let award = null;
   try {
     award = await fetchQuery(api.awards.getBySlug, { slug });
@@ -19,12 +49,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     console.error("awards.getBySlug failed:", error);
     return new Response("Unavailable", { status: 503, headers: { "Cache-Control": "no-store" } });
   }
-  if (!award) {
-    return new Response("No such award", {
-      status: 404,
-      headers: { "Content-Type": "text/plain", "Cache-Control": "public, max-age=300, s-maxage=300" },
-    });
-  }
+  if (!award) return notFound();
 
   // The jurors who scored the site sign it; First 100 is honorary (no jury).
   const reviews = award.tier === "F100" ? [] : await getJuryReviews(award.listing.slug);

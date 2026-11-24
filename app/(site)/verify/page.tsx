@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
-import { badgeDate } from "@/lib/badgeInfo";
+import { badgeDate, badgePath } from "@/lib/badgeInfo";
 import { certificateCode, certificatesSigned, findCertificate, normalizeCode } from "@/lib/certificateCode";
 import { formatScore } from "@/lib/format";
 
 // /verify: check a Shemoqmedi certificate. A certificate's QR code opens this
 // page with its number (and award), and anyone can type a number in. A real
-// number shows the official record next to the real certificate, so a copy
-// with an edited name, award or score stands out; a made-up or revoked one
-// finds nothing. Results are never indexed.
+// number shows the official record next to the award's badge, so a copy with
+// an edited name, award or score stands out; a made-up or revoked one finds
+// nothing. The certificate image itself is private to the site's owner.
+// Results are never indexed.
 export const metadata: Metadata = {
   title: "Verify a certificate",
   description: "Check that a Shemoqmedi award certificate is real: enter its certificate number to see the official record.",
@@ -70,13 +71,15 @@ export default async function VerifyPage({ searchParams }: Props) {
           </p>
         ) : found ? (
           <div role="status" className="grid gap-8 rounded-3xl border border-black/10 p-6 md:p-8 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- the generated certificate itself */}
+            {/* The award's public badge. The certificate itself is private to the
+                site's owner, so the record below is what a copy is checked against. */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- the badge's own SVG */}
             <img
-              src={`/certificate/${found.slug}`}
-              alt={`The genuine certificate: ${found.name} for ${found.listing.title}`}
-              width={1131}
-              height={1600}
-              className="h-auto w-full rounded-xl border border-black/10"
+              src={badgePath(found.slug, { shape: "seal" })}
+              alt={`${found.name} badge for ${found.listing.title}`}
+              width={320}
+              height={320}
+              className="h-auto w-full max-w-[320px]"
             />
             <div className="grid content-start gap-6">
               <div className="grid gap-2">

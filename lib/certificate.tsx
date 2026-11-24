@@ -356,11 +356,12 @@ export async function certificateImage(c: CertificateData, opts: { download?: bo
     </div>
   );
 
-  const headers: Record<string, string> = {
-    "Cache-Control": c.sample ? "public, max-age=300, s-maxage=300" : "public, max-age=3600, s-maxage=3600, stale-while-revalidate=600",
-    "Access-Control-Allow-Origin": "*",
-  };
-  if (c.sample) headers["X-Robots-Tag"] = "noindex";
+  // A real certificate is private to its owner (app/certificate/[slug]/route.tsx):
+  // never stored by a shared cache or the CDN. Samples are public.
+  const headers: Record<string, string> = c.sample
+    ? { "Cache-Control": "public, max-age=300, s-maxage=300", "Access-Control-Allow-Origin": "*" }
+    : { "Cache-Control": "private, no-store" };
+  headers["X-Robots-Tag"] = "noindex";
   if (opts.download) headers["Content-Disposition"] = `attachment; filename="${certificateFilename(c.slug)}"`;
 
   const rendered = new ImageResponse(image, { width: px(W), height: px(H), fonts: await fontList });

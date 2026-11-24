@@ -588,7 +588,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
                 </ol>
                 {listing.isClaimed && (
                   <p className="mt-5 text-xs leading-relaxed text-black/55">
-                    Made {listing.title}? Its badges are on <Link href="/account/badges" className="underline underline-offset-4">your account</Link>.
+                    Made {listing.title}? Its certificate and badges are on <Link href="/account/badges" className="underline underline-offset-4">your account</Link>.
                   </p>
                 )}
               </div>

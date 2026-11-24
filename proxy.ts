@@ -70,6 +70,8 @@ export const config = {
     "/sign-up/:path*",
     "/sso-callback/:path*",
     "/session-tasks/:path*",
+    // Certificates open only for the site's owner (the route reads the session).
+    "/certificate/:path*",
     "/(api|trpc)(.*)",
     // Retired Voloo pages (lib/gone.ts answers them with 410 Gone).
     "/(en|ru)/:path*",

@@ -184,7 +184,7 @@ function List() {
               )}
               {PUBLIC.has(l.status) && l.awards.length > 0 && (
                 <Link href="/account/badges" className="font-medium underline underline-offset-4">
-                  Get badges
+                  Certificate and badges
                 </Link>
               )}
               <RemovalButton listing={l} onClick={() => void act(l)} />
