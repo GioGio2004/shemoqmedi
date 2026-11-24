@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DirectoryBrowser } from "@/components/listing/DirectoryBrowser";
+import { FeaturedCreators, LatestSites } from "@/components/listing/HomeSections";
 import { HeroShowcase } from "@/components/listing/HeroShowcase";
 import { HeroSlider } from "@/components/listing/HeroSlider";
 import type { PublicListing } from "@/convex-helpers-api";
@@ -28,7 +28,7 @@ function sliderOrder(listings: PublicListing[]) {
 import { LiveVotingRail } from "@/components/listing/LiveVotingRail";
 import { PageHero } from "@/components/listing/PageHero";
 import { PillLink } from "@/components/site/ui";
-import { getPublicListings } from "@/lib/listings";
+import { getCreators, getPublicListings } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, SOCIAL_PROFILES, absoluteUrl } from "@/lib/site";
 
 // Title and description are the root defaults (app/layout.tsx), which Next
@@ -52,7 +52,7 @@ export const dynamic = "force-static";
 export const revalidate = 60;
 
 export default async function Home() {
-  const listings = await getPublicListings();
+  const [listings, creators] = await Promise.all([getPublicListings(), getCreators()]);
 
   const listed = listings.slice(0, 20);
   // Organization gives Google the logo; WebSite gives it the site name (the
@@ -116,7 +116,8 @@ export default async function Home() {
       />
       <HeroShowcase listings={listings} />
       <LiveVotingRail listings={listings} />
-      <DirectoryBrowser listings={listings} />
+      <LatestSites listings={listings} />
+      <FeaturedCreators creators={creators} />
     </>
   );
 }

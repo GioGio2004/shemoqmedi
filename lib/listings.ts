@@ -84,7 +84,7 @@ export const getJurorPage = cache((slug: string): Promise<JurorPage | null> =>
 );
 
 export const getCreator = cache(
-  (slug: string): Promise<{ creator: PublicCreator; listings: PublicListing[] } | null> =>
+  (slug: string): Promise<{ creator: PublicCreator; listings: PublicListing[]; awards?: PublicAward[] } | null> =>
     safe("creators.getBySlug", () => fetchQuery(api.creators.getBySlug, { slug }), null),
 );
 

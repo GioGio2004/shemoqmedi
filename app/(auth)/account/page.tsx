@@ -7,6 +7,7 @@ import { MyListings } from "@/components/listing/MyListings";
 import { PillLink } from "@/components/site/ui";
 import { AccountHeader } from "@/components/account/AccountHeader";
 import { DeleteAccount } from "@/components/account/DeleteAccount";
+import { CreatorProfileEditor } from "@/components/account/CreatorProfileEditor";
 
 export const metadata: Metadata = { title: "Your account", robots: { index: false } };
 
@@ -64,6 +65,7 @@ export default async function AccountPage({
             <MyListings />
           </div>
         </section>
+        <CreatorProfileEditor />
         <DeleteAccount />
       </div>
     </main>

@@ -19,7 +19,7 @@ import { ThemeSwitch } from "./ThemeSwitch";
 // someone reaches for the menu.
 
 export const EXPLORE = [
-  { label: "Directory", href: "/" },
+  { label: "Directory", href: "/websites" },
   { label: "Live voting", href: "/collections/nominees" },
   { label: "Site of the Day", href: "/site-of-the-day" },
   { label: "Best Solo Creation", href: "/collections/bsc" },

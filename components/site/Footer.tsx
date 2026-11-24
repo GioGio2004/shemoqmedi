@@ -9,7 +9,7 @@ type FooterLink = { label: string; href: string };
 const WORDMARK = "Shemoqmedi";
 
 const EXPLORE: FooterLink[] = [
-  { label: "Directory", href: "/" },
+  { label: "Directory", href: "/websites" },
   { label: "Live voting", href: "/collections/nominees" },
   { label: "Creators", href: "/creators" },
   { label: "Badges", href: "/badges" },

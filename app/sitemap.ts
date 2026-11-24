@@ -66,6 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    { url: absoluteUrl("/websites"), lastModified: newest(listings), changeFrequency: "daily", priority: 0.8 },
     {
       url: absoluteUrl("/creators"),
       // A creator's updatedAt already includes their live listings' changes.

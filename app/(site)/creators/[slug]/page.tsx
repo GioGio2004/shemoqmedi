@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { PublicCreator, PublicListing } from "@/convex-helpers-api";
-import { PageHero } from "@/components/listing/PageHero";
+import Link from "next/link";
+import { JurorPhoto } from "@/components/jury/JurorPhoto";
+import { badgeDate, badgePath } from "@/lib/badgeInfo";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { TierBadge } from "@/components/listing/Badges";
 import { PillLink } from "@/components/site/ui";
@@ -118,6 +120,7 @@ export default async function CreatorPage({ params }: Params) {
   const data = await getCreator(slug);
   if (!data) notFound();
   const { creator, listings } = data;
+  const awards = data.awards ?? [];
   const website = safeWebsite(creator.website);
   // Same rule as listing pages: followed once the creator or one of their listings is claimed.
   const rel = creator.isClaimed || listings.some((l) => l.isDoFollow ?? l.isClaimed) ? "noopener" : "nofollow noopener";
@@ -148,6 +151,8 @@ export default async function CreatorPage({ params }: Params) {
         name: creator.name,
         url: website ?? url,
         description: creator.bio ?? undefined,
+        image: creator.photoUrl ?? undefined,
+        email: creator.email ?? undefined,
         sameAs: sameAs.length > 0 ? sameAs : undefined,
         ...(creator.location
           ? { [solo ? "homeLocation" : "location"]: { "@type": "Place", name: creator.location } }
@@ -169,11 +174,19 @@ export default async function CreatorPage({ params }: Params) {
   };
 
   const counters = [
+    ["SOTY", creator.awards.SOTY ?? 0],
+    ["SOTM", creator.awards.SOTM ?? 0],
     ["SOTD", creator.awards.SOTD],
     ["BSC", creator.awards.BSC],
     ["HM", creator.awards.HM],
-    ["Nominations", creator.nominations],
+    ["First 100", creator.awards.F100 ?? 0],
+    ["Sites", creator.nominations],
   ] as const;
+  const bio = (creator.bio ?? "")
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const email = creator.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(creator.email) ? creator.email : null;
 
   return (
     <>
@@ -181,19 +194,57 @@ export default async function CreatorPage({ params }: Params) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <PageHero
-        prelude={creator.tier === "solo" ? "solo developer" : "agency"}
-        title={creator.name}
-        titleClassName={creator.name.length > 10 ? "text-[clamp(3rem,9vw,9rem)]" : undefined}
-        lede={creator.bio ?? undefined}
-        action={
-          creator.isClaimed === false ? (
-            <PillLink href={`/claim/${creator.slug}?type=creator`} variant="outline">
-              Claim this profile
-            </PillLink>
-          ) : undefined
-        }
-      />
+      <header className="container-site grid gap-10 pt-32 pb-12 md:grid-cols-12 md:gap-10 md:pt-40 md:pb-16">
+        <div className="grid content-start gap-8 md:col-span-8">
+          <div>
+            <p className="text-[clamp(1.25rem,2vw,1.75rem)] leading-tight tracking-[-0.03em]">
+              {solo ? "solo developer" : "agency"}
+            </p>
+            <h1
+              className={
+                creator.name.length > 10
+                  ? "text-[clamp(3rem,8vw,8rem)] leading-[0.9] font-semibold tracking-[-0.055em] uppercase"
+                  : "text-[clamp(3.5rem,10vw,10rem)] leading-[0.88] font-semibold tracking-[-0.055em] uppercase"
+              }
+            >
+              {creator.name}
+            </h1>
+          </div>
+          {bio.length > 0 && (
+            <div className="grid max-w-2xl gap-4 text-[15px] leading-relaxed text-black/70">
+              {bio.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {email && <PillLink href={`mailto:${email}`}>Get in touch</PillLink>}
+            {website && (
+              <PillLink href={website} external rel={rel} variant={email ? "outline" : "solid"}>
+                Visit website
+              </PillLink>
+            )}
+            {creator.isClaimed === false && (
+              <PillLink href={`/claim/${creator.slug}?type=creator`} variant="outline">
+                Claim this profile
+              </PillLink>
+            )}
+          </div>
+        </div>
+        {/* Phones: a small portrait above the name. Wider: a large one beside it. */}
+        <div className="order-first md:order-none md:col-span-4">
+          <JurorPhoto
+            url={creator.photoUrl ?? null}
+            name={creator.name}
+            alt={creator.photoUrl ? creator.name : ""}
+            width={420}
+            height={525}
+            mono={false}
+            priority
+            className="aspect-[4/5] w-28 rounded-2xl border border-black/8 md:ml-auto md:w-full md:max-w-[420px] md:rounded-3xl"
+          />
+        </div>
+      </header>
 
       <section aria-label="Creator facts" className="container-site pb-12">
         <dl className="flex flex-col items-start gap-4 border-y border-black/10 py-6 md:flex-row md:flex-wrap md:items-center md:gap-x-10">
@@ -222,6 +273,19 @@ export default async function CreatorPage({ params }: Params) {
               </dd>
             </div>
           )}
+          {email && (
+            <div>
+              <dt className="sr-only">Email</dt>
+              <dd>
+                <a
+                  href={`mailto:${email}`}
+                  className="text-sm underline decoration-black/20 underline-offset-4 hover:decoration-black"
+                >
+                  {email}
+                </a>
+              </dd>
+            </div>
+          )}
           {links.length > 0 && (
             <div>
               <dt className="sr-only">Profiles</dt>
@@ -243,18 +307,62 @@ export default async function CreatorPage({ params }: Params) {
           <div className="md:ml-auto">
             <dt className="sr-only">Record</dt>
             <dd className={mono}>
-              {counters.map(([label, n], i) => (
-                <span key={label}>
-                  {i > 0 && <span aria-hidden="true"> · </span>}
-                  {label} {n}
-                </span>
-              ))}
+              {counters
+                .filter(([label, n]) => n > 0 || label === "Sites")
+                .map(([label, n], i) => (
+                  <span key={label}>
+                    {i > 0 && <span aria-hidden="true"> · </span>}
+                    {label} {n}
+                  </span>
+                ))}
             </dd>
           </div>
         </dl>
       </section>
 
-      <section aria-label={`Websites by ${creator.name}`} className="container-site pb-24">
+      {awards.length > 0 && (
+        <section aria-labelledby="achievements-title" className="container-site pb-16">
+          <h2
+            id="achievements-title"
+            className="mb-8 text-[clamp(1.5rem,2.6vw,2.25rem)] leading-[1.05] font-semibold tracking-[-0.045em]"
+          >
+            Achievements
+          </h2>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {awards.map((a) => (
+              <li key={a.slug}>
+                <Link
+                  href={`/awards/${a.slug}`}
+                  className="group flex items-center gap-5 rounded-3xl border border-black/10 p-5 transition-colors hover:border-black"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- the award's own badge SVG */}
+                  <img
+                    src={badgePath(a.slug, { shape: "seal" })}
+                    alt=""
+                    width={88}
+                    height={88}
+                    loading="lazy"
+                    className="size-[88px] shrink-0"
+                  />
+                  <span className="grid min-w-0 gap-1">
+                    <span className="font-semibold tracking-[-0.02em]">{a.name}</span>
+                    <span className="truncate text-sm text-black/60">{a.listing.title}</span>
+                    <span className={`${mono} text-black/50`}>{badgeDate(a.tier, a.period, a.date)}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section aria-labelledby="websites-title" className="container-site pb-24">
+        <h2
+          id="websites-title"
+          className="mb-8 text-[clamp(1.5rem,2.6vw,2.25rem)] leading-[1.05] font-semibold tracking-[-0.045em]"
+        >
+          Websites
+        </h2>
         <ListingGrid listings={listings} emptyTitle="No public websites yet." />
       </section>
     </>

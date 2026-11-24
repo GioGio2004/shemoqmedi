@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PageHero } from "@/components/listing/PageHero";
-import { TierBadge } from "@/components/listing/Badges";
+import { CreatorGrid } from "@/components/creators/CreatorCard";
 import { PillLink } from "@/components/site/ui";
-import { regionName } from "@/lib/collections";
 import { getCreators } from "@/lib/listings";
 import { SITE_NAME } from "@/lib/site";
 
@@ -54,33 +52,7 @@ export default async function CreatorsPage() {
             <PillLink href="/submit">Submit a site</PillLink>
           </div>
         ) : (
-          <ul className="flex flex-col gap-3">
-            {creators.map((creator) => (
-              <li
-                key={creator.slug}
-                className="relative flex flex-col gap-4 rounded-3xl border border-black/10 p-6 transition-colors hover:border-black md:flex-row md:items-center md:justify-between md:px-8"
-              >
-                <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:gap-5">
-                  {/* The ::after overlay makes the whole row the click target. */}
-                  <Link
-                    href={`/creators/${creator.slug}`}
-                    className="text-[clamp(1.5rem,2.5vw,2rem)] leading-none font-semibold tracking-[-0.045em] after:absolute after:inset-0 after:rounded-3xl"
-                  >
-                    {creator.name}
-                  </Link>
-                  <TierBadge tier={creator.tier} />
-                </div>
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                  <span className="text-sm text-black/60">
-                    {creator.location ?? regionName(creator.region)}
-                  </span>
-                  <span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase tabular-nums">
-                    {plural(creator.nominations, "nomination")} · {plural(creator.awards, "award")}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <CreatorGrid creators={creators} />
         )}
       </section>
     </>

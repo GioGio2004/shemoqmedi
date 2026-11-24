@@ -110,6 +110,10 @@ export type PublicCreator = {
   /** Profile links (Dribbble, LinkedIn, ...). Optional until the backend with it is deployed. */
   links?: string[];
   bio: string | null;
+  /** Public "get in touch" address, only when the creator set one. Optional until the backend with it is deployed. */
+  email?: string | null;
+  /** The owner's sign-in photo; null or missing shows initials. */
+  photoUrl?: string | null;
   isClaimed: boolean;
   /** SOTY and SOTM are optional until the backend with them is deployed. */
   awards: { SOTY?: number; SOTM?: number; SOTD: number; BSC: number; HM: number; F100?: number };
@@ -122,9 +126,27 @@ export type CreatorSummary = {
   tier: CreatorTier;
   region: RegionSlug;
   location: string | null;
+  /** The owner's sign-in photo; null or missing shows initials. Optional until the backend with it is deployed. */
+  photoUrl?: string | null;
+  isClaimed?: boolean;
   nominations: number;
   awards: number;
   updatedAt: number;
+};
+
+/** A creator profile the signed-in user claimed, as they edit it from their account. */
+export type OwnCreatorProfile = {
+  id: Id<"creators">;
+  slug: string;
+  name: string;
+  location: string;
+  website: string;
+  links: string[];
+  bio: string;
+  email: string;
+  photoUrl: string | null;
+  /** false until one of its sites is public. */
+  isPublic: boolean;
 };
 
 /** A juror's past role ("Art director" at "Studio X", "2019 – present"). */
@@ -385,8 +407,16 @@ export type PublicApiType = {
     >;
   };
   creators: {
-    getBySlug: Q<{ slug: string }, { creator: PublicCreator; listings: PublicListing[] } | null>;
+    /** awards: every active award of the creator's sites, newest first (optional until the backend with it is deployed). */
+    getBySlug: Q<{ slug: string }, { creator: PublicCreator; listings: PublicListing[]; awards?: PublicAward[] } | null>;
     listPublic: Q<Empty, CreatorSummary[]>;
+    /** The signed-in user's claimed profiles. */
+    mine: Q<Empty, OwnCreatorProfile[]>;
+    /** The owner edits their profile; "" clears a field. */
+    updateMine: M<
+      { id: Id<"creators">; location: string; website: string; links: string[]; bio: string; email: string },
+      null
+    >;
   };
   jury: {
     /** Active jurors with their evaluation counts (/jury). */
