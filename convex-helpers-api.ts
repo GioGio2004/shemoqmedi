@@ -155,8 +155,26 @@ export type OwnCreatorProfile = {
   isPublic: boolean;
 };
 
-/** A juror's past role ("Art director" at "Studio X", "2019 – present"). */
-export type JurorExperience = { title: string; organization: string; period?: string };
+/**
+ * A position on a juror's profile, LinkedIn style. Months are 1–12 and
+ * optional (year-only dates); `current` means no end date. `period` is the
+ * older free-text date, only on rows saved before dates existed.
+ */
+export type JurorExperience = {
+  title: string;
+  organization: string;
+  organizationUrl?: string;
+  location?: string;
+  startYear?: number;
+  startMonth?: number;
+  endYear?: number;
+  endMonth?: number;
+  current?: boolean;
+  description?: string;
+  period?: string;
+};
+/** A school on a juror's profile. */
+export type JurorEducation = { school: string; degree?: string; field?: string; startYear?: number; endYear?: number };
 /** A notable piece of a juror's work. */
 export type JurorWork = { title: string; url?: string; year?: string; description?: string };
 
@@ -171,7 +189,8 @@ export type JurorPublic = {
   linkedinUrl: string | null;
   bio: string | null;
   /** Optional during rollout: older backends don't send them. Use `?? []`. */
-  experience?: JurorExperience[];
+  experience?: JurorExperience[]; // newest first
+  education?: JurorEducation[]; // newest first
   work?: JurorWork[];
   isFounding: boolean; // "Founding Jury" badge
   imageUrl: string | null; // null: grey placeholder
@@ -190,6 +209,7 @@ export type ClaimJurorPreview = {
   imageUrl: string | null;
   /** Optional during rollout: older backends don't send them. */
   experience?: JurorExperience[];
+  education?: JurorEducation[];
   work?: JurorWork[];
 };
 
@@ -237,7 +257,8 @@ export type JurorProfileArgs = {
   website?: string; // "" clears
   linkedinUrl?: string; // "" clears
   bio?: string;
-  experience?: JurorExperience[]; // [] clears; absent keeps
+  experience?: JurorExperience[]; // [] clears; absent keeps; sorted newest first on save
+  education?: JurorEducation[]; // [] clears; absent keeps
   work?: JurorWork[]; // [] clears; absent keeps
   interests?: string[]; // categories for the jury digest; [] clears; absent keeps
 };

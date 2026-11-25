@@ -200,7 +200,12 @@ export const AWARD_RULES: AwardRules = {
 /** Jury panels (mirrors the backend's JURY_CATEGORIES). */
 export const JURY_CATEGORIES = [
   { slug: "design", name: "Design & UI" },
+  { slug: "product", name: "Product & UX Research" },
+  { slug: "brand", name: "Brand & Creative Direction" },
+  { slug: "motion", name: "Motion, 3D & Creative Development" },
   { slug: "engineering", name: "Engineering & Performance" },
+  { slug: "accessibility", name: "Accessibility & Inclusive Design" },
+  { slug: "growth", name: "Marketing & Growth" },
   { slug: "venture", name: "Venture & Startups" },
   { slug: "academic", name: "Academic, SEO & Content" },
 ] as const;
@@ -237,9 +242,14 @@ export const LIMITS = {
   technologies: 6,
   /** Categories per listing (the first is the primary one). */
   categories: 3,
-  /** Entries in a juror's Experience and Work sections. */
-  juryExperience: 8,
+  /** Entries in a juror's Experience, Education and Work sections (mirrors the backend). */
+  juryExperience: 15,
+  juryEducation: 5,
   juryWork: 8,
+  /** A position's short description on a juror's profile. */
+  juryExperienceDescription: 600,
+  /** Earliest year a position or school may start in. */
+  juryEarliestYear: 1950,
   /** Jury evaluation comment, optional (mirrors the backend). */
   juryComment: 1000,
   juryTitle: 80,

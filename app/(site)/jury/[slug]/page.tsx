@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JurorProfileView } from "@/components/jury/JurorProfileView";
+import { currentRoles } from "@/components/jury/experience";
 import { jurorTitle, linkedinUrl, panelName, safeUrl } from "@/components/jury/jurorInfo";
 import { getAwardRules, getJurorPage, getJurorSlugs } from "@/lib/listings";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
@@ -67,6 +68,16 @@ export default async function JurorPage({ params }: Params) {
   const website = safeUrl(juror.website);
   const linkedin = linkedinUrl(juror.linkedinUrl);
   const sameAs = [website, linkedin].filter((l): l is string => l !== null);
+  // Current positions and schools, as on LinkedIn: Person.worksFor and alumniOf.
+  const worksFor = currentRoles(juror.experience ?? []).map((r) => {
+    const orgUrl = safeUrl(r.organizationUrl);
+    return { "@type": "Organization", name: r.organization, ...(orgUrl ? { url: orgUrl } : {}) };
+  });
+  // One entry per school, even with two degrees from it.
+  const alumniOf = [...new Set((juror.education ?? []).map((e) => e.school))].map((name) => ({
+    "@type": "EducationalOrganization",
+    name,
+  }));
 
   // The Person's @id is the one /jury uses for this member.
   const url = absoluteUrl(`/jury/${juror.slug}`);
@@ -100,6 +111,8 @@ export default async function JurorPage({ params }: Params) {
           memberOf: { "@id": `${SITE_URL}/#organization` },
         },
         knowsAbout: panel,
+        ...(worksFor.length > 0 ? { worksFor } : {}),
+        ...(alumniOf.length > 0 ? { alumniOf } : {}),
         ...(juror.location ? { homeLocation: { "@type": "Place", name: juror.location } } : {}),
       },
     ],

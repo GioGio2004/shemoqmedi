@@ -190,7 +190,7 @@ export function ClaimToken({ token }: { token: string }) {
                     Below is your profile exactly as it will appear on Shemoqmedi.
                   </p>
                   <p className="text-sm text-black/60">
-                    Everything on it is yours to edit after you claim it: photo, role, bio, experience and work. Nothing is
+                    Everything on it is yours to edit after you claim it: photo, role, bio, experience, education and work. Nothing is
                     published as your profile until you claim it.
                   </p>
                   <a

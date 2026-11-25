@@ -7,6 +7,15 @@ import { cn } from "@/lib/utils";
 const button =
   "inline-flex min-h-[42px] items-center rounded-full border border-black/12 bg-white px-4.5 text-[11px] font-semibold tracking-[0.06em] text-black uppercase transition-colors hover:border-black";
 
+/** The issuer as the LinkedIn company page is named. */
+const LINKEDIN_ORG_NAME = "shemoqmedi.space";
+/**
+ * The LinkedIn company page's numeric ID (linkedin.com/company/<id>/admin).
+ * With it LinkedIn links the issuer to the page and shows its logo; without
+ * it the issuer is plain text.
+ */
+const LINKEDIN_ORG_ID: string | null = null;
+
 /**
  * LinkedIn's "Add to profile" link: lists the jury seat under the member's
  * Licenses & certifications, linking back to their jury page.
@@ -16,7 +25,7 @@ export function addToLinkedInUrl(slug: string, joinedAt?: number) {
   const params = new URLSearchParams({
     startTask: "CERTIFICATION_NAME",
     name: "Jury Member, Shemoqmedi Awards",
-    organizationName: "Shemoqmedi",
+    ...(LINKEDIN_ORG_ID ? { organizationId: LINKEDIN_ORG_ID } : { organizationName: LINKEDIN_ORG_NAME }),
     issueYear: String(d.getFullYear()),
     issueMonth: String(d.getMonth() + 1),
     certUrl: absoluteUrl(`/jury/${slug}`),

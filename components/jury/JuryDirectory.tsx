@@ -24,7 +24,12 @@ const COPY = {
     founding: "დამფუძნებელი",
     panels: {
       design: "დიზაინი და UI",
+      product: "პროდუქტი და UX კვლევა",
+      brand: "ბრენდი და კრეატიული მიმართულება",
+      motion: "მოუშენი, 3D და კრეატიული დეველოპმენტი",
       engineering: "ინჟინერია და წარმადობა",
+      accessibility: "ხელმისაწვდომობა და ინკლუზიური დიზაინი",
+      growth: "მარკეტინგი და ზრდა",
       venture: "ვენჩურები და სტარტაპები",
       academic: "აკადემია, SEO და კონტენტი",
     } as Record<string, string>,

@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
-import { api, type JurorExperience, type JurorProfileArgs, type JurorWork } from "@/convex-helpers-api";
+import {
+  api,
+  type JurorEducation,
+  type JurorExperience,
+  type JurorProfileArgs,
+  type JurorWork,
+} from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
 import { isImageKit } from "@/lib/imageLoader";
 import { CATEGORIES, CATEGORY_GROUPS, LIMITS } from "@/lib/taxonomy";
@@ -13,6 +19,7 @@ import { JurorAvatar } from "./JurorAvatar";
 import { JurorPhoto } from "./JurorPhoto";
 import { JuryShareActions } from "./JuryShareActions";
 import { panelName } from "./jurorInfo";
+import { MONTHS } from "./experience";
 
 const input =
   "w-full min-h-[46px] rounded-xl border border-black/14 bg-white px-3.5 py-3 text-sm outline-none transition-colors placeholder:text-black/35 focus:border-black";
@@ -219,9 +226,51 @@ const removeButton = "text-sm text-black/55 underline underline-offset-4 hover:t
 
 /** Trimmed rows with empty optional fields left out; fully empty rows dropped. */
 function cleanExperience(rows: JurorExperience[]): JurorExperience[] {
-  return rows
-    .map((r) => ({ title: r.title.trim(), organization: r.organization.trim(), period: r.period?.trim() || undefined }))
-    .filter((r) => r.title || r.organization || r.period);
+  const out: JurorExperience[] = [];
+  for (const r of rows) {
+    const title = r.title.trim();
+    const organization = r.organization.trim();
+    const organizationUrl = r.organizationUrl?.trim();
+    const location = r.location?.trim();
+    const description = r.description?.trim();
+    const period = r.period?.trim();
+    const endYear = r.current ? undefined : r.endYear;
+    const empty = !title && !organization && !organizationUrl && !location && !description;
+    if (empty && r.startYear === undefined && endYear === undefined && !r.current) continue;
+    out.push({
+      title,
+      organization,
+      ...(organizationUrl ? { organizationUrl } : {}),
+      ...(location ? { location } : {}),
+      ...(r.startYear !== undefined ? { startYear: r.startYear } : {}),
+      ...(r.startYear !== undefined && r.startMonth ? { startMonth: r.startMonth } : {}),
+      ...(endYear !== undefined ? { endYear } : {}),
+      ...(endYear !== undefined && r.endMonth ? { endMonth: r.endMonth } : {}),
+      ...(r.current ? { current: true } : {}),
+      ...(description ? { description } : {}),
+      // The old free-text dates stay only until real dates are picked.
+      ...(period && r.startYear === undefined ? { period } : {}),
+    });
+  }
+  return out;
+}
+
+function cleanEducation(rows: JurorEducation[]): JurorEducation[] {
+  const out: JurorEducation[] = [];
+  for (const r of rows) {
+    const school = r.school.trim();
+    const degree = r.degree?.trim();
+    const field = r.field?.trim();
+    if (!school && !degree && !field && r.startYear === undefined && r.endYear === undefined) continue;
+    out.push({
+      school,
+      ...(degree ? { degree } : {}),
+      ...(field ? { field } : {}),
+      ...(r.startYear !== undefined ? { startYear: r.startYear } : {}),
+      ...(r.endYear !== undefined ? { endYear: r.endYear } : {}),
+    });
+  }
+  return out;
 }
 
 function cleanWork(rows: JurorWork[]): JurorWork[] {
@@ -235,14 +284,116 @@ function cleanWork(rows: JurorWork[]): JurorWork[] {
     .filter((r) => r.title || r.url || r.year || r.description);
 }
 
-/** Rows the server would refuse or drop, explained before saving. */
-function listsProblem(experience: JurorExperience[], work: JurorWork[]) {
-  if (experience.some((r) => !r.title || !r.organization)) return "Each experience entry needs a role and an organisation.";
+const ym = (year: number, month: number | undefined, fallback: number) => year * 12 + (month ?? fallback);
+
+/** Rows the server would refuse, explained before saving. */
+function listsProblem(experience: JurorExperience[], education: JurorEducation[], work: JurorWork[]) {
+  for (const r of experience) {
+    if (!r.title || !r.organization) return "Each experience entry needs a role and a company.";
+    if ((r.current || r.endYear !== undefined) && r.startYear === undefined) return `Add the start year for ${r.title}.`;
+    if (
+      r.startYear !== undefined &&
+      r.endYear !== undefined &&
+      ym(r.endYear, r.endMonth, 12) < ym(r.startYear, r.startMonth, 1)
+    ) {
+      return `${r.title} at ${r.organization} ends before it starts.`;
+    }
+  }
+  for (const r of education) {
+    if (!r.school) return "Each education entry needs a school.";
+    if (r.startYear !== undefined && r.endYear !== undefined && r.endYear < r.startYear) {
+      return `${r.school} ends before it starts.`;
+    }
+  }
   if (work.some((r) => !r.title)) return "Each work entry needs a title.";
   return null;
 }
 
-/** Past roles: role and organisation, period optional. */
+const select = `${input} cursor-pointer disabled:cursor-not-allowed disabled:bg-black/[0.03] disabled:text-black/35`;
+const optional = <span className="text-black/45 normal-case">(optional)</span>;
+
+/** Years from this year (plus `ahead`, for an expected graduation) back to the earliest allowed. */
+function yearList(ahead = 0) {
+  const top = new Date().getFullYear() + ahead;
+  return Array.from({ length: top - LIMITS.juryEarliestYear + 1 }, (_, i) => top - i);
+}
+
+const toNumber = (value: string) => (value ? Number(value) : undefined);
+
+function YearSelect({
+  label: aria,
+  value,
+  onChange,
+  years,
+  disabled,
+}: {
+  label: string;
+  value?: number;
+  onChange: (year: number | undefined) => void;
+  years: number[];
+  disabled?: boolean;
+}) {
+  return (
+    <select
+      aria-label={aria}
+      value={disabled ? "" : (value ?? "")}
+      disabled={disabled}
+      onChange={(e) => onChange(toNumber(e.target.value))}
+      className={select}
+    >
+      <option value="">Year</option>
+      {years.map((y) => (
+        <option key={y} value={y}>
+          {y}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/** A month and a year select, side by side: "Start date", "End date". */
+function MonthYear({
+  legend,
+  month,
+  year,
+  onMonth,
+  onYear,
+  disabled,
+  years,
+}: {
+  legend: string;
+  month?: number;
+  year?: number;
+  onMonth: (month: number | undefined) => void;
+  onYear: (year: number | undefined) => void;
+  disabled?: boolean;
+  years: number[];
+}) {
+  return (
+    <fieldset className="grid gap-2">
+      <legend className={`${label} mb-2`}>{legend}</legend>
+      <div className="grid grid-cols-2 gap-2">
+        <select
+          aria-label={`${legend}: month`}
+          value={disabled ? "" : (month ?? "")}
+          disabled={disabled}
+          onChange={(e) => onMonth(toNumber(e.target.value))}
+          className={select}
+        >
+          <option value="">Month</option>
+          {MONTHS.map((m, i) => (
+            <option key={m} value={i + 1}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <YearSelect label={`${legend}: year`} value={year} onChange={onYear} years={years} disabled={disabled} />
+      </div>
+    </fieldset>
+  );
+}
+
+/** Positions, LinkedIn style: role, company, dates, location and a short description. */
 function ExperienceEditor({
   rows,
   onChange,
@@ -250,53 +401,225 @@ function ExperienceEditor({
   rows: JurorExperience[];
   onChange: (rows: JurorExperience[]) => void;
 }) {
-  const edit = (i: number, key: keyof JurorExperience, value: string) =>
-    onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
+  const edit = (i: number, patch: Partial<JurorExperience>) =>
+    onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const years = yearList();
   return (
-    <fieldset className="grid gap-3">
+    <fieldset className="grid gap-4">
       <legend className="sr-only">Experience</legend>
-      {rows.map((r, i) => (
-        <div
-          key={i}
-          className="grid gap-3 rounded-2xl border border-black/10 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_10rem_auto] md:items-center"
-        >
-          <input
-            aria-label={`Experience ${i + 1}: role`}
-            maxLength={80}
-            value={r.title}
-            onChange={(e) => edit(i, "title", e.target.value)}
-            className={input}
-            placeholder="Art director"
-          />
-          <input
-            aria-label={`Experience ${i + 1}: organisation`}
-            maxLength={80}
-            value={r.organization}
-            onChange={(e) => edit(i, "organization", e.target.value)}
-            className={input}
-            placeholder="Studio X"
-          />
-          <input
-            aria-label={`Experience ${i + 1}: period (optional)`}
-            maxLength={40}
-            value={r.period ?? ""}
-            onChange={(e) => edit(i, "period", e.target.value)}
-            className={input}
-            placeholder="2019 – now"
-          />
-          <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className={removeButton}>
-            Remove
-          </button>
-        </div>
-      ))}
+      {rows.map((r, i) => {
+        const n = i + 1;
+        return (
+          <div key={i} className="grid gap-5 rounded-2xl border border-black/10 p-4 md:p-5">
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="min-w-0 truncate font-mono text-[11px] tracking-[0.06em] text-black/50 uppercase">
+                {[r.title, r.organization].filter((x) => x.trim()).join(" · ") || "New position"}
+              </p>
+              <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className={removeButton}>
+                Remove
+              </button>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="grid gap-2">
+                <span className={label}>Role</span>
+                <input
+                  aria-label={`Experience ${n}: role`}
+                  maxLength={80}
+                  value={r.title}
+                  onChange={(e) => edit(i, { title: e.target.value })}
+                  className={input}
+                  placeholder="Art director"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className={label}>Company</span>
+                <input
+                  aria-label={`Experience ${n}: company`}
+                  maxLength={80}
+                  value={r.organization}
+                  onChange={(e) => edit(i, { organization: e.target.value })}
+                  className={input}
+                  placeholder="Studio X"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className={label}>Company website {optional}</span>
+                <input
+                  aria-label={`Experience ${n}: company website (optional)`}
+                  inputMode="url"
+                  maxLength={LIMITS.url}
+                  value={r.organizationUrl ?? ""}
+                  onChange={(e) => edit(i, { organizationUrl: e.target.value })}
+                  className={input}
+                  placeholder="https://studio-x.com"
+                  spellCheck={false}
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className={label}>Location {optional}</span>
+                <input
+                  aria-label={`Experience ${n}: location (optional)`}
+                  maxLength={80}
+                  value={r.location ?? ""}
+                  onChange={(e) => edit(i, { location: e.target.value })}
+                  className={input}
+                  placeholder="Tbilisi, Georgia · Remote"
+                />
+              </label>
+              <MonthYear
+                legend="Start date"
+                month={r.startMonth}
+                year={r.startYear}
+                years={years}
+                onMonth={(startMonth) => edit(i, { startMonth })}
+                onYear={(startYear) => edit(i, { startYear })}
+              />
+              <MonthYear
+                legend={r.current ? "End date: present" : "End date"}
+                month={r.endMonth}
+                year={r.endYear}
+                years={years}
+                disabled={r.current}
+                onMonth={(endMonth) => edit(i, { endMonth })}
+                onYear={(endYear) => edit(i, { endYear })}
+              />
+            </div>
+            <label className="flex w-fit cursor-pointer items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={r.current ?? false}
+                onChange={(e) => edit(i, { current: e.target.checked })}
+                className="size-4 accent-black"
+              />
+              I currently work in this role
+            </label>
+            {r.period && r.startYear === undefined && (
+              <p className="text-sm text-black/55">
+                Saved earlier as &ldquo;{r.period}&rdquo;. Pick a start date to show real dates and time in the role.
+              </p>
+            )}
+            <label className="grid gap-2">
+              <span className="flex items-baseline justify-between gap-4">
+                <span className={label}>Description {optional}</span>
+                <span className="font-mono text-[11px] text-black/45 tabular-nums">
+                  {(r.description ?? "").length}/{LIMITS.juryExperienceDescription}
+                </span>
+              </span>
+              <textarea
+                aria-label={`Experience ${n}: description (optional)`}
+                rows={3}
+                maxLength={LIMITS.juryExperienceDescription}
+                value={r.description ?? ""}
+                onChange={(e) => edit(i, { description: e.target.value })}
+                className={`${input} resize-y leading-relaxed`}
+                placeholder="What you led, built or changed there. Line breaks are kept."
+              />
+            </label>
+          </div>
+        );
+      })}
       <div>
         <button
           type="button"
           disabled={rows.length >= LIMITS.juryExperience}
-          onClick={() => onChange([...rows, { title: "", organization: "", period: "" }])}
+          onClick={() => onChange([...rows, { title: "", organization: "" }])}
           className={smallButton}
         >
-          Add experience
+          Add position
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+/** Schools: name, degree and field, years. */
+function EducationEditor({
+  rows,
+  onChange,
+}: {
+  rows: JurorEducation[];
+  onChange: (rows: JurorEducation[]) => void;
+}) {
+  const edit = (i: number, patch: Partial<JurorEducation>) =>
+    onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const startYears = yearList();
+  const endYears = yearList(8);
+  return (
+    <fieldset className="grid gap-4">
+      <legend className="sr-only">Education</legend>
+      {rows.map((r, i) => {
+        const n = i + 1;
+        return (
+          <div key={i} className="grid gap-5 rounded-2xl border border-black/10 p-4 md:grid-cols-2 md:p-5">
+            <div className="grid gap-2 md:col-span-2">
+              <div className="flex items-baseline justify-between gap-4">
+                <label htmlFor={`education-${n}-school`} className={label}>
+                  School
+                </label>
+                <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className={removeButton}>
+                  Remove
+                </button>
+              </div>
+              <input
+                id={`education-${n}-school`}
+                maxLength={100}
+                value={r.school}
+                onChange={(e) => edit(i, { school: e.target.value })}
+                className={input}
+                placeholder="Tbilisi State Academy of Arts"
+              />
+            </div>
+            <label className="grid gap-2">
+              <span className={label}>Degree {optional}</span>
+              <input
+                aria-label={`Education ${n}: degree (optional)`}
+                maxLength={80}
+                value={r.degree ?? ""}
+                onChange={(e) => edit(i, { degree: e.target.value })}
+                className={input}
+                placeholder="MA"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className={label}>Field of study {optional}</span>
+              <input
+                aria-label={`Education ${n}: field of study (optional)`}
+                maxLength={80}
+                value={r.field ?? ""}
+                onChange={(e) => edit(i, { field: e.target.value })}
+                className={input}
+                placeholder="Graphic design"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className={label}>Start year {optional}</span>
+              <YearSelect
+                label={`Education ${n}: start year`}
+                value={r.startYear}
+                onChange={(startYear) => edit(i, { startYear })}
+                years={startYears}
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className={label}>End year or expected {optional}</span>
+              <YearSelect
+                label={`Education ${n}: end year`}
+                value={r.endYear}
+                onChange={(endYear) => edit(i, { endYear })}
+                years={endYears}
+              />
+            </label>
+          </div>
+        );
+      })}
+      <div>
+        <button
+          type="button"
+          disabled={rows.length >= LIMITS.juryEducation}
+          onClick={() => onChange([...rows, { school: "" }])}
+          className={smallButton}
+        >
+          Add education
         </button>
       </div>
     </fieldset>
@@ -398,6 +721,10 @@ function ProfileFields({
     setSaved(false);
     setForm((f) => ({ ...f, experience }));
   };
+  const setEducation = (education: JurorEducation[]) => {
+    setSaved(false);
+    setForm((f) => ({ ...f, education }));
+  };
   const setWork = (work: JurorWork[]) => {
     setSaved(false);
     setForm((f) => ({ ...f, work }));
@@ -407,8 +734,9 @@ function ProfileFields({
     e.preventDefault();
     if (busy) return;
     const experience = cleanExperience(form.experience ?? []);
+    const education = cleanEducation(form.education ?? []);
     const work = cleanWork(form.work ?? []);
-    const problem = listsProblem(experience, work);
+    const problem = listsProblem(experience, education, work);
     if (problem) {
       setError(problem);
       return;
@@ -426,6 +754,7 @@ function ProfileFields({
         bio: form.bio?.trim() || undefined,
         // Always sent: [] clears the section.
         experience,
+        education,
         work,
         ...(form.interests !== undefined ? { interests: form.interests } : {}),
       });
@@ -511,8 +840,19 @@ function ProfileFields({
             className={`${input} resize-y leading-relaxed`}
           />
         </Group>
-        <Group title="Experience" hint="Roles you want on your profile, most recent first." count={`${(form.experience ?? []).length}/${LIMITS.juryExperience}`}>
+        <Group
+          title="Experience"
+          hint="Your positions, like on LinkedIn. Your profile lists them newest first and groups roles at the same company."
+          count={`${(form.experience ?? []).length}/${LIMITS.juryExperience}`}
+        >
           <ExperienceEditor rows={form.experience ?? []} onChange={setExperience} />
+        </Group>
+        <Group
+          title="Education"
+          hint="Optional. Schools and degrees, newest first."
+          count={`${(form.education ?? []).length}/${LIMITS.juryEducation}`}
+        >
+          <EducationEditor rows={form.education ?? []} onChange={setEducation} />
         </Group>
         <Group title="Selected work" hint="Projects you are proud of, with a link where there is one." count={`${(form.work ?? []).length}/${LIMITS.juryWork}`}>
           <WorkEditor rows={form.work ?? []} onChange={setWork} />
@@ -608,6 +948,7 @@ export function JuryProfile({ claimed }: { claimed?: boolean }) {
           linkedinUrl: me.linkedinUrl ?? undefined,
           bio: me.bio ?? undefined,
           experience: me.experience ?? [],
+          education: me.education ?? [],
           work: me.work ?? [],
           interests: me.interests ?? [],
         }}

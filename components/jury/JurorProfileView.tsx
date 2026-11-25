@@ -1,10 +1,11 @@
 import Link from "next/link";
-import type { JurorExperience, JurorWork } from "@/convex-helpers-api";
+import type { JurorEducation, JurorExperience, JurorWork } from "@/convex-helpers-api";
 import type { JuryCategory } from "@/lib/taxonomy";
 import { MediaImage as Image } from "@/components/site/MediaImage";
 import { ArrowIcon, PillLink } from "@/components/site/ui";
 import { formatDate, formatScore, hostOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { educationDates, educationTitle, experienceDates, experienceDuration, groupExperience } from "./experience";
 import { JurorPhoto } from "./JurorPhoto";
 import { JuryShareActions } from "./JuryShareActions";
 import { linkedinUrl, panelName, safeUrl } from "./jurorInfo";
@@ -19,6 +20,7 @@ export type ProfileJuror = {
   linkedinUrl: string | null;
   bio: string | null;
   experience?: JurorExperience[];
+  education?: JurorEducation[];
   work?: JurorWork[];
   isFounding: boolean;
   imageUrl: string | null;
@@ -49,9 +51,96 @@ function Row({ id, heading, aside, children }: { id: string; heading: string; as
   );
 }
 
+/** A company name, linked out when it has a website. */
+function Company({ name, url, className }: { name: string; url?: string; className?: string }) {
+  const link = safeUrl(url ?? null);
+  if (!link) return <span className={className}>{name}</span>;
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener"
+      className={cn("underline decoration-black/20 underline-offset-4 transition-colors hover:decoration-black", className)}
+    >
+      {name}
+    </a>
+  );
+}
+
+/** Dates on the right of a role: "Mar 2021 – Present", then "4 yrs 9 mos". */
+function RoleDates({ role }: { role: JurorExperience }) {
+  const dates = experienceDates(role);
+  const duration = experienceDuration(role);
+  if (!dates) return null;
+  return (
+    <p className={`${mono} grid gap-1 text-black/55 sm:pt-1.5 sm:text-right`}>
+      <span className="inline-flex items-center gap-2 sm:justify-end">
+        {role.current && <span aria-hidden="true" className="size-1.5 rounded-full bg-black" />}
+        {dates}
+      </span>
+      {duration && <span className="text-black/40">{duration}</span>}
+    </p>
+  );
+}
+
+function RoleDescription({ text }: { text?: string }) {
+  if (!text) return null;
+  return <p className="mt-3 max-w-2xl text-[15px] leading-relaxed whitespace-pre-line text-black/70">{text}</p>;
+}
+
+/** Experience, newest first; consecutive roles at one company share its heading. */
+function ExperienceList({ rows }: { rows: JurorExperience[] }) {
+  const groups = groupExperience(rows);
+  const item = "border-b border-black/10 py-6 first:pt-0 last:border-b-0 last:pb-0";
+  return (
+    <ol className="grid">
+      {groups.map((g, i) =>
+        g.roles.length === 1 ? (
+          <li key={i} className={cn(item, "grid gap-2 sm:grid-cols-[minmax(0,1fr)_13rem] sm:gap-6")}>
+            <div className="min-w-0">
+              <p className="text-lg leading-snug font-semibold tracking-[-0.02em]">{g.roles[0].title}</p>
+              <p className="mt-0.5 text-[15px] text-black/60">
+                <Company name={g.organization} url={g.organizationUrl} />
+                {g.roles[0].location && <span> · {g.roles[0].location}</span>}
+              </p>
+              <RoleDescription text={g.roles[0].description} />
+            </div>
+            <RoleDates role={g.roles[0]} />
+          </li>
+        ) : (
+          <li key={i} className={cn(item, "grid gap-5")}>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+              <p className="text-lg leading-snug font-semibold tracking-[-0.02em]">
+                <Company name={g.organization} url={g.organizationUrl} />
+              </p>
+              {g.duration && <p className={`${mono} text-black/55`}>{g.duration}</p>}
+            </div>
+            <ol className="grid gap-6 border-l border-black/15 pl-5 md:pl-6">
+              {g.roles.map((r, j) => (
+                <li key={j} className="relative grid gap-2 sm:grid-cols-[minmax(0,1fr)_13rem] sm:gap-6">
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-2.5 -left-[calc(1.25rem+3.5px)] size-1.5 rounded-full bg-black md:-left-[calc(1.5rem+3.5px)]"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[17px] leading-snug font-semibold tracking-[-0.02em]">{r.title}</p>
+                    {r.location && <p className="mt-0.5 text-[15px] text-black/60">{r.location}</p>}
+                    <RoleDescription text={r.description} />
+                  </div>
+                  <RoleDates role={r} />
+                </li>
+              ))}
+            </ol>
+          </li>
+        ),
+      )}
+    </ol>
+  );
+}
+
 /**
  * A juror's public profile: portrait and identity, stats, about, experience,
- * selected work, reviews. The /jury/<slug> page, and the invitation page's
+ * education, selected work, reviews. The /jury/<slug> page, and the invitation page's
  * preview of the profile before it is claimed (`preview`: no share buttons,
  * no links to a page that doesn't exist yet).
  */
@@ -74,6 +163,7 @@ export function JurorProfileView({
   const website = safeUrl(juror.website);
   const linkedin = linkedinUrl(juror.linkedinUrl);
   const experience = juror.experience ?? [];
+  const education = juror.education ?? [];
   const work = juror.work ?? [];
   const meanGiven = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.average, 0) / reviews.length : null;
   const stats: [string, string][] = [
@@ -167,19 +257,29 @@ export function JurorProfileView({
 
         {experience.length > 0 && (
           <Row id="experience-title" heading="Experience">
+            <ExperienceList rows={experience} />
+          </Row>
+        )}
+
+        {education.length > 0 && (
+          <Row id="education-title" heading="Education">
             <ol className="grid">
-              {experience.map((e, i) => (
-                <li
-                  key={i}
-                  className="grid gap-1 border-b border-black/10 py-5 first:pt-0 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_12rem] sm:gap-6"
-                >
-                  <div>
-                    <p className="text-lg font-semibold tracking-[-0.02em]">{e.title}</p>
-                    <p className="text-[15px] text-black/60">{e.organization}</p>
-                  </div>
-                  {e.period && <p className={`${mono} text-black/55 sm:pt-1.5 sm:text-right`}>{e.period}</p>}
-                </li>
-              ))}
+              {education.map((e, i) => {
+                const title = educationTitle(e);
+                const dates = educationDates(e);
+                return (
+                  <li
+                    key={i}
+                    className="grid gap-1 border-b border-black/10 py-5 first:pt-0 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_13rem] sm:gap-6"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-lg leading-snug font-semibold tracking-[-0.02em]">{e.school}</p>
+                      {title && <p className="mt-0.5 text-[15px] text-black/60">{title}</p>}
+                    </div>
+                    {dates && <p className={`${mono} text-black/55 sm:pt-1.5 sm:text-right`}>{dates}</p>}
+                  </li>
+                );
+              })}
             </ol>
           </Row>
         )}
