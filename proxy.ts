@@ -5,10 +5,10 @@ import { GONE_HTML, isGonePath } from "@/lib/gone";
 // Pages that need a signed-in user. Everything else is public.
 // /claim is not here: a /claim/<token> link must open for people who have no
 // account yet (the page sends them through sign-up), and the /claim/<slug>
-// request form checks the session itself.
+// request form checks the session itself. /submit is open too: its form saves
+// the submission first and signs people in with an email code after.
 const isProtectedRoute = createRouteMatcher([
   "/account(.*)",
-  "/submit(.*)",
   "/vote(.*)",
   "/jury/profile(.*)",
   "/jury/rounds(.*)",

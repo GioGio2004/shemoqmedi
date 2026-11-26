@@ -503,6 +503,18 @@ export type PublicApiType = {
     open: Q<Empty, RoundCard[] | null>;
     vote: M<{ roundId: string; slug: string; scores: Pillars }, null>;
   };
+  quickSubmit: {
+    /** No account needed: saves the unverified pre-submission. `token`: 64 hex chars kept by this browser. */
+    start: M<
+      { name: string; url: string; email: string; token: string; source?: string; website?: string },
+      { id: string }
+    >;
+    /** Signed in: ties the pre-submission to the account and confirms it. */
+    finalize: M<{ id: string; token: string }, { name: string }>;
+    /** The pre-submission for the browser holding its secret (resume in another browser). */
+    peek: Q<{ id: string; token: string }, { name: string; url: string; email: string; status: string } | null>;
+    track: M<{ event: "form_start" | "verify_start" | "verify_success" }, null>;
+  };
   audits: {
     /** The site's technical audit, for jurors only; null for anyone else or before the first run. */
     forJuror: Q<{ slug: string }, SiteAudit | null>;
