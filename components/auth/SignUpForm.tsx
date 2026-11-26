@@ -20,10 +20,26 @@ import {
   useAfterAuth,
 } from "./AuthUI";
 
+/** True when sign-up was reached on the way to /submit (or with no destination, which defaults there). */
+function cameToSubmit(raw: string | null) {
+  if (!raw) return true;
+  try {
+    const path = new URL(raw, "https://shemoqmedi.space").pathname;
+    return path === "/submit" || path.startsWith("/submit/");
+  } catch {
+    return false;
+  }
+}
+
 // New accounts go straight to the listing form unless another page sent them.
 export function SignUpForm() {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const redirect = safeRedirect(useSearchParams().get("redirect_url"), "/submit");
+  const rawRedirect = useSearchParams().get("redirect_url");
+  const redirect = safeRedirect(rawRedirect, "/submit");
+  // People who came to submit a site (from an ad or a post) see why they are here.
+  // Read from the raw parameter, not `redirect`: safeRedirect needs window, so on
+  // the server it always returns the fallback and the two renders would differ.
+  const forSubmit = cameToSubmit(rawRedirect);
   const { go, stuck } = useAfterAuth(redirect);
 
   const [step, setStep] = useState<"details" | "verify">("details");
@@ -156,9 +172,6 @@ export function SignUpForm() {
       </form>
     );
   }
-
-  // People who came to submit a site (from an ad or a post) see why they are here.
-  const forSubmit = redirect === "/submit" || redirect.startsWith("/submit?") || redirect.startsWith("/submit/");
 
   return (
     <div className="grid gap-6">
