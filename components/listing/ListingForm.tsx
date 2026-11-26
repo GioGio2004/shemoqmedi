@@ -519,7 +519,7 @@ export function ListingForm() {
         creditUrl: data.creditUrl || undefined,
         isStartup,
         redesignOf: isRedesign ? redesignSlug(redesignOf) || undefined : undefined,
-        // Express Fast-Track is not open yet; the backend rejects it.
+        // The only tier: there is no paid option (the backend refuses "express").
         submissionTier: "standard",
         coverId,
         galleryIds: galleryIds.length ? galleryIds : undefined,
@@ -773,41 +773,26 @@ export function ListingForm() {
         />
       </div>
 
-      <fieldset className="grid gap-3 lg:col-span-12">
-        <legend className="eyebrow mb-1 text-black">Submission</legend>
-        <div className="grid gap-3 md:grid-cols-2">
-          <OptionCard
-            name="submissionTier"
-            value="standard"
-            checked
-            title="Standard community queue"
-            aside={<span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">Free</span>}
-          >
-            Reviewed by hand, usually within 14–30 days. Accepted sites join that week&apos;s batch and are scored by
-            the jury the week after. First 100: the first hundred sites we welcome get a numbered honorary badge.
-          </OptionCard>
-          <OptionCard
-            name="submissionTier"
-            value="express"
-            checked={false}
-            disabled
-            title="Express Fast-Track"
-            aside={
-              <span className="flex flex-col items-end gap-1.5">
-                <span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">
-                  $25 / 65 GEL
-                </span>
-                <span className="inline-flex h-6 items-center rounded-full border border-black/15 px-2.5 font-mono text-[10px] font-medium tracking-[0.08em] uppercase">
-                  Coming soon
-                </span>
-              </span>
-            }
-          >
-            Guaranteed 48-hour review, immediate entry into a 7-day voting window (extended to 14
-            days if the jury needs more time), a permanent indexed page and a backlink to your site.
-          </OptionCard>
+      {/* One way in, and it's free: there is no paid tier (listings are earned, not bought). */}
+      <section aria-labelledby="submission-heading" className="grid gap-3 lg:col-span-12">
+        <h2 id="submission-heading" className="eyebrow mb-1 text-black">
+          Submission
+        </h2>
+        <div className="grid gap-2 rounded-2xl border border-black/14 p-5">
+          <p className="flex items-start justify-between gap-3">
+            <span className="text-base font-semibold tracking-[-0.02em]">Reviewed by hand</span>
+            <span className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase">Free</span>
+          </p>
+          <p className="text-sm leading-relaxed text-black/60">
+            Usually within 14–30 days. Accepted sites join that week&apos;s batch and are scored by the jury the week
+            after. First 100: the first hundred sites we welcome get a numbered honorary badge.
+          </p>
+          <p className="text-sm leading-relaxed text-black/60">
+            Shemoqmedi is a creative space: we list original work, and awards and recognition are earned, never bought.
+            Sites sent only for commercial promotion or a backlink are declined.
+          </p>
         </div>
-      </fieldset>
+      </section>
 
       <div className="flex flex-col gap-4 border-t border-black/10 pt-8 lg:col-span-12 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-md text-xs leading-relaxed text-black/55">
