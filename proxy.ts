@@ -17,6 +17,14 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 const clerk = clerkMiddleware(async (auth, req) => {
+  // Signed in at /submit: the choice between the 30-second form and the full
+  // form (/submit/choose), at the same address. Guests (and ?form=quick) get
+  // the 30-second form straight away, so that page stays static and fast.
+  if (req.nextUrl.pathname === "/submit" && !req.nextUrl.searchParams.has("form")) {
+    const { userId } = await auth();
+    if (userId) return NextResponse.rewrite(new URL(`/submit/choose${req.nextUrl.search}`, req.url));
+    return;
+  }
   if (!isProtectedRoute(req)) return;
 
   // Pending (a task such as a password reset is left): finish it first. By

@@ -18,7 +18,7 @@ export default function FullSubmitPage() {
         title="Submit"
         lede="Write your own listing: description, credits, screenshots and a preview video. Our editors review every site by hand, and accepted ones get a week of jury voting."
         action={
-          <PillLink href="/submit" variant="outline">
+          <PillLink href="/submit?form=quick" variant="outline">
             30-second form
           </PillLink>
         }

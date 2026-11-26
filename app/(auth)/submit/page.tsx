@@ -18,6 +18,8 @@ const STEPS = [
 // Open to everyone, no account: the form saves the submission, then
 // /submit/received offers an optional sign-in to track it. The full form,
 // where the creator writes the listing, is /submit/full (signed-in).
+// Signed-in visitors see /submit/choose here instead (proxy.ts) and reach
+// this form as /submit?form=quick.
 export default function SubmitPage() {
   return (
     <main id="main-content" className="container-site pt-24 pb-24 md:pt-36">
