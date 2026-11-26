@@ -363,6 +363,18 @@ export function SubmissionReceived() {
               </p>
               <p className="eyebrow">Takes about 30 seconds.</p>
             </div>
+            {/* Google is the main way in; in-app browsers (Instagram, Facebook…) block it, so there the code is. */}
+            {app === null && (
+              <>
+                <GoogleButton
+                  primary
+                  onClick={() => void onGoogle()}
+                  pending={pending === "google"}
+                  disabled={!ready || pending !== null}
+                />
+                <Divider />
+              </>
+            )}
             <div className="grid gap-2">
               <label htmlFor="track-email" className="eyebrow text-black">
                 Email address
@@ -389,15 +401,13 @@ export function SubmissionReceived() {
               )}
             </div>
             <FormError message={error} />
-            <SubmitButton pending={pending === "code"} disabled={!ready || pending !== null}>
+            <SubmitButton
+              pending={pending === "code"}
+              disabled={!ready || pending !== null}
+              variant={app === null ? "secondary" : "primary"}
+            >
               Email me a code
             </SubmitButton>
-            {app === null && (
-              <>
-                <Divider />
-                <GoogleButton onClick={() => void onGoogle()} pending={pending === "google"} disabled={!ready || pending !== null} />
-              </>
-            )}
             <div className="flex justify-center">
               <TextButton
                 onClick={() => {

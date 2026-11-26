@@ -37,40 +37,53 @@ export function Field({
   );
 }
 
-/** Full-width black pill with the round arrow badge (Kencho style). */
+/** Full-width black pill with the round arrow badge (Kencho style); "secondary" is the outline version. */
 export function SubmitButton({
   pending,
   disabled,
+  variant = "primary",
   children,
 }: {
   pending?: boolean;
   disabled?: boolean;
+  variant?: "primary" | "secondary";
   children: React.ReactNode;
 }) {
+  const secondary = variant === "secondary";
   return (
     <button
       type="submit"
       disabled={pending || disabled}
       aria-busy={pending || undefined}
-      className="group inline-flex min-h-[52px] w-full items-center justify-between gap-3.5 rounded-full bg-black py-1 pr-1.5 pl-6 text-[12px] font-semibold tracking-[0.05em] text-white uppercase transition-[transform,opacity] duration-200 active:scale-[0.99] disabled:opacity-50"
+      className={cn(
+        "group inline-flex min-h-[52px] w-full items-center justify-between gap-3.5 rounded-full py-1 pr-1.5 pl-6 text-[12px] font-semibold tracking-[0.05em] uppercase transition-[transform,opacity,border-color] duration-200 active:scale-[0.99] disabled:opacity-50",
+        secondary ? "border border-black/14 bg-white text-black hover:border-black" : "bg-black text-white",
+      )}
     >
       <span>{pending ? "One moment…" : children}</span>
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-black transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+      <span
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+          secondary ? "bg-black text-white" : "bg-white text-black",
+        )}
+      >
         <ArrowIcon />
       </span>
     </button>
   );
 }
 
-/** Outline pill for "Continue with Google". Monochrome mark to stay black and white. */
+/** Outline pill for "Continue with Google" (filled when it's the main way in). Monochrome mark to stay black and white. */
 export function GoogleButton({
   onClick,
   pending,
   disabled,
+  primary,
 }: {
   onClick: () => void;
   pending?: boolean;
   disabled?: boolean;
+  primary?: boolean;
 }) {
   return (
     <button
@@ -79,7 +92,10 @@ export function GoogleButton({
       disabled={pending || disabled}
       // The site's crow may land on top of this pill (crow/roam.ts).
       data-crow-perch=""
-      className="inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full border border-black/14 bg-white px-6 text-[12px] font-semibold tracking-[0.05em] uppercase transition-colors hover:border-black disabled:opacity-50"
+      className={cn(
+        "inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full border px-6 text-[12px] font-semibold tracking-[0.05em] uppercase transition-[colors,opacity] disabled:opacity-50",
+        primary ? "border-black bg-black text-white hover:opacity-90" : "border-black/14 bg-white hover:border-black",
+      )}
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" className="size-[18px]" fill="currentColor">
         <path d="M21.35 11.1H12v2.98h5.35c-.23 1.4-1.66 4.1-5.35 4.1-3.22 0-5.85-2.67-5.85-5.96S8.78 6.26 12 6.26c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.68 3.7 14.55 2.75 12 2.75 6.9 2.75 2.75 6.9 2.75 12S6.9 21.25 12 21.25c5.34 0 8.88-3.75 8.88-9.04 0-.6-.07-1.07-.15-1.53Z" />
