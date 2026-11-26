@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Header } from "@/components/site/Header";
 import { THEME_SCRIPT } from "@/components/site/ThemeSwitch";
-import { INTRO_SCRIPT, WelcomeIntro } from "@/components/site/WelcomeIntro";
 import "./globals.css";
 
 const inter = Inter({
@@ -69,11 +68,8 @@ export default function RootLayout({
       <head>
         {/* The saved theme (navbar switch), applied before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        {/* First page of a visit: the welcome screen, decided before first paint. */}
-        <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
       </head>
       <body className={inter.variable}>
-        <WelcomeIntro />
         <Header />
         {children}
       </body>
