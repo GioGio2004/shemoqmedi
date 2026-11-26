@@ -4,12 +4,14 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api, type OwnSubmission } from "@/convex-helpers-api";
-import { funnelSource, readRef } from "@/lib/submission";
+import { fullFormHref, funnelSource, isOpenSubmission, readRef } from "@/lib/submission";
 import { cn } from "@/lib/utils";
 
 // "Your submissions" on the account and jury pages: every site this account
 // submitted through /submit and where it stands. Signing in anywhere also
-// links this browser's latest submission (the server checks the email).
+// links this browser's latest submission (the server checks the email). One
+// that has no listing yet links to the full form (/submit/full), where its
+// creator can write the listing themselves.
 
 const STEPS = ["Received", "Editorial review", "Preparation", "Awaiting approval", "Jury evaluation", "Results"] as const;
 
@@ -113,6 +115,12 @@ export function MySubmissions() {
                 {s.listing && PUBLIC.has(s.listing.status) && (
                   <Link href={`/sites/${s.listing.slug}`} className="text-sm font-semibold underline-offset-4 hover:underline">
                     View listing
+                  </Link>
+                )}
+                {/* Still with the editors: the creator can write the listing in the full form instead. */}
+                {isOpenSubmission(s) && (
+                  <Link href={fullFormHref(s.id)} className="text-sm font-semibold underline-offset-4 hover:underline">
+                    Add the details yourself
                   </Link>
                 )}
               </p>

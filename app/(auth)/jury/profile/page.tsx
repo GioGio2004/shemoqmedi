@@ -42,7 +42,7 @@ export default async function JuryProfilePage({ searchParams }: { searchParams: 
               Your sites
             </h2>
             <p className="text-sm text-black/55">Everything you&apos;ve submitted or claimed, and where it stands.</p>
-            <PillLink href="/submit" variant="outline" className="mt-3 justify-self-start">
+            <PillLink href="/submit/full" variant="outline" className="mt-3 justify-self-start">
               Submit a site
             </PillLink>
           </div>

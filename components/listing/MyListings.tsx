@@ -131,7 +131,7 @@ function List() {
           No sites yet.
         </p>
         <Link
-          href="/submit"
+          href="/submit/full"
           className="mt-4 inline-block text-sm font-medium underline underline-offset-[5px]"
         >
           Submit your first site ↗

@@ -31,11 +31,11 @@ function cameToSubmit(raw: string | null) {
   }
 }
 
-// New accounts go straight to the listing form unless another page sent them.
+// New accounts go straight to the full submission form (/submit/full) unless another page sent them.
 export function SignUpForm() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const rawRedirect = useSearchParams().get("redirect_url");
-  const redirect = safeRedirect(rawRedirect, "/submit");
+  const redirect = safeRedirect(rawRedirect, "/submit/full");
   // People who came to submit a site (from an ad or a post) see why they are here.
   // Read from the raw parameter, not `redirect`: safeRedirect needs window, so on
   // the server it always returns the fallback and the two renders would differ.
@@ -261,7 +261,8 @@ export function SignUpForm() {
       <p className="border-t border-black/10 pt-6 text-sm text-black/60">
         Already have an account?{" "}
         <Link
-          href={redirect === "/submit" ? "/sign-in" : `/sign-in?redirect_url=${encodeURIComponent(redirect)}`}
+          // Sent here from a page (the full form, a claim link): logging in goes back to it too.
+          href={rawRedirect ? `/sign-in?redirect_url=${encodeURIComponent(redirect)}` : "/sign-in"}
           className="font-semibold text-black underline-offset-4 hover:underline"
         >
           Log in

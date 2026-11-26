@@ -5,4 +5,4 @@
 export const CONTACT_EMAIL = "shemoqmedi.voloostudion@gmail.com";
 
 /** Shown as "Last updated" on both pages. Update it whenever either text changes. */
-export const LEGAL_UPDATED = "19 November 2026";
+export const LEGAL_UPDATED = "27 November 2026";

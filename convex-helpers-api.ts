@@ -414,6 +414,11 @@ export type PublicApiType = {
     resolveSlug: Q<{ slug: string }, string | null>;
     publicSlugs: Q<Empty, { slug: string; updatedAt: number }[]>;
     generateUploadUrl: M<Empty, string>;
+    /**
+     * The full form (/submit/full). If the account already sent this website through the 30-second
+     * form (quickSubmit.submit) and it has no listing yet, this completes that submission instead of
+     * adding a second entry; someone else's open submission of the site is refused.
+     */
     submit: M<SubmitArgs, { slug: string }>;
     /** The checks submit makes that don't need the files; run before uploading. */
     precheckSubmission: Q<{ url: string; redesignOf?: string }, { ok: true } | { ok: false; reason: string }>;

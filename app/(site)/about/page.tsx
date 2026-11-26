@@ -41,8 +41,9 @@ const sections: InfoSection[] = [
     body: (
       <>
         <p>
-          Anyone can <Link href="/submit">submit a website</Link>. The jury reviews every submission by hand before it
-          appears. Sites that are unfinished, broken or not original are declined with a short note explaining why.
+          Anyone can <Link href="/submit">submit a website</Link>, free of charge, in{" "}
+          <Link href="#submit">one of two ways</Link>. The jury reviews every submission by hand before it appears.
+          Sites that are unfinished, broken or not original are declined with a short note explaining why.
         </p>
         <p>
           Approved sites go live in weekly batches, and the jury scores each batch the following week on four weighted
@@ -52,6 +53,32 @@ const sections: InfoSection[] = [
           <Link href="/collections/sotm">Site of the Month</Link> and{" "}
           <Link href="/collections/soty">Site of the Year</Link>. The details are on{" "}
           <Link href="/how-we-score">How we score</Link>.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "submit",
+    heading: "Two ways to submit a website",
+    body: (
+      <>
+        <p>Submitting is free either way, and every site gets the same review and the same jury.</p>
+        <ul className="grid list-disc gap-3 pl-5 marker:text-black/30">
+          <li>
+            <strong>The 30-second form.</strong> Give us the site&apos;s name, its address and your email. No account
+            is needed. Our editors prepare the listing for you: the description, the credits and the screenshots.{" "}
+            <Link href="/submit">Open the 30-second form</Link>.
+          </li>
+          <li>
+            <strong>The full form.</strong> With a free account you write the listing yourself: a short description,
+            categories, the technologies the site is built with, who made it, your own screenshots and an optional
+            preview video. <Link href="/submit/full">Open the full form</Link>.
+          </li>
+        </ul>
+        <p>
+          You can also start with the first and finish with the second. After a 30-second submission, create an
+          account with the same email and add the details yourself: it stays one submission, not two. An account also
+          lets you follow your site from review to results and read your jury scores when voting closes.
         </p>
       </>
     ),

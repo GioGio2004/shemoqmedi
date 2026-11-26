@@ -205,8 +205,8 @@ export function SignInForm() {
     <div className="grid gap-6">
       <GoogleOneTap
         signInForceRedirectUrl={redirect}
-        // New accounts go to /submit, unless they came from a page (e.g. a claim link) that wants them back.
-        signUpForceRedirectUrl={redirect === "/account" ? "/submit" : redirect}
+        // New accounts go to the full submission form, unless they came from a page (e.g. a claim link) that wants them back.
+        signUpForceRedirectUrl={redirect === "/account" ? "/submit/full" : redirect}
       />
       <GoogleButton onClick={onGoogle} pending={pending === "google"} disabled={!ready || pending !== null} />
       <Divider />

@@ -43,7 +43,7 @@ export default async function AccountPage({
         : submitted
           ? "Thanks, your site is in the review queue. We also check that it's yours before your listing links back to you with a followed link. You'll see the decision here."
           : linked
-            ? "You're in. Your submission is in your account now: follow it below, and we'll email you as it moves along."
+            ? "You're in. Your submission is in your account now: follow it below, and add its details yourself if you like. We'll email you as it moves along."
             : null;
 
   return (
@@ -51,7 +51,7 @@ export default async function AccountPage({
       <AccountHeader
         eyebrow="Your account"
         defaultAvatar
-        actions={<PillLink href="/submit">Submit a site</PillLink>}
+        actions={<PillLink href="/submit/full">Submit a site</PillLink>}
       />
       <div className="container-site pb-24">
         {notice && (

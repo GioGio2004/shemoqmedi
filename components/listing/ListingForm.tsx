@@ -2,10 +2,12 @@
 
 import { friendlyError } from "@/lib/errors";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAction, useConvex, useMutation } from "convex/react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAction, useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { MAX_IMAGE_INPUT_BYTES, uploadToImageKit } from "@/lib/imagekitUpload";
 import { uploadVideoToR2 } from "@/lib/videoUpload";
+import { isOpenSubmission, readRef, siteKey } from "@/lib/submission";
 import { useUser } from "@clerk/nextjs";
 import { z } from "zod";
 import { api } from "@/convex-helpers-api";
@@ -356,9 +358,23 @@ function redesignSlug(raw: string) {
   return (m ? m[1] : value).toLowerCase();
 }
 
+/**
+ * The full submission form (/submit/full): the creator writes the listing.
+ *
+ * A site they already sent through the 30-second form (/submit) is completed
+ * here, not added twice: the server finds their open submission by the
+ * website's address (listings.submit). So this form only has to fill in its
+ * name and link, from /submit/full?s=<id> or one of the buttons at the top.
+ */
 export function ListingForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
+  // A new account reaches the database through Clerk's webhook a moment after sign-up.
+  const account = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
+  const sent = useQuery(api.quickSubmit.mine, isAuthenticated ? {} : "skip");
+  const linkSubmission = useMutation(api.quickSubmit.link);
   const getUploadAuth = useAction(api.media.uploadAuth);
   const registerMedia = useMutation(api.media.register);
   const getVideoUploadUrl = useAction(api.media.videoUploadUrl);
@@ -387,6 +403,30 @@ export function ListingForm() {
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">("idle");
   const [progress, setProgress] = useState<number | null>(null); // video compression, 0–1
   const busy = useRef(false);
+
+  // Sent the 30-second form from this browser before signing up: add it to the
+  // account, so it shows up below (the server links it only if the email matches).
+  const linkTried = useRef(false);
+  useEffect(() => {
+    if (!account || linkTried.current) return;
+    linkTried.current = true;
+    const ref = readRef();
+    if (ref) void linkSubmission({ id: ref.id, token: ref.token }).catch(() => {});
+  }, [account, linkSubmission]);
+
+  // Their 30-second submissions that have no listing yet.
+  const open = (sent ?? []).filter(isOpenSubmission);
+  // /submit/full?s=<id> ("Add the details yourself"): its name and link, once.
+  const asked = open.find((s) => s.id === params.get("s"));
+  const [prefilled, setPrefilled] = useState<string | null>(null);
+  if (asked && prefilled !== asked.id) {
+    setPrefilled(asked.id);
+    setTitle(asked.name);
+    setUrl(asked.url);
+  }
+  // The submission this form completes: the one for the website in the URL field.
+  const completing = url.trim() ? open.find((s) => siteKey(s.url) === siteKey(url)) : undefined;
+  const otherOpen = open.filter((s) => s !== completing);
 
   // Prefill "Made by" with the account name until the user edits it.
   const displayCredit = creditTouched ? creditName : creditName || user?.fullName || "";
@@ -495,6 +535,38 @@ export function ListingForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-10 lg:grid-cols-12">
+      {(completing || otherOpen.length > 0) && (
+        <div role="status" className="grid gap-3 rounded-2xl border border-black/10 p-5 lg:col-span-12">
+          {completing && (
+            <p className="text-sm leading-relaxed">
+              <span className="font-semibold">Completing “{completing.name}”.</span>{" "}
+              <span className="text-black/60">
+                You already sent us this site, so your details are added to that submission. It stays one entry.
+              </span>
+            </p>
+          )}
+          {otherOpen.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-sm text-black/60">
+                {completing ? "Or finish another site you sent:" : "Finishing a site you already sent?"}
+              </span>
+              {otherOpen.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setTitle(s.name);
+                    setUrl(s.url);
+                  }}
+                  className={pill(false)}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="grid content-start gap-6 lg:col-span-7">
         <Field label="Site title" htmlFor="title">
           <input
@@ -738,8 +810,13 @@ export function ListingForm() {
       </fieldset>
 
       <div className="flex flex-col gap-4 border-t border-black/10 pt-8 lg:col-span-12 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-md text-xs text-black/55">
-          Every submission is reviewed by hand. You&apos;ll see the decision on your account page.
+        <p className="max-w-md text-xs leading-relaxed text-black/55">
+          Every submission is reviewed by hand. You&apos;ll see the decision on your account page. By submitting you
+          agree to our{" "}
+          <Link href="/terms" className="underline underline-offset-4">
+            terms
+          </Link>
+          .
         </p>
         <div className="flex flex-col items-start gap-3 sm:items-end">
           {error && (

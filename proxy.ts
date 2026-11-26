@@ -5,10 +5,12 @@ import { GONE_HTML, isGonePath } from "@/lib/gone";
 // Pages that need a signed-in user. Everything else is public.
 // /claim is not here: a /claim/<token> link must open for people who have no
 // account yet (the page sends them through sign-up), and the /claim/<slug>
-// request form checks the session itself. /submit is open too: its form saves
-// the submission first and signs people in with an email code after.
+// request form checks the session itself. /submit is open too: its 30-second
+// form saves the submission first and offers a sign-in after. Only the full
+// form, /submit/full, needs an account.
 const isProtectedRoute = createRouteMatcher([
   "/account(.*)",
+  "/submit/full(.*)",
   "/vote(.*)",
   "/jury/profile(.*)",
   "/jury/rounds(.*)",
@@ -28,9 +30,9 @@ const clerk = clerkMiddleware(async (auth, req) => {
   }
   if (!userId) {
     // Our own auth pages (not Clerk's hosted ones), then back here. Someone
-    // opening /submit logged out is almost always new (ads and posts link
-    // there), so they get sign-up, with "Log in" one tap away; the other
-    // protected pages are for people who already have an account.
+    // opening the full form (/submit/full) logged out is almost always new,
+    // so they get sign-up, with "Log in" one tap away; the other protected
+    // pages are for people who already have an account.
     const isSubmit = req.nextUrl.pathname.startsWith("/submit");
     const url = new URL(isSubmit ? "/sign-up" : "/sign-in", req.url);
     url.searchParams.set("redirect_url", req.nextUrl.href);

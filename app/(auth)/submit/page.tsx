@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { QuickSubmit } from "@/components/submit/QuickSubmit";
 
@@ -15,7 +16,8 @@ const STEPS = [
 ] as const;
 
 // Open to everyone, no account: the form saves the submission, then
-// /submit/received offers an optional sign-in to track it.
+// /submit/received offers an optional sign-in to track it. The full form,
+// where the creator writes the listing, is /submit/full (signed-in).
 export default function SubmitPage() {
   return (
     <main id="main-content" className="container-site pt-24 pb-24 md:pt-36">
@@ -42,6 +44,13 @@ export default function SubmitPage() {
             </li>
           ))}
         </ol>
+        <p className="text-sm leading-relaxed text-black/60">
+          Rather write the listing yourself?{" "}
+          <Link href="/submit/full" className="font-semibold text-black underline underline-offset-4">
+            Use the full form
+          </Link>
+          : your own description, credits, screenshots and video. It needs a free account.
+        </p>
       </div>
     </main>
   );

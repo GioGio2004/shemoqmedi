@@ -1,7 +1,30 @@
-// Browser-side helpers for the 30-second submission (/submit) and the
-// optional sign-in after it (/submit/received). See convex/quickSubmit.ts.
+// Browser-side helpers for the 30-second submission (/submit), the optional
+// sign-in after it (/submit/received) and the full form that can complete it
+// (/submit/full). See convex/quickSubmit.ts.
 
-import type { SubmissionAttribution } from "@/convex-helpers-api";
+import type { OwnSubmission, SubmissionAttribution } from "@/convex-helpers-api";
+
+/** Still with the editors, with no listing made from it: the full form can complete it. */
+export const isOpenSubmission = (s: Pick<OwnSubmission, "status" | "listing">) =>
+  (s.status === "received" || s.status === "preparing") && !s.listing;
+
+/** Where the full form opens to complete a submission. */
+export const fullFormHref = (id: string) => `/submit/full?s=${encodeURIComponent(id)}`;
+
+/**
+ * The key the server gives a website (domainKey in the backend's
+ * convex/lib/domains.ts): its host without "www." plus the path, no trailing
+ * slash. Two addresses with the same key are the same site.
+ */
+export function siteKey(url: string) {
+  const value = url.trim();
+  try {
+    const parsed = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    return `${parsed.hostname.toLowerCase().replace(/^www\./, "")}${parsed.pathname.replace(/\/+$/, "")}`;
+  } catch {
+    return value.toLowerCase();
+  }
+}
 
 /** This browser's reference to its latest submission. Never the email. */
 const REF_KEY = "submission-ref";

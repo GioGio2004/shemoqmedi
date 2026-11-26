@@ -8,7 +8,16 @@ import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api, type SubmissionEvent } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
-import { funnelSource, inAppBrowser, randomPassword, readRef, saveRef, type SubmissionRef } from "@/lib/submission";
+import {
+  fullFormHref,
+  funnelSource,
+  inAppBrowser,
+  isOpenSubmission,
+  randomPassword,
+  readRef,
+  saveRef,
+  type SubmissionRef,
+} from "@/lib/submission";
 import {
   CodeInput,
   Divider,
@@ -24,6 +33,8 @@ import {
 // (Clerk email code, or Google outside in-app browsers) to track it. The
 // submission never depends on this. Once signed in, the server links it only
 // if the account's verified email is the submitted one (quickSubmit.link).
+// Linked and still with the editors: the full form (/submit/full) is offered,
+// for people who'd rather write the listing themselves.
 //
 // The reference comes from this browser (saved by the form) or from the
 // confirmation email's link (?r=&k=), which is moved into storage and removed
@@ -97,6 +108,9 @@ export function SubmissionReceived() {
   }, []);
 
   const prefill = useQuery(api.quickSubmit.prefill, ref ? { id: ref.id, token: ref.token } : "skip");
+  // Once it's in the account: whether the full form can still complete it.
+  const mine = useQuery(api.quickSubmit.mine, accountReady && linked?.status === "linked" ? {} : "skip");
+  const canComplete = !!ref && !!mine?.some((s) => s.id === ref.id && isOpenSubmission(s));
   useEffect(() => {
     if (prefill && ref && fromLink.current) {
       fromLink.current = false;
@@ -297,6 +311,7 @@ export function SubmissionReceived() {
             result={linked}
             error={error}
             signedInEmail={signedInEmail}
+            fullForm={canComplete ? fullFormHref(ref.id) : null}
             onSwitch={() => void signOut({ redirectUrl: "/submit/received" })}
           />
         ) : step === "skipped" ? (
@@ -431,11 +446,14 @@ function SignedInState({
   result,
   error,
   signedInEmail,
+  fullForm,
   onSwitch,
 }: {
   result: LinkResult | null;
   error: string | null;
   signedInEmail: string;
+  /** /submit/full for this submission, while it has no listing yet. */
+  fullForm: string | null;
   onSwitch: () => void;
 }) {
   if (error) return <FormError message={error} />;
@@ -455,10 +473,21 @@ function SignedInState({
         <p className="text-[15px] leading-relaxed text-black/70">
           Follow its progress, and see your jury scores once voting closes.
         </p>
-        <div>
+        {fullForm && (
+          <p className="text-[15px] leading-relaxed text-black/70">
+            Rather write the listing yourself? Add your own description, credits, screenshots and video. It&apos;s
+            optional: our editors prepare it either way.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-3">
           <Link href="/account" className={primaryButton}>
             Go to your dashboard
           </Link>
+          {fullForm && (
+            <Link href={fullForm} className={secondaryButton}>
+              Add the details yourself
+            </Link>
+          )}
         </div>
       </div>
     );

@@ -7,8 +7,9 @@ import { kaAlternates, kaOpenGraph } from "@/lib/kaPages";
 import { LIMITS, type AwardRules } from "@/lib/taxonomy";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 
-// Georgian-only guide to submitting a site (the form itself, /submit, is
-// English and not indexed). No English twin, so no hreflang pair.
+// Georgian-only guide to submitting a site: the 30-second form (/submit) and
+// the full form (/submit/full), both English and not indexed. No English
+// twin, so no hreflang pair.
 const PATH = "/ka/how-to-submit";
 const title = "როგორ გამოვგზავნოთ ვებსაიტი შემოქმედზე";
 const description =
@@ -39,11 +40,37 @@ const sectionsFor = (rules: AwardRules): InfoSection[] => [
     ),
   },
   {
-    id: "what-you-need",
-    heading: "რა დაგჭირდება",
+    id: "two-ways",
+    heading: "გამოგზავნის ორი გზა",
     body: (
       <>
-        <p>გამოგზავნის ფორმა ჯერჯერობით ინგლისურადაა. მის შესავსებად მოამზადე:</p>
+        <p>საიტის გამოგზავნა ორი გზით შეგიძლია. ორივე ფორმა ჯერჯერობით ინგლისურადაა.</p>
+        <ul className={list}>
+          <li>
+            <strong>სწრაფი ფორმა, 30 წამი.</strong> საკმარისია საიტის სახელი, მისი მისამართი და შენი ელფოსტა.
+            ანგარიში არ გჭირდება. აღწერას, ავტორების მითითებასა და სქრინშოტებს ჩვენი რედაქტორები ამზადებენ.{" "}
+            <Link href="/submit">სწრაფი ფორმა</Link>.
+          </li>
+          <li>
+            <strong>სრული ფორმა.</strong> უფასო ანგარიშით საიტის გვერდს თავად ავსებ: მოკლე აღწერა, კატეგორიები,
+            ტექნოლოგიები, ავტორები, შენი სქრინშოტები და, სურვილისამებრ, ვიდეო.{" "}
+            <Link href="/submit/full">სრული ფორმა</Link>.
+          </li>
+        </ul>
+        <p>
+          შეგიძლია სწრაფი ფორმით დაიწყო და დეტალები მოგვიანებით თავად დაამატო: შექმენი ანგარიში იმავე ელფოსტით და
+          შეავსე სრული ფორმა. ეს ერთ გამოგზავნად რჩება და არა ორად. ანგარიშით ასევე ხედავ, რა ეტაპზეა შენი საიტი, და
+          კენჭისყრის დასრულების შემდეგ კითხულობ ჟიურის ქულებს.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "what-you-need",
+    heading: "რა დაგჭირდება სრული ფორმისთვის",
+    body: (
+      <>
+        <p>სრული ფორმის შესავსებად მოამზადე:</p>
         <ul className={list}>
           <li>ანგარიში შემოქმედზე (შესვლა ან რეგისტრაცია ერთ წუთს მოითხოვს);</li>
           <li>საიტის სახელი და მისი საჯარო, მოქმედი მისამართი;</li>

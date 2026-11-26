@@ -49,7 +49,9 @@ const sections: InfoSection[] = [
         <p>
           <strong>Sites you submit.</strong> The site&apos;s address, title, description, categories, technologies,
           the credits (creator or studio name and website), and the screenshots and video you upload. Once a site is
-          approved, this information is public.
+          approved, this information is public. If you use the 30-second form without an account, we also keep the
+          contact email you enter with the submission, so we can tell you what happens to it. That email is never
+          public.
         </p>
         <p>
           <strong>Votes.</strong> The scores you give a site are stored with your account so each account can vote
