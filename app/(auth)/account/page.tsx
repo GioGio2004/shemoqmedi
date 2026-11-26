@@ -9,6 +9,7 @@ import { AccountHeader } from "@/components/account/AccountHeader";
 import { DeleteAccount } from "@/components/account/DeleteAccount";
 import { CreatorProfileEditor } from "@/components/account/CreatorProfileEditor";
 import { AvatarPicker } from "@/components/account/AvatarPicker";
+import { MySubmissions } from "@/components/account/MySubmissions";
 
 export const metadata: Metadata = { title: "Your account", robots: { index: false } };
 
@@ -24,15 +25,15 @@ async function isJuror() {
 }
 
 // Protected by proxy.ts (requires a Clerk session). Jurors are sent to their
-// jury profile (which lists their sites too), except right after a submit or
-// claim, whose message is shown here.
+// jury profile (which lists their sites too), except right after a submit,
+// claim or linking a submission, whose message is shown here.
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ submitted?: string; claimed?: string; jury?: string }>;
+  searchParams: Promise<{ submitted?: string; claimed?: string; jury?: string; linked?: string }>;
 }) {
-  const { submitted, claimed, jury } = await searchParams;
-  if (!submitted && !claimed && (await isJuror())) redirect("/jury/profile");
+  const { submitted, claimed, jury, linked } = await searchParams;
+  if (!submitted && !claimed && !linked && (await isJuror())) redirect("/jury/profile");
 
   const notice =
     jury === "pending"
@@ -41,7 +42,9 @@ export default async function AccountPage({
         ? "Done, the site is yours. Its public page updates within a minute, with a followed link to your site."
         : submitted
           ? "Thanks, your site is in the review queue. We also check that it's yours before your listing links back to you with a followed link. You'll see the decision here."
-          : null;
+          : linked
+            ? "You're in. Your submission is in your account now: follow it below, and we'll email you as it moves along."
+            : null;
 
   return (
     <main id="main-content">
@@ -56,6 +59,7 @@ export default async function AccountPage({
             {notice}
           </p>
         )}
+        <MySubmissions />
         <section
           aria-labelledby="your-sites-title"
           className="grid gap-6 border-t border-black/10 py-12 md:grid-cols-12 md:gap-10 md:py-16"

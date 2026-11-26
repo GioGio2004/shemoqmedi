@@ -8,10 +8,11 @@ import { useEffect, useRef } from "react";
 //
 // INTRO_SCRIPT (in <head>) decides before first paint, so the page never
 // flashes underneath: it sets html[data-intro="on"], which shows the overlay
-// (globals.css). Skipped for reduced motion and for crawlers and speed tests.
+// (globals.css). Skipped for reduced motion, crawlers and speed tests, and on
+// task pages (submit, sign-in, account, claim) where it would only get in the way.
 // If this component never runs, CSS lifts the overlay by itself after 3.5 s.
 
-export const INTRO_SCRIPT = `try{var d=document.documentElement;if(!sessionStorage.getItem("intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|pagespeed/i.test(navigator.userAgent)){d.dataset.intro="on";sessionStorage.setItem("intro","1")}}catch(e){}`;
+export const INTRO_SCRIPT = `try{var d=document.documentElement;if(!/^[/](submit|sign-in|sign-up|sso-callback|session-tasks|claim|account|vote|jury[/]profile)([/]|$)/.test(location.pathname)&&!sessionStorage.getItem("intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|pagespeed/i.test(navigator.userAgent)){d.dataset.intro="on";sessionStorage.setItem("intro","1")}}catch(e){}`;
 
 /** The flapping part of the takeoff sheet (public/crow/nav/takeoff.json): frames 35–68. */
 const SHEET = { src: "/crow/nav/takeoff.webp", columns: 18, fw: 198, fh: 200, ratio: 2, fps: 24, from: 35, to: 68 };

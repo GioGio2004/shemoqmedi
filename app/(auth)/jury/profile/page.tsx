@@ -6,6 +6,7 @@ import { MyListings } from "@/components/listing/MyListings";
 import { DeleteAccount } from "@/components/account/DeleteAccount";
 import { CreatorProfileEditor } from "@/components/account/CreatorProfileEditor";
 import { AvatarPicker } from "@/components/account/AvatarPicker";
+import { MySubmissions } from "@/components/account/MySubmissions";
 
 export const metadata: Metadata = { title: "Your jury profile", robots: { index: false } };
 
@@ -49,6 +50,7 @@ export default async function JuryProfilePage({ searchParams }: { searchParams: 
             <MyListings />
           </div>
         </section>
+        <MySubmissions />
         <AvatarPicker onlyForCreators />
         <CreatorProfileEditor />
         <DeleteAccount />

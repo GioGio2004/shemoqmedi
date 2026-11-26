@@ -504,16 +504,30 @@ export type PublicApiType = {
     vote: M<{ roundId: string; slug: string; scores: Pillars }, null>;
   };
   quickSubmit: {
-    /** No account needed: saves the unverified pre-submission. `token`: 64 hex chars kept by this browser. */
-    start: M<
-      { name: string; url: string; email: string; token: string; source?: string; website?: string },
-      { id: string }
+    /** Public: saves the submission for good. `token`: 64 hex chars kept by this browser (idempotency + linking). */
+    submit: M<
+      {
+        name: string;
+        url: string;
+        email: string;
+        token: string;
+        website?: string;
+        attribution?: SubmissionAttribution;
+      },
+      { id: string; linked: boolean }
     >;
-    /** Signed in: ties the pre-submission to the account and confirms it. */
-    finalize: M<{ id: string; token: string }, { name: string }>;
-    /** The pre-submission for the browser holding its secret (resume in another browser). */
-    peek: Q<{ id: string; token: string }, { name: string; url: string; email: string; status: string } | null>;
-    track: M<{ event: "form_start" | "verify_start" | "verify_success" }, null>;
+    /** Name and contact email, only for the browser (or email link) holding the submission's secret. */
+    prefill: Q<{ id: string; token: string }, { name: string; email: string; linked: boolean; canCorrect: boolean } | null>;
+    /** Signed in: links it if the account's verified email is the submitted one. */
+    link: M<
+      { id: string; token: string },
+      { status: "linked" | "mismatch" | "taken" | "not_found"; submittedEmail: string | null }
+    >;
+    /** The submitting browser fixes a typo in the (unverified) contact email. */
+    correctEmail: M<{ id: string; token: string; email: string }, null>;
+    /** The signed-in account's linked submissions. */
+    mine: Q<Empty, OwnSubmission[]>;
+    track: M<{ event: SubmissionEvent; source?: string }, null>;
   };
   audits: {
     /** The site's technical audit, for jurors only; null for anyone else or before the first run. */
@@ -543,6 +557,37 @@ export type PublicApiType = {
       null
     >;
   };
+};
+
+/** Where a submission came from (no personal data). */
+export type SubmissionAttribution = {
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  referrer?: string; // host only
+  device?: "mobile" | "tablet" | "desktop";
+  inApp?: string;
+};
+
+export type SubmissionEvent =
+  | "submission_page_viewed"
+  | "submission_form_started"
+  | "submission_form_completed"
+  | "submission_validation_failed"
+  | "post_submission_auth_viewed"
+  | "post_submission_auth_started"
+  | "post_submission_auth_completed"
+  | "post_submission_auth_failed"
+  | "post_submission_auth_skipped"
+  | "submission_dashboard_viewed";
+
+export type OwnSubmission = {
+  id: string;
+  name: string;
+  url: string;
+  status: "received" | "preparing" | "listed" | "rejected";
+  createdAt: number;
+  listing: { slug: string; status: string } | null;
 };
 
 export const api: PublicApiType = anyApi as unknown as PublicApiType;

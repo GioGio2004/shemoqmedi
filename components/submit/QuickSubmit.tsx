@@ -1,446 +1,233 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useAuth, useClerk, useSignIn, useSignUp, useUser } from "@clerk/nextjs";
-import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { api } from "@/convex-helpers-api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { api, type SubmissionEvent } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
-import {
-  CodeInput,
-  Divider,
-  Field,
-  FormError,
-  GoogleButton,
-  SubmitButton,
-  TextButton,
-  errorMessage,
-  inputClass,
-} from "@/components/auth/AuthUI";
+import { attribution, funnelSource, newToken, rememberLanding, saveRef } from "@/lib/submission";
+import { FormError, SubmitButton, inputClass } from "@/components/auth/AuthUI";
+import { cn } from "@/lib/utils";
 
-// The one-screen submission: site name, link and email. The pre-submission is
-// saved first (unverified), then a 6-digit email code signs the person in or
-// up, then the submission is tied to the account (convex/quickSubmit.ts).
-// Already signed-in people skip the code. Google is offered only outside
-// in-app browsers (Instagram, Facebook… block Google sign-in).
+// The 30-second submission: site name, website URL, email. Nothing else on
+// this page: no code, no password, no account. The submission is saved for
+// good the moment it's sent (convex/quickSubmit.ts submit); signing in to
+// track it is offered afterwards, optionally, on /submit/received.
 
-const DRAFT_KEY = "quick-submit";
-const DRAFT_TTL = 2 * 24 * 3600_000;
+type Fields = { name: string; url: string; email: string };
+type Errors = Partial<Record<keyof Fields, string>>;
 
-type Draft = { id: string; token: string; name: string; url: string; email: string; at: number };
-type Phase = "form" | "code" | "finishing" | "done";
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function newToken() {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-/** A long random password, for Clerk setups that still require one (the person never needs it: they log in with a code). */
-function randomPassword() {
-  return `${newToken().slice(0, 24)}Aa1!`;
-}
-
-function readDraft(): Draft | null {
+function urlError(raw: string) {
+  const value = raw.trim();
+  if (!value) return "Enter your website's address.";
+  if (/\s/.test(value)) return "A web address has no spaces.";
   try {
-    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null") as Draft | null;
-    return d && Date.now() - d.at < DRAFT_TTL ? d : null;
-  } catch {
+    const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    if (!/^https?:$/.test(url.protocol) || !/\.[a-z]{2,}$/i.test(url.hostname)) throw new Error();
     return null;
-  }
-}
-function saveDraft(d: Draft) {
-  try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
   } catch {
-    // storage blocked (private mode): the flow still works in this tab
-  }
-}
-function clearDraft() {
-  try {
-    localStorage.removeItem(DRAFT_KEY);
-  } catch {
-    // nothing to clear
+    return "That doesn't look like a web address. Try yoursite.com.";
   }
 }
 
-/** The in-app browser we're in, if any. */
-function inAppBrowser(): "instagram" | "facebook" | "tiktok" | "linkedin" | "threads" | null {
-  if (typeof navigator === "undefined") return null;
-  const ua = navigator.userAgent;
-  if (/Instagram/i.test(ua)) return "instagram";
-  if (/Barcelona/i.test(ua)) return "threads";
-  if (/FBAN|FBAV|FB_IAB|FBIOS|FB4A/i.test(ua)) return "facebook";
-  if (/musical_ly|TikTok|BytedanceWebview/i.test(ua)) return "tiktok";
-  if (/LinkedInApp/i.test(ua)) return "linkedin";
-  return null;
+function validate(f: Fields): Errors {
+  const errors: Errors = {};
+  const name = f.name.trim();
+  if (!name) errors.name = "Enter the site's name.";
+  else if (name.length > 80) errors.name = "Keep the name under 80 characters.";
+  const url = urlError(f.url);
+  if (url) errors.url = url;
+  const email = f.email.trim();
+  if (!email) errors.email = "Enter your email address.";
+  else if (!EMAIL.test(email) || email.length > 254) errors.email = "Check your email address. It looks incomplete.";
+  return errors;
 }
 
-/** This page in the phone's real browser, carrying the draft so it can pick up there. */
-function externalHref(d: Draft | null) {
-  const url = new URL(window.location.href);
-  url.search = "";
-  if (d) {
-    url.searchParams.set("d", d.id);
-    url.searchParams.set("t", d.token);
-  }
-  const ua = navigator.userAgent;
-  if (/Android/i.test(ua)) {
-    return `intent://${url.host}${url.pathname}${url.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url.toString())};end`;
-  }
-  // iOS 17+ opens x-safari-https links in Safari.
-  return url.toString().replace(/^https:/, "x-safari-https:");
-}
-
-function sourceOf(params: URLSearchParams, app: string | null) {
-  return params.get("utm_source") || app || "direct";
+function InlineField({
+  id,
+  label,
+  error,
+  aside,
+  children,
+}: {
+  id: string;
+  label: string;
+  error?: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="eyebrow text-black">
+          {label}
+        </label>
+        {aside}
+      </div>
+      {children}
+      {error && (
+        <p id={`${id}-error`} className="text-[13px] leading-snug text-black">
+          <span aria-hidden="true" className="mr-1.5 inline-block size-1.5 -translate-y-px rounded-full bg-black align-middle" />
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function QuickSubmit() {
+  const router = useRouter();
   const params = useSearchParams();
-  const { isLoaded: authLoaded, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
   const { user } = useUser();
-  const { setActive } = useClerk();
-  const { isLoaded: signInLoaded, signIn } = useSignIn();
-  const { isLoaded: signUpLoaded, signUp } = useSignUp();
-  const { isAuthenticated } = useConvexAuth();
-  // A new account reaches the database through Clerk's webhook a moment after sign-up.
-  const account = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
-  const accountReady = isAuthenticated && !!account;
-
-  const start = useMutation(api.quickSubmit.start);
-  const finalize = useMutation(api.quickSubmit.finalize);
+  const submit = useMutation(api.quickSubmit.submit);
   const track = useMutation(api.quickSubmit.track);
 
-  const [phase, setPhase] = useState<Phase>("form");
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
-  const [email, setEmail] = useState("");
+  const [fields, setFields] = useState<Fields>({ name: "", url: "", email: "" });
+  const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
+  const [tried, setTried] = useState(false);
   const [honeypot, setHoneypot] = useState("");
-  const [code, setCode] = useState("");
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [draft, setDraft] = useState<Draft | null>(null);
-  const [pending, setPending] = useState<null | "form" | "google" | "code" | "resend">(null);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [app, setApp] = useState<ReturnType<typeof inAppBrowser>>(null);
-  const [submittedName, setSubmittedName] = useState("");
   const started = useRef(false);
-  const finalizing = useRef(false);
+  // Blocks a second press before React re-renders (double-clicks).
+  const busy = useRef(false);
+  // One secret per submission attempt: retries and double-clicks reuse it, so the server saves it once.
+  const token = useRef<string | null>(null);
 
-  // Restore: this browser's draft, or one handed over from an in-app browser (?d=&t=).
-  const handoff = params.get("d") && params.get("t") ? { id: params.get("d")!, token: params.get("t")! } : null;
-  const peeked = useQuery(api.quickSubmit.peek, handoff ?? "skip");
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state once
-    setApp(inAppBrowser());
-    const d = readDraft();
-    if (d) {
-      setDraft(d);
-      setName(d.name);
-      setUrl(d.url);
-      setEmail(d.email);
-      // Back from Google: finish it.
-      if (params.get("resume")) setPhase("finishing");
-    }
-  }, [params]);
-  useEffect(() => {
-    if (!handoff || !peeked || peeked.status !== "unverified") return;
-    const d: Draft = { ...handoff, name: peeked.name, url: peeked.url, email: peeked.email, at: Date.now() };
-    saveDraft(d);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the handed-over draft arrives from the query
-    setDraft(d);
-    setName(d.name);
-    setUrl(d.url);
-    setEmail(d.email);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per handed-over draft
-  }, [peeked]);
+  const send = (event: SubmissionEvent) => void track({ event, source: funnelSource() }).catch(() => {});
 
-  // Signed in: their account email, not editable.
+  useEffect(() => {
+    rememberLanding(params);
+    send("submission_page_viewed");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per page view
+  }, []);
+
+  // Signed in: their account's email, so the submission is theirs right away.
   const accountEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors the signed-in account
-    if (isSignedIn && accountEmail) setEmail(accountEmail);
+    if (isSignedIn && accountEmail) setFields((f) => ({ ...f, email: accountEmail }));
   }, [isSignedIn, accountEmail]);
 
-  const onFirstInput = useCallback(() => {
-    if (started.current) return;
-    started.current = true;
-    void track({ event: "form_start" }).catch(() => {});
-  }, [track]);
+  const errors = validate(fields);
+  const shown = (k: keyof Fields) => ((tried || touched[k]) && errors[k]) || undefined;
 
-  // Signed in and a draft to finish: tie it to the account.
-  useEffect(() => {
-    if (phase !== "finishing" || !accountReady || !draft || finalizing.current) return;
-    finalizing.current = true;
-    finalize({ id: draft.id, token: draft.token })
-      .then((r) => {
-        clearDraft();
-        setSubmittedName(r.name);
-        setPhase("done");
-      })
-      .catch((err) => {
-        setError(friendlyError(err));
-        setPhase("form");
-      })
-      .finally(() => {
-        finalizing.current = false;
-      });
-  }, [phase, accountReady, draft, finalize]);
-
-  /** Save the pre-submission (unverified). Reuses this browser's secret for the same site. */
-  async function saveRemote(): Promise<Draft> {
-    const token = draft && draft.url === url.trim() ? draft.token : newToken();
-    const { id } = await start({
-      name: name.trim(),
-      url: url.trim(),
-      email: email.trim(),
-      token,
-      source: sourceOf(params, app),
-      website: honeypot || undefined,
-    });
-    const d: Draft = { id, token, name: name.trim(), url: url.trim(), email: email.trim(), at: Date.now() };
-    saveDraft(d);
-    setDraft(d);
-    return d;
-  }
-
-  /** Email code: log in if the account exists, else sign up. */
-  async function sendCode(address: string) {
-    if (!signIn || !signUp) throw new Error("Not ready");
-    try {
-      const si = await signIn.create({ identifier: address });
-      const factor = si.supportedFirstFactors?.find((f) => f.strategy === "email_code");
-      if (!factor || !("emailAddressId" in factor)) throw new Error("Email codes are not available for this account.");
-      await signIn.prepareFirstFactor({ strategy: "email_code", emailAddressId: factor.emailAddressId });
-      setMode("signin");
-    } catch (err) {
-      if (!(isClerkAPIResponseError(err) && err.errors[0]?.code === "form_identifier_not_found")) throw err;
-      const su = await signUp.create({ emailAddress: address });
-      if (su.missingFields?.includes("password")) await signUp.update({ password: randomPassword() });
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      setMode("signup");
+  const set = (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!started.current) {
+      started.current = true;
+      send("submission_form_started");
     }
-  }
+    setFields((f) => ({ ...f, [k]: e.target.value }));
+    setError(null);
+  };
+  const blur = (k: keyof Fields) => () => {
+    if (fields[k].trim()) setTouched((t) => ({ ...t, [k]: true }));
+  };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (pending) return;
-    setPending("form");
-    setError(null);
-    try {
-      await saveRemote();
-      if (isSignedIn) {
-        setPhase("finishing");
-        return;
-      }
-      await sendCode(email.trim());
-      void track({ event: "verify_start" }).catch(() => {});
-      setCode("");
-      setPhase("code");
-    } catch (err) {
-      setError(isClerkAPIResponseError(err) ? errorMessage(err) : friendlyError(err));
-    } finally {
-      setPending(null);
+    if (busy.current) return;
+    setTried(true);
+    const first = (["name", "url", "email"] as const).find((k) => errors[k]);
+    if (first) {
+      send("submission_validation_failed");
+      document.getElementById(`qs-${first}`)?.focus();
+      return;
     }
-  }
-
-  async function onCode(e: React.FormEvent) {
-    e.preventDefault();
-    if (pending || !signIn || !signUp) return;
-    setPending("code");
+    send("submission_form_completed");
+    busy.current = true;
+    setPending(true);
     setError(null);
     try {
-      const res =
-        mode === "signin"
-          ? await signIn.attemptFirstFactor({ strategy: "email_code", code })
-          : await signUp.attemptEmailAddressVerification({ code });
-      if (res.status !== "complete" || !res.createdSessionId) {
-        setError("We couldn't finish signing you in. Send a new code and try again.");
-        return;
-      }
-      await setActive({ session: res.createdSessionId });
-      void track({ event: "verify_success" }).catch(() => {});
-      setPhase("finishing");
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setPending(null);
-    }
-  }
-
-  async function onResend() {
-    setPending("resend");
-    setError(null);
-    setNotice(null);
-    try {
-      await sendCode(email.trim());
-      setNotice("A new code is on its way.");
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setPending(null);
-    }
-  }
-
-  async function onGoogle() {
-    if (!signIn) return;
-    const form = document.getElementById("quick-submit-form") as HTMLFormElement | null;
-    if (form && !form.reportValidity()) return;
-    setPending("google");
-    setError(null);
-    try {
-      await saveRemote();
-      void track({ event: "verify_start" }).catch(() => {});
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/submit?resume=1",
+      token.current ??= newToken();
+      const { id } = await submit({
+        name: fields.name.trim(),
+        url: fields.url.trim(),
+        email: fields.email.trim(),
+        token: token.current,
+        website: honeypot || undefined,
+        attribution: attribution(),
       });
+      saveRef({ id, token: token.current });
+      router.push("/submit/received");
     } catch (err) {
-      setError(isClerkAPIResponseError(err) ? errorMessage(err) : friendlyError(err));
-      setPending(null);
+      setError(friendlyError(err));
+      busy.current = false;
+      setPending(false);
     }
   }
 
-  const ready = authLoaded && signInLoaded && signUpLoaded;
-  const showGoogle = !isSignedIn && app === null;
-
-  if (phase === "done") {
-    return (
-      <div className="grid gap-6">
-        <p className="eyebrow">Submitted</p>
-        <h2 className="text-[clamp(2rem,6vw,3rem)] leading-[1] font-semibold tracking-[-0.05em]">Thank you. {submittedName} is in.</h2>
-        <p className="text-[15px] leading-relaxed text-black/70">
-          Our editors review every site by hand and prepare its listing. When it goes live for a week of jury voting, we
-          email you at <strong className="text-black">{accountEmail || email}</strong>.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/account"
-            className="inline-flex min-h-[50px] items-center rounded-full bg-black px-6 text-[12px] font-semibold tracking-[0.05em] text-white uppercase"
-          >
-            Your account
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setName("");
-              setUrl("");
-              setDraft(null);
-              setPhase("form");
-            }}
-            className="inline-flex min-h-[50px] items-center rounded-full border border-black/14 px-6 text-[12px] font-semibold tracking-[0.05em] uppercase hover:border-black"
-          >
-            Submit another
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === "finishing") {
-    return (
-      <div className="grid gap-3" role="status">
-        <p className="eyebrow">One moment</p>
-        <p className="text-2xl font-semibold tracking-[-0.04em]">Sending your site…</p>
-        <FormError message={error} />
-      </div>
-    );
-  }
-
-  if (phase === "code") {
-    return (
-      <form onSubmit={onCode} className="grid gap-5">
-        <div className="grid gap-2">
-          <p className="eyebrow">Last step</p>
-          <h2 className="text-[clamp(1.75rem,6vw,2.5rem)] leading-[1.05] font-semibold tracking-[-0.045em]">Check your email</h2>
-          <p className="text-[15px] leading-relaxed text-black/70">
-            We sent a 6-digit code to <strong className="text-black">{email}</strong>. Enter it to send your site.
-          </p>
-        </div>
-        <CodeInput value={code} onChange={setCode} disabled={pending === "code"} />
-        <FormError message={error} />
-        {notice && (
-          <p role="status" className="text-sm text-black/60">
-            {notice}
-          </p>
-        )}
-        <SubmitButton pending={pending === "code"} disabled={code.length !== 6}>
-          Verify and submit
-        </SubmitButton>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <TextButton onClick={() => void onResend()} disabled={pending !== null}>
-            Send a new code
-          </TextButton>
-          <TextButton
-            onClick={() => {
-              setPhase("form");
-              setError(null);
-            }}
-          >
-            Use a different email
-          </TextButton>
-        </div>
-        {app && (
-          <p className="text-xs leading-relaxed text-black/55">
-            No code? Check spam, or{" "}
-            <a href={externalHref(draft)} className="underline underline-offset-4">
-              open this page in your browser
-            </a>{" "}
-            to continue there (or tap ••• and choose Open in browser).
-          </p>
-        )}
-      </form>
-    );
-  }
+  const describe = (k: keyof Fields) => (shown(k) ? `qs-${k}-error` : undefined);
+  const fieldClass = (k: keyof Fields) => cn(inputClass, shown(k) && "border-black");
 
   return (
-    <form id="quick-submit-form" onSubmit={onSubmit} onFocus={onFirstInput} className="grid gap-5" noValidate={false}>
-      <Field id="qs-name" label="Site name">
+    <form onSubmit={onSubmit} noValidate className="grid gap-5">
+      <InlineField id="qs-name" label="Site name" error={shown("name")}>
         <input
           id="qs-name"
-          required
-          maxLength={80}
+          name="organization"
           autoComplete="organization"
+          enterKeyHint="next"
           placeholder="Studio Nord"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={inputClass}
+          value={fields.name}
+          onChange={set("name")}
+          onBlur={blur("name")}
+          aria-invalid={!!shown("name")}
+          aria-describedby={describe("name")}
+          className={fieldClass("name")}
         />
-      </Field>
-      <Field id="qs-url" label="Website link">
+      </InlineField>
+      <InlineField id="qs-url" label="Website URL" error={shown("url")}>
         <input
           id="qs-url"
-          required
+          name="url"
+          type="url"
           inputMode="url"
           autoComplete="url"
           autoCapitalize="none"
+          autoCorrect="off"
           spellCheck={false}
+          enterKeyHint="next"
           placeholder="studionord.com"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className={inputClass}
+          value={fields.url}
+          onChange={set("url")}
+          onBlur={blur("url")}
+          aria-invalid={!!shown("url")}
+          aria-describedby={describe("url")}
+          className={fieldClass("url")}
         />
-      </Field>
-      <Field id="qs-email" label="Your email" aside={isSignedIn ? <span className="text-xs text-black/50">Signed in</span> : undefined}>
+      </InlineField>
+      <InlineField
+        id="qs-email"
+        label="Email address"
+        error={shown("email")}
+        aside={isSignedIn ? <span className="text-xs text-black/50">Signed in</span> : undefined}
+      >
         <input
           id="qs-email"
+          name="email"
           type="email"
-          required
           inputMode="email"
           autoComplete="email"
           autoCapitalize="none"
+          autoCorrect="off"
           spellCheck={false}
+          enterKeyHint="send"
           placeholder="you@studionord.com"
-          value={email}
+          value={fields.email}
           readOnly={!!isSignedIn}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
+          onChange={set("email")}
+          onBlur={blur("email")}
+          aria-invalid={!!shown("email")}
+          aria-describedby={describe("email")}
+          className={fieldClass("email")}
         />
-      </Field>
+      </InlineField>
       {/* Hidden from people; bots fill it. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label htmlFor="qs-website">Leave this empty</label>
@@ -448,23 +235,16 @@ export function QuickSubmit() {
       </div>
 
       <FormError message={error} />
-      <SubmitButton pending={pending === "form"} disabled={!ready}>
-        {isSignedIn ? "Submit site" : "Send me a code"}
+      <SubmitButton pending={pending}>
+        Submit my project
       </SubmitButton>
-      {showGoogle && (
-        <>
-          <Divider />
-          <GoogleButton onClick={() => void onGoogle()} pending={pending === "google"} disabled={!ready || pending !== null} />
-        </>
-      )}
       <p className="text-xs leading-relaxed text-black/50">
-        {isSignedIn
-          ? "We'll email you when it goes live."
-          : "No password: we email you a 6-digit code to confirm it's you, and that creates your free account."}{" "}
-        By submitting you agree to our <Link href="/terms" className="underline underline-offset-4">terms</Link>.
+        No account needed. By submitting you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-4">
+          terms
+        </Link>
+        .
       </p>
-      {/* Clerk's bot protection for new accounts. */}
-      <div id="clerk-captcha" />
     </form>
   );
 }
