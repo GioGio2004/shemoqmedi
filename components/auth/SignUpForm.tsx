@@ -157,8 +157,16 @@ export function SignUpForm() {
     );
   }
 
+  // People who came to submit a site (from an ad or a post) see why they are here.
+  const forSubmit = redirect === "/submit" || redirect.startsWith("/submit?") || redirect.startsWith("/submit/");
+
   return (
     <div className="grid gap-6">
+      {forSubmit && (
+        <p className="text-sm leading-relaxed text-black/70">
+          Submitting is free. Create an account, then add your site for the jury.
+        </p>
+      )}
       <GoogleOneTap signInForceRedirectUrl={redirect} signUpForceRedirectUrl={redirect} />
       <GoogleButton onClick={onGoogle} pending={pending === "google"} disabled={!ready || pending !== null} />
       <Divider />

@@ -27,9 +27,18 @@ const clerk = clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(url);
   }
   if (!userId) {
-    // Our own sign-in page (not Clerk's hosted one), then back here.
-    const url = new URL("/sign-in", req.url);
+    // Our own auth pages (not Clerk's hosted ones), then back here. Someone
+    // opening /submit logged out is almost always new (ads and posts link
+    // there), so they get sign-up, with "Log in" one tap away; the other
+    // protected pages are for people who already have an account.
+    const isSubmit = req.nextUrl.pathname.startsWith("/submit");
+    const url = new URL(isSubmit ? "/sign-up" : "/sign-in", req.url);
     url.searchParams.set("redirect_url", req.nextUrl.href);
+    // Keep campaign tags on the page people actually land on, so analytics
+    // still credit the ad or post that sent them.
+    for (const [key, value] of req.nextUrl.searchParams) {
+      if (key.startsWith("utm_")) url.searchParams.set(key, value);
+    }
     return NextResponse.redirect(url);
   }
 });
