@@ -9,12 +9,14 @@ import { api, type SubmissionEvent } from "@/convex-helpers-api";
 import { friendlyError } from "@/lib/errors";
 import { attribution, funnelSource, newToken, rememberLanding, saveRef } from "@/lib/submission";
 import { FormError, SubmitButton, inputClass } from "@/components/auth/AuthUI";
+import { SubmitGuidelines } from "@/components/submit/SubmitGuidelines";
 import { cn } from "@/lib/utils";
 
-// The 30-second submission: site name, website URL, email. Nothing else on
-// this page: no code, no password, no account. The submission is saved for
-// good the moment it's sent (convex/quickSubmit.ts submit); signing in to
-// track it is offered afterwards, optionally, on /submit/received.
+// The 30-second submission: site name, website URL, email. No code, no
+// password, no account. Pressing submit opens the guidelines ("Earned, not
+// bought.") with the Terms checkbox (SubmitGuidelines); confirming there saves
+// the submission for good (convex/quickSubmit.ts submit). Signing in to track
+// it is offered afterwards, optionally, on /submit/received.
 
 type Fields = { name: string; url: string; email: string };
 type Errors = Partial<Record<keyof Fields, string>>;
@@ -93,6 +95,8 @@ export function QuickSubmit() {
   const [honeypot, setHoneypot] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const started = useRef(false);
   // Blocks a second press before React re-renders (double-clicks).
   const busy = useRef(false);
@@ -140,6 +144,13 @@ export function QuickSubmit() {
       return;
     }
     send("submission_form_completed");
+    setError(null);
+    // The guidelines and the Terms checkbox come first; saving happens in confirm().
+    setGuidelinesOpen(true);
+  }
+
+  async function confirm() {
+    if (busy.current || !agreed) return;
     busy.current = true;
     setPending(true);
     setError(null);
@@ -152,10 +163,13 @@ export function QuickSubmit() {
         token: token.current,
         website: honeypot || undefined,
         attribution: attribution(),
+        acceptedTerms: true,
       });
       saveRef({ id, token: token.current });
       router.push("/submit/received");
     } catch (err) {
+      // Back to the form, where the message sits next to what needs fixing.
+      setGuidelinesOpen(false);
       setError(friendlyError(err));
       busy.current = false;
       setPending(false);
@@ -239,12 +253,21 @@ export function QuickSubmit() {
         Submit my project
       </SubmitButton>
       <p className="text-xs leading-relaxed text-black/50">
-        No account needed. By submitting you agree to our{" "}
-        <Link href="/terms" className="underline underline-offset-4">
+        No account needed. Free, and never for sale: we list original, creative work and decline sites sent only for
+        promotion. See our{" "}
+        <Link href="/terms#submissions" className="underline underline-offset-4">
           terms
         </Link>
         .
       </p>
+      <SubmitGuidelines
+        open={guidelinesOpen}
+        onOpenChange={setGuidelinesOpen}
+        agreed={agreed}
+        onAgreedChange={setAgreed}
+        pending={pending}
+        onConfirm={() => void confirm()}
+      />
     </form>
   );
 }

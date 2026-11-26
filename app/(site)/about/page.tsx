@@ -42,8 +42,9 @@ const sections: InfoSection[] = [
       <>
         <p>
           Anyone can <Link href="/submit">submit a website</Link>, free of charge, in{" "}
-          <Link href="#submit">one of two ways</Link>. The jury reviews every submission by hand before it appears.
-          Sites that are unfinished, broken or not original are declined with a short note explaining why.
+          <Link href="#submit">one of two ways</Link>. Our editors review every submission by hand before it appears: we
+          list original, creative work, and decline sites that are unfinished, broken, built from a template without a
+          creative idea of their own, or sent only for promotion. Awards here are earned, never bought.
         </p>
         <p>
           Approved sites go live in weekly batches, and the jury scores each batch the following week on four weighted

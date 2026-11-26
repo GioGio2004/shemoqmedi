@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const STEPS = [
   ["Submit", "Name, link and your email. That's all."],
-  ["We prepare it", "Our editors review it by hand and build its listing."],
+  ["We review it", "By hand. Original, creative work gets a listing; sites sent only for promotion are declined."],
   ["The jury scores it", "A week of voting, then the results by email."],
 ] as const;
 
@@ -28,7 +28,8 @@ export default function SubmitPage() {
             Takes 30 seconds.
           </h1>
           <p className="text-[15px] leading-relaxed text-black/65">
-            Our editors review every site by hand. Accepted ones get a week of jury voting.
+            A creative space: awards here are earned, not bought. Our editors review every site by hand, and accepted
+            ones get a week of jury voting.
           </p>
         </header>
         <Suspense fallback={<p className="text-sm text-black/55">Loading…</p>}>

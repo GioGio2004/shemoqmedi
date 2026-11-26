@@ -62,8 +62,15 @@ const sections: InfoSection[] = [
           promotion of the site (for example on social media), with credit, for as long as the listing is online.
         </p>
         <p>
+          Shemoqmedi is a creative space: awards and recognition here are earned, never bought. We list websites with
+          original design and a creative idea of their own. We decline sites submitted only for commercial promotion,
+          advertising or link building, and sites built from templates or themes without a creative direction of their
+          own. Submitting, listing, jury scores and awards are free, and none of them can be paid for.
+        </p>
+        <p>
           Every submission is reviewed by hand. We decide which sites are listed, and may decline, edit (for example to
-          fix a typo or a category) or remove a listing at any time.
+          fix a typo or a category) or remove a listing at any time. When you submit, you confirm that you agree to
+          these Terms and to the submission guidelines shown before you send.
         </p>
       </>
     ),

@@ -518,6 +518,8 @@ export type PublicApiType = {
         token: string;
         website?: string;
         attribution?: SubmissionAttribution;
+        /** Ticked "I agree to the Terms" in the guidelines popup. */
+        acceptedTerms?: boolean;
       },
       { id: string; linked: boolean }
     >;
